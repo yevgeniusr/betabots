@@ -16,6 +16,41 @@ Betabots can help you answer:
 - Where do users get bored, scared, confused, or convinced?
 - Which changes make users happier enough to return?
 
+## Official Modes
+
+Betabots has two official execution modes.
+
+### Fast Mode
+
+Fast mode is API-level synthetic-live simulation. It is for speed, scale, backend confidence, social graph population, and repeated multi-session behavior.
+
+Use it when you need hundreds of users to create profiles, like/pass, match, message, reserve, wait, and return:
+
+```bash
+BETABOT_COUNT=200 \
+BETABOT_SESSIONS=4 \
+BETABOT_CONCURRENCY=16 \
+BETABOT_BACKEND_URL=http://localhost:3001/api \
+BETABOT_AUTH_TOKEN=your-dev-e2e-token \
+node skills/betabots/scripts/multi_session_betabots.cjs
+```
+
+### Thoughtful Mode
+
+Thoughtful mode launches real browsers and runs human-speed sessions. It is for comprehension, trust, emotion, copy, onboarding, visual UI, and product taste. Each bot records what it sees, thinks, clicks, types, misunderstands, likes, and why it leaves or returns.
+
+Use it after fast mode is clean:
+
+```bash
+BETABOT_APP_URL=http://localhost:5173 \
+BETABOT_THOUGHTFUL_COUNT=5 \
+BETABOT_THOUGHTFUL_MINUTES=8 \
+BETABOT_HEADLESS=false \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+By default, thoughtful mode uses real-time pacing (`BETABOT_TIME_SCALE=1`). Lower the scale only for development dry-runs.
+
 ## Repository Layout
 
 ```text
@@ -24,7 +59,7 @@ Betabots can help you answer:
 .cursor-plugin/plugin.json     Cursor plugin manifest
 skills/betabots/SKILL.md       Main Betabots skill
 skills/betabots/scripts/       Cohort, analysis, and live simulation scripts
-skills/betabots/references/    Session templates, safety, and live-run guidance
+skills/betabots/references/    Session templates, safety, fast, and thoughtful guidance
 scripts/install-local.sh       Local installer for Codex, Claude, and Cursor
 tests/smoke.sh                 Lightweight validation
 ```
@@ -114,6 +149,18 @@ node skills/betabots/scripts/multi_session_betabots.cjs
 ```
 
 The bundled live runner is an adapter for products with endpoints similar to DnDate: profiles, characters, reactions, matches, messages, and tables. For other products, adapt the endpoint functions and keep the same artifact format.
+
+Run thoughtful browser sessions:
+
+```bash
+BETABOT_APP_URL=http://localhost:5173 \
+BETABOT_THOUGHTFUL_COUNT=3 \
+BETABOT_THOUGHTFUL_MINUTES=10 \
+BETABOT_HEADLESS=false \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+Thoughtful mode requires Playwright to be available in the target project or globally.
 
 ## Safety
 

@@ -16,3 +16,5 @@ MD
 python3 "$ROOT/skills/betabots/scripts/analyze_sessions.py" /tmp/betabots-raw >/tmp/betabots-analysis.md
 grep -q "Sessions analyzed: 1" /tmp/betabots-analysis.md
 node --check "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs" >/dev/null
+echo "betabots smoke ok"

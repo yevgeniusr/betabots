@@ -11,15 +11,18 @@ A betabot is a simulated human with a defined past who discovers a product under
 
 Betabots may open the UI, click buttons, send messages, wait for other users, return in later sessions, search the web when allowed, and abandon the product for human reasons. They must not inspect source code, databases, logs, API internals, or hidden requirements during a user session.
 
-## Modes
+## Official Modes
 
-Use the lightest mode that answers the product question:
+Use one of two explicit modes:
 
-1. **Journey cohort**: dozens of browser or manual sessions focused on onboarding, comprehension, and friction.
-2. **Synthetic live app**: hundreds of API-level users create profiles, react, match, message, wait, and return across sessions.
-3. **Hybrid validation**: API-level live graph plus browser probes for the most important personas and routes.
+1. **Fast mode**: API-level synthetic-live simulation. Use this to populate products with dozens or hundreds of users, test social graphs, stress backend contracts, and discover systemic failures quickly. Fast bots can create users, profiles, reactions, matches, messages, bookings, and return sessions through real product APIs, but they do not judge visual UI quality.
+2. **Thoughtful mode**: real-browser human-speed sessions. Use this when the question is comprehension, trust, emotion, taste, copy, interaction quality, onboarding, and whether the product feels usable to an actual person. Thoughtful bots open the UI in real browsers, pause, read, think, click, type, hesitate, take screenshots, and save first-person raw thoughts.
 
-Do not use hundreds of real browsers unless the goal is load testing browser infrastructure. For product behavior, API-level social simulation plus targeted browser checks is more reliable and cheaper.
+Default rule:
+
+- Run **fast** first when the product needs population or backend confidence.
+- Run **thoughtful** after fast mode is clean, because thoughtful sessions are slower and should not waste human-like time on basic API crashes.
+- Do not replace thoughtful mode with fast metrics. A happy API bot is not proof that a human understood the product.
 
 ## Workflow
 
@@ -57,9 +60,10 @@ Use these bundled scripts from the plugin root:
 
 - `skills/betabots/scripts/generate_cohort.py`: create reusable persona cohorts.
 - `skills/betabots/scripts/analyze_sessions.py`: aggregate raw Markdown sessions.
-- `skills/betabots/scripts/multi_session_betabots.cjs`: run a configurable API-level synthetic-live simulation against an app with bearer-token auth.
+- `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level synthetic-live simulation against an app with bearer-token auth.
+- `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with thoughts, screenshots, and first-person raw logs.
 
-Read `references/live-simulation.md` before using the multi-session runner. Read `references/session-template.md` when writing raw journey files manually.
+Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/session-template.md` when writing raw journey files manually.
 
 ## Happiness Standard
 
