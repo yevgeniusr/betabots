@@ -118,6 +118,12 @@ function firstVisibleText(text) {
   return text.replace(/\s+/g, ' ').trim().slice(0, 700)
 }
 
+function locatorForRole(page, label) {
+  return page.getByRole('link', { name: label })
+    .or(page.getByRole('button', { name: label }))
+    .first()
+}
+
 async function observe(page) {
   const title = await page.title().catch(() => '')
   const text = await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
@@ -126,7 +132,7 @@ async function observe(page) {
 
 async function clickFirst(page, labels) {
   for (const label of labels) {
-    const locator = page.getByRole('link', { name: label }).or(page.getByRole('button', { name: label })).first()
+    const locator = locatorForRole(page, label)
     if (await locator.isVisible({ timeout: 1000 }).catch(() => false)) {
       try {
         await locator.click({ timeout: 5000 })
@@ -135,6 +141,75 @@ async function clickFirst(page, labels) {
     }
   }
   return null
+}
+
+async function selectByIndex(locator, index) {
+  const count = await locator.count().catch(() => 0)
+  if (count === 0) return false
+  await locator.nth(0).selectOption({ index }).catch(async () => {
+    await locator.nth(0).selectOption({ index: 1 })
+  })
+  return true
+}
+
+async function tryCreateCharacter(page, bot, log, actions) {
+  const before = await observe(page)
+  const lower = before.text.toLowerCase()
+  if (!lower.includes('character')) return false
+
+  const clicked = await clickFirst(page, ['Create your first character', /^create$/i, /create character/i])
+  if (!clicked) return false
+
+  actions.push(`clicked ${clicked}`)
+  log(`I start creating a character because the app keeps telling me that is the way in.`)
+  await wait(1500 + random() * 2500)
+
+  const modalText = (await observe(page)).text.toLowerCase()
+  if (!modalText.includes('basic information')) {
+    log(`I expected a character form, but I am not sure it opened.`)
+    return false
+  }
+
+  const firstName = bot.name.split(' ')[0]
+  const characterName = `${firstName} ${pick(['Emberleaf', 'Moonbrook', 'Ironquill', 'Duskwalker', 'Starling'])}`
+  const hook = `${characterName} is looking for a table where character choices matter and strangers become a party slowly.`
+
+  await page.locator('input[type="text"]').first().fill(characterName, { timeout: 5000 })
+  await selectByIndex(page.locator('select').nth(0), 1 + Math.floor(random() * 4))
+  await selectByIndex(page.locator('select').nth(1), 1 + Math.floor(random() * 6))
+  await selectByIndex(page.locator('select').nth(2), 1 + Math.floor(random() * 6))
+  actions.push(`filled character basics for ${characterName}`)
+  log(`I name my character ${characterName}; this makes the product feel personal instead of abstract.`)
+
+  await clickFirst(page, [/next step/i])
+  await wait(1000 + random() * 2000)
+  await clickFirst(page, [/next step/i])
+  await wait(1000 + random() * 2000)
+
+  await page.locator('textarea').first().fill(hook, { timeout: 5000 })
+  await selectByIndex(page.locator('select').first(), 1 + Math.floor(random() * 4))
+  actions.push('filled character hook and vibe')
+  log(`I write a hook instead of optimizing it; I am trying to sound like myself.`)
+
+  await clickFirst(page, [/next step/i])
+  await wait(1000 + random() * 2000)
+  const sliders = page.locator('input[type="range"]')
+  const sliderCount = await sliders.count().catch(() => 0)
+  for (let index = 0; index < Math.min(sliderCount, 4); index += 1) {
+    await sliders.nth(index).fill(String(35 + Math.floor(random() * 40))).catch(() => {})
+  }
+  await clickFirst(page, [/finalize character/i])
+  await wait(2500 + random() * 3500)
+
+  const after = await observe(page)
+  if (after.text.toLowerCase().includes(characterName.toLowerCase()) || !after.text.toLowerCase().includes('basic information')) {
+    actions.push(`created character ${characterName}`)
+    log(`The character seems saved, so now I expect the rest of the app to make more sense.`)
+    return true
+  }
+
+  log(`I tried to finish the character, but I cannot tell whether it saved.`)
+  return false
 }
 
 async function screenshot(page, bot, step) {
@@ -180,6 +255,8 @@ async function runBot(browser, bot) {
   let step = 1
   let value = 0
   let trust = 45
+  let emptyCharacterViews = 0
+  let createdCharacter = false
 
   const log = (text) => notes.push(`- T+${elapsed(startedAt)} ${text}`)
 
@@ -234,6 +311,21 @@ async function runBot(browser, bot) {
       if (lower.includes('match') || lower.includes('character') || lower.includes('reserve') || lower.includes('session')) value += 12
       if (lower.includes('safety') || lower.includes('privacy') || lower.includes('beginner')) trust += 8
       if (lower.includes('error') || lower.includes('something went wrong')) trust -= 20
+      if (lower.includes('start with a character') || lower.includes('character required')) emptyCharacterViews += 1
+
+      if (!createdCharacter && emptyCharacterViews > 0) {
+        createdCharacter = await tryCreateCharacter(page, bot, log, actions)
+        if (createdCharacter) {
+          value += 18
+          trust += 8
+          observation = await observe(page)
+          await screenshot(page, bot, step++)
+          log(`After creating a character, I see: ${observation.text}`)
+        } else if (emptyCharacterViews >= 2) {
+          trust -= 8
+          log(`I am looping on the character requirement and starting to lose patience.`)
+        }
+      }
 
       const reserveClicked = await clickFirst(page, [/^like$/i, /^pass$/i, /^reserve$/i, /^save$/i, /^message$/i])
       if (reserveClicked) {
@@ -257,9 +349,14 @@ async function runBot(browser, bot) {
     await context.close().catch(() => {})
   }
 
-  const score = clamp(value + trust - errors.length * 20, 0, 100)
+  let score = clamp(value + trust - errors.length * 20, 0, 100)
+  if (emptyCharacterViews >= 3 && !createdCharacter) {
+    score = Math.min(score, 62)
+  }
   const endReason = errors.length
     ? 'hit a bug or dead end'
+    : emptyCharacterViews >= 3 && !createdCharacter
+      ? 'got stuck before creating a character and left'
     : score >= 75
       ? 'completed session and will come back later'
       : score >= 55
@@ -287,6 +384,8 @@ ${notes.join('\n')}
 - Return likelihood: ${score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low'}
 - Trust level: ${trust >= 70 ? 'high' : trust >= 45 ? 'medium' : 'low'}
 - Value understood: ${value >= 35 ? 'yes' : value >= 15 ? 'partial' : 'unclear'}
+- Created required character: ${createdCharacter ? 'yes' : 'no'}
+- Character gate loops: ${emptyCharacterViews}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
