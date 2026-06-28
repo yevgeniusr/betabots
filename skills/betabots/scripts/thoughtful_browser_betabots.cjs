@@ -157,12 +157,16 @@ async function tryCreateCharacter(page, bot, log, actions) {
   const lower = before.text.toLowerCase()
   if (!lower.includes('character')) return false
 
-  const clicked = await clickFirst(page, ['Create your first character', /^create$/i, /create character/i])
-  if (!clicked) return false
+  if (!lower.includes('basic information')) {
+    const clicked = await clickFirst(page, ['Create your first character', /^create$/i, /create character/i])
+    if (!clicked) return false
 
-  actions.push(`clicked ${clicked}`)
-  log(`I start creating a character because the app keeps telling me that is the way in.`)
-  await wait(1500 + random() * 2500)
+    actions.push(`clicked ${clicked}`)
+    log(`I start creating a character because the app keeps telling me that is the way in.`)
+    await wait(1500 + random() * 2500)
+  } else {
+    log(`The character form is already open, so I stop wandering and fill it in.`)
+  }
 
   const modalText = (await observe(page)).text.toLowerCase()
   if (!modalText.includes('basic information')) {
