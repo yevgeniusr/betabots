@@ -183,7 +183,7 @@ async function runBot(browser, bot) {
     log(ideaFrom(bot, observation))
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
-    const plannedMoves = clamp(Math.round(bot.attentionSpanMinutes * 1.4), 4, 18)
+    const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 3), 8, 45)
     const routes = [
       { labels: [/get started/i, /start/i, /try/i, /demo/i, /discover/i], fallback: '/discover' },
       { labels: [/create/i, /profile/i, /character/i], fallback: '/profile' },
@@ -193,8 +193,10 @@ async function runBot(browser, bot) {
       { labels: [/table/i, /marketplace/i, /sessions/i, /reserve/i], fallback: '/tabletop' },
     ]
 
-    for (let move = 0; move < plannedMoves && Date.now() - startedAt < sessionMs; move += 1) {
-      await wait(5000 + random() * 16000)
+    for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs; move += 1) {
+      const remainingMs = sessionMs - (Date.now() - startedAt)
+      await wait(Math.min(remainingMs, 7000 + random() * 16000))
+      if (Date.now() - startedAt >= sessionMs) break
       const route = routes[move % routes.length]
       const clicked = await clickFirst(page, route.labels)
       if (clicked) {
@@ -227,6 +229,14 @@ async function runBot(browser, bot) {
         log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
         await wait(3000 + random() * 7000)
       }
+    }
+
+    while (Date.now() - startedAt < sessionMs) {
+      const remainingMs = sessionMs - (Date.now() - startedAt)
+      await wait(Math.min(remainingMs, 12000 + random() * 18000))
+      if (Date.now() - startedAt >= sessionMs) break
+      observation = await observe(page)
+      log(`I linger instead of rushing. I think: ${think(bot, observation, 'linger')}`)
     }
   } catch (error) {
     errors.push(error.message)
