@@ -61,6 +61,19 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 `{id}`, `{name}`, and `{role}` are replaced per bot so sessions do not accidentally share user state.
 
+For long-form research, set explicit minimum and maximum session lengths:
+
+```bash
+BETABOT_THOUGHTFUL_COUNT=50 \
+BETABOT_THOUGHTFUL_MINUTES=60 \
+BETABOT_THOUGHTFUL_MIN_SESSION_MINUTES=60 \
+BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES=75 \
+BETABOT_THOUGHTFUL_CONCURRENCY=10 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The runner aggregates first-person thoughts and ideas into `analysis.md` and `summary.json`.
+
 ## Repository Layout
 
 ```text

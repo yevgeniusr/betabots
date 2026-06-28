@@ -26,6 +26,15 @@ Use thoughtful mode when fast API traffic is not enough. It answers:
 
 Default `BETABOT_TIME_SCALE=1` means real pacing. A 10-minute session should take about 10 minutes. Use lower scales only for development dry-runs and mark the limitation in `analysis.md`.
 
+For minimum-duration studies, set both target and minimum session length:
+
+```bash
+BETABOT_THOUGHTFUL_MINUTES=60 \
+BETABOT_THOUGHTFUL_MIN_SESSION_MINUTES=60 \
+BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES=75 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
 ## Auth Isolation
 
 When the target app supports local E2E auth, use per-bot browser storage so one bot does not inherit another bot's account:
@@ -69,3 +78,5 @@ Raw logs should contain:
 - what made me trust or distrust;
 - ideas I had as a user;
 - why I ended the session.
+
+The runner also aggregates repeated first-person ideas into `analysis.md` so the product agent can patch repeated issues instead of isolated taste comments.

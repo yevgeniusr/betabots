@@ -7,6 +7,8 @@ const config = {
   appUrl: (process.env.BETABOT_APP_URL || 'http://localhost:5173').replace(/\/$/, ''),
   count: Number(process.env.BETABOT_THOUGHTFUL_COUNT || process.env.BETABOT_COUNT || 3),
   minutes: Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8),
+  minMinutes: Number(process.env.BETABOT_THOUGHTFUL_MIN_SESSION_MINUTES || process.env.BETABOT_THOUGHTFUL_MINUTES || 8),
+  maxMinutes: Number(process.env.BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES || Math.max(Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8) + 4, 180)),
   concurrency: Number(process.env.BETABOT_THOUGHTFUL_CONCURRENCY || 1),
   headless: String(process.env.BETABOT_HEADLESS || 'false') === 'true',
   timeScale: Number(process.env.BETABOT_TIME_SCALE || 1),
@@ -66,7 +68,7 @@ function personaAt(index) {
     goal: goalFor(role),
     emotionalBaseline: pick(baselines),
     technicalComfort: pick(['low', 'medium', 'high']),
-    attentionSpanMinutes: clamp(config.minutes + Math.round((random() - 0.5) * 4), 3, 30),
+    attentionSpanMinutes: clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
   }
 }
 
@@ -276,6 +278,8 @@ async function runBot(browser, bot) {
   const notes = []
   const actions = []
   const errors = []
+  const ideas = []
+  const thoughts = []
   let step = 1
   let value = 0
   let trust = 45
@@ -283,6 +287,14 @@ async function runBot(browser, bot) {
   let createdCharacter = false
 
   const log = (text) => notes.push(`- T+${elapsed(startedAt)} ${text}`)
+  const recordThought = (thought) => {
+    thoughts.push(thought)
+    log(`I think: ${thought}`)
+  }
+  const recordIdea = (idea) => {
+    ideas.push(idea.replace(/^Idea:\s*/, ''))
+    log(idea)
+  }
 
   try {
     log(`I arrive as ${bot.role}. My past: ${bot.past}`)
@@ -293,8 +305,8 @@ async function runBot(browser, bot) {
     let observation = await observe(page)
     await screenshot(page, bot, step++)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
-    log(`I think: ${think(bot, observation, 'arrival')}`)
-    log(ideaFrom(bot, observation))
+    recordThought(think(bot, observation, 'arrival'))
+    recordIdea(ideaFrom(bot, observation))
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 3), 8, 45)
@@ -329,8 +341,8 @@ async function runBot(browser, bot) {
       await screenshot(page, bot, step++)
       log(`I now see: ${observation.text}`)
       const thought = think(bot, observation, 'exploration')
-      log(`I think: ${thought}`)
-      log(ideaFrom(bot, observation))
+      recordThought(thought)
+      recordIdea(ideaFrom(bot, observation))
 
       const lower = observation.text.toLowerCase()
       if (lower.includes('match') || lower.includes('character') || lower.includes('reserve') || lower.includes('session')) value += 12
@@ -365,7 +377,9 @@ async function runBot(browser, bot) {
       await wait(Math.min(remainingMs, 12000 + random() * 18000))
       if (Date.now() - startedAt >= sessionMs) break
       observation = await observe(page)
-      log(`I linger instead of rushing. I think: ${think(bot, observation, 'linger')}`)
+      const thought = think(bot, observation, 'linger')
+      thoughts.push(thought)
+      log(`I linger instead of rushing. I think: ${thought}`)
     }
   } catch (error) {
     errors.push(error.message)
@@ -411,6 +425,8 @@ ${notes.join('\n')}
 - Value understood: ${value >= 35 ? 'yes' : value >= 15 ? 'partial' : 'unclear'}
 - Created required character: ${createdCharacter ? 'yes' : 'no'}
 - Character gate loops: ${emptyCharacterViews}
+- Ideas expressed: ${ideas.length}
+- Thoughts expressed: ${thoughts.length}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
@@ -419,7 +435,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1 }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, attentionSpanMinutes: bot.attentionSpanMinutes }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -440,6 +456,13 @@ function writeAnalysis(results, startedAt) {
   const errorBots = results.filter((result) => result.errors.length > 0)
   const median = scores[Math.floor(scores.length * 0.5)] || 0
   const elapsedSeconds = Math.round((Date.now() - startedAt) / 1000)
+  const ideaCounts = new Map()
+  for (const result of results) {
+    for (const idea of result.ideas || []) {
+      ideaCounts.set(idea, (ideaCounts.get(idea) || 0) + 1)
+    }
+  }
+  const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
   const summary = {
     config,
     elapsedSeconds,
@@ -447,6 +470,7 @@ function writeAnalysis(results, startedAt) {
     unhappy,
     median,
     errorBots,
+    topIdeas,
     results,
   }
   fs.writeFileSync(path.join(config.runDir, 'summary.json'), JSON.stringify(summary, null, 2))
@@ -456,6 +480,8 @@ function writeAnalysis(results, startedAt) {
 - Bots: ${results.length}
 - App URL: ${config.appUrl}
 - Estimated minutes per bot: ${config.minutes}
+- Minimum minutes per bot: ${config.minMinutes}
+- Maximum minutes per bot: ${config.maxMinutes}
 - Time scale: ${config.timeScale}
 - Headless: ${config.headless}
 - Concurrency: ${config.concurrency}
@@ -470,7 +496,12 @@ function writeAnalysis(results, startedAt) {
 - Browser sessions completed: ${results.length}
 - Screenshots captured: ${results.reduce((sum, result) => sum + result.screenshots, 0)}
 - UI actions attempted: ${results.reduce((sum, result) => sum + result.actions, 0)}
+- Thoughts expressed: ${results.reduce((sum, result) => sum + result.thoughts, 0)}
+- Ideas expressed: ${results.reduce((sum, result) => sum + (result.ideas || []).length, 0)}
 - Error bots: ${errorBots.length}
+
+## Top Bot Ideas
+${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} bots: ${idea}`).join('\n') : '- None'}
 
 ## Interpretation
 - Thoughtful mode launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
