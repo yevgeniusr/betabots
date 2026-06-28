@@ -51,6 +51,16 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 By default, thoughtful mode uses real-time pacing (`BETABOT_TIME_SCALE=1`). Lower the scale only for development dry-runs.
 
+For apps with local E2E auth, seed a separate browser account per bot:
+
+```bash
+BETABOT_AUTH_LOCAL_STORAGE_KEY=your.auth.storage.key \
+BETABOT_AUTH_TOKEN_TEMPLATE='dev-token:{id}' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+`{id}`, `{name}`, and `{role}` are replaced per bot so sessions do not accidentally share user state.
+
 ## Repository Layout
 
 ```text
@@ -161,6 +171,11 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
 Thoughtful mode requires Playwright to be available in the target project or globally.
+
+Optional auth isolation:
+
+- `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
+- `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
 
 ## Safety
 

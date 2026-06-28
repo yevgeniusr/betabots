@@ -26,6 +26,21 @@ Use thoughtful mode when fast API traffic is not enough. It answers:
 
 Default `BETABOT_TIME_SCALE=1` means real pacing. A 10-minute session should take about 10 minutes. Use lower scales only for development dry-runs and mark the limitation in `analysis.md`.
 
+## Auth Isolation
+
+When the target app supports local E2E auth, use per-bot browser storage so one bot does not inherit another bot's account:
+
+- `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before app JavaScript runs.
+- `BETABOT_AUTH_TOKEN_TEMPLATE`: token template with `{id}`, `{name}`, or `{role}` placeholders.
+
+Example:
+
+```bash
+BETABOT_AUTH_LOCAL_STORAGE_KEY=dndate.e2eAuthToken \
+BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
 ## Recommended Scale
 
 - Smoke: 1-3 bots, 3-6 minutes each.

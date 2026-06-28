@@ -11,6 +11,8 @@ const config = {
   headless: String(process.env.BETABOT_HEADLESS || 'false') === 'true',
   timeScale: Number(process.env.BETABOT_TIME_SCALE || 1),
   seed: Number(process.env.BETABOT_SEED || 20260630),
+  authLocalStorageKey: process.env.BETABOT_AUTH_LOCAL_STORAGE_KEY || '',
+  authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -116,6 +118,18 @@ function elapsed(startedAt) {
 
 function firstVisibleText(text) {
   return text.replace(/\s+/g, ' ').trim().slice(0, 700)
+}
+
+function safeTokenPart(value) {
+  return String(value).replace(/[^a-zA-Z0-9._-]/g, '-')
+}
+
+function authTokenFor(bot) {
+  if (!config.authTokenTemplate) return ''
+  return config.authTokenTemplate
+    .replaceAll('{id}', safeTokenPart(bot.id))
+    .replaceAll('{name}', safeTokenPart(bot.name.toLowerCase()))
+    .replaceAll('{role}', safeTokenPart(bot.role.toLowerCase()))
 }
 
 function locatorForRole(page, label) {
@@ -252,6 +266,12 @@ async function runBot(browser, bot) {
       ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'
       : undefined,
   })
+  const authToken = authTokenFor(bot)
+  if (config.authLocalStorageKey && authToken) {
+    await context.addInitScript(([key, token]) => {
+      window.localStorage.setItem(key, token)
+    }, [config.authLocalStorageKey, authToken])
+  }
   const page = await context.newPage()
   const notes = []
   const actions = []
@@ -267,6 +287,7 @@ async function runBot(browser, bot) {
   try {
     log(`I arrive as ${bot.role}. My past: ${bot.past}`)
     log(`Today I want to: ${bot.goal}`)
+    if (authToken) log(`I have my own isolated test account for this session.`)
     await page.goto(config.appUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
     await wait(2500 + random() * 5000)
     let observation = await observe(page)
