@@ -88,8 +88,12 @@ async function requirePlaywright() {
   try {
     return require('playwright')
   } catch {
-    console.error('Playwright is required for thoughtful mode. Install it in the target project or run: npm install -D playwright')
-    process.exit(2)
+    try {
+      return require('@playwright/test')
+    } catch {
+      console.error('Playwright is required for thoughtful mode. Install it in the target project or run: npm install -D playwright')
+      process.exit(2)
+    }
   }
 }
 
