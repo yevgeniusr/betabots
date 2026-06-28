@@ -1,0 +1,18 @@
+{
+  "name": "betabots-dev",
+  "description": "Development marketplace for the Betabots synthetic beta cohort plugin",
+  "owner": {
+    "name": "Yev Rachkovan"
+  },
+  "plugins": [
+    {
+      "name": "betabots",
+      "description": "Synthetic human beta cohorts for product discovery, usability, and live product simulation.",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "Yev Rachkovan"
+      }
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "name": "betabots",
+  "version": "0.1.0",
+  "description": "Synthetic human beta cohorts for product discovery, multi-session usability, and live social-graph simulation.",
+  "author": {
+    "name": "Yev Rachkovan",
+    "url": "https://github.com/yevgeniusr"
+  },
+  "homepage": "https://github.com/yevgeniusr/betabots",
+  "repository": "https://github.com/yevgeniusr/betabots",
+  "license": "MIT",
+  "keywords": [
+    "beta-testing",
+    "synthetic-users",
+    "usability",
+    "product-research",
+    "agents",
+    "qa",
+    "simulation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Betabots",
+    "shortDescription": "Run human-like synthetic beta cohorts against products.",
+    "longDescription": "Betabots helps agents create defined-past synthetic users, run multi-session product journeys, simulate social interaction, capture raw first-person storylines, synthesize insights, and iterate products from realistic user behavior.",
+    "developerName": "Yev Rachkovan",
+    "category": "Coding",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": [
+      "Run a betabot cohort against this app.",
+      "Simulate live users and analyze friction.",
+      "Create multi-session beta users."
+    ],
+    "websiteURL": "https://github.com/yevgeniusr/betabots",
+    "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+    "brandColor": "#7C3AED",
+    "composerIcon": "./assets/betabots.svg",
+    "logo": "./assets/betabots.svg",
+    "screenshots": []
+  }
+}

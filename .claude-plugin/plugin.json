@@ -1,0 +1,12 @@
+{
+  "name": "betabots",
+  "description": "Synthetic human beta cohorts for product discovery, multi-session usability, and live social-graph simulation.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Yev Rachkovan"
+  },
+  "homepage": "https://github.com/yevgeniusr/betabots",
+  "repository": "https://github.com/yevgeniusr/betabots",
+  "license": "MIT",
+  "keywords": ["skills", "beta-testing", "synthetic-users", "usability", "product-research"]
+}
