@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require('node:fs')
 const path = require('node:path')
+const { createRequire } = require('node:module')
 
 const config = {
   appUrl: (process.env.BETABOT_APP_URL || 'http://localhost:5173').replace(/\/$/, ''),
@@ -85,16 +86,21 @@ function goalFor(role) {
 }
 
 async function requirePlaywright() {
-  try {
-    return require('playwright')
-  } catch {
+  const localRequire = createRequire(path.join(process.cwd(), 'package.json'))
+  const attempts = [
+    () => require('playwright'),
+    () => require('@playwright/test'),
+    () => localRequire('playwright'),
+    () => localRequire('@playwright/test'),
+  ]
+  for (const attempt of attempts) {
     try {
-      return require('@playwright/test')
-    } catch {
-      console.error('Playwright is required for thoughtful mode. Install it in the target project or run: npm install -D playwright')
-      process.exit(2)
-    }
+      return attempt()
+    } catch {}
   }
+
+  console.error('Playwright is required for thoughtful mode. Install it in the target project or run: npm install -D playwright')
+  process.exit(2)
 }
 
 function mkdirs() {
