@@ -128,8 +128,10 @@ async function clickFirst(page, labels) {
   for (const label of labels) {
     const locator = page.getByRole('link', { name: label }).or(page.getByRole('button', { name: label })).first()
     if (await locator.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await locator.click({ timeout: 5000 })
-      return label instanceof RegExp ? label.toString() : label
+      try {
+        await locator.click({ timeout: 5000 })
+        return label instanceof RegExp ? label.toString() : label
+      } catch {}
     }
   }
   return null
@@ -233,7 +235,7 @@ async function runBot(browser, bot) {
       if (lower.includes('safety') || lower.includes('privacy') || lower.includes('beginner')) trust += 8
       if (lower.includes('error') || lower.includes('something went wrong')) trust -= 20
 
-      const reserveClicked = await clickFirst(page, [/like/i, /pass/i, /reserve/i, /save/i, /message/i])
+      const reserveClicked = await clickFirst(page, [/^like$/i, /^pass$/i, /^reserve$/i, /^save$/i, /^message$/i])
       if (reserveClicked) {
         actions.push(`clicked ${reserveClicked}`)
         log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
