@@ -70,6 +70,28 @@ BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+## Social Coordination
+
+For social, dating, marketplace, chat, or booking products, enable coordinated Thoughtful mode when a cold-start UI would otherwise prevent new browser users from reaching each other.
+
+The browser remains responsible for user-visible behavior: arrival, onboarding, profile creation, hesitation, navigation, screenshots, thoughts, and opinions. A background coordinator only uses product APIs to create the missing social touchpoints between ready bots:
+
+- detect which bots have created characters or profiles;
+- pair ready bots from the same cohort;
+- send and accept reactions or likes;
+- create matches through the product's normal endpoints;
+- seed initial messages so later browser sessions can inspect chats and respond.
+
+```bash
+BETABOT_THOUGHTFUL_SOCIAL_COORDINATION=true \
+BETABOT_BACKEND_URL=http://localhost:3001/api \
+BETABOT_AUTH_LOCAL_STORAGE_KEY=dndate.e2eAuthToken \
+BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The runner writes `coordination.json` with ready users, pair status, match/message events, and coordinator errors. If coordination repeatedly fails, treat that as product evidence: real users may also be unable to find active people, get likes, or continue a social journey.
+
 ## Recommended Scale
 
 - Smoke: 1-3 bots, 3-6 minutes each.

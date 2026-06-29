@@ -16,6 +16,9 @@ const config = {
   authLocalStorageKey: process.env.BETABOT_AUTH_LOCAL_STORAGE_KEY || '',
   authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
   cohortFile: process.env.BETABOT_COHORT_FILE || '',
+  backendUrl: (process.env.BETABOT_BACKEND_URL || 'http://localhost:3001/api').replace(/\/$/, ''),
+  socialCoordination: String(process.env.BETABOT_THOUGHTFUL_SOCIAL_COORDINATION || 'false') === 'true',
+  coordinationIntervalMs: Number(process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -186,6 +189,18 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
 const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
 
+const coordinatorOpeners = [
+  'Your character hook made me stop scrolling. Want to test the table chemistry with a one-shot?',
+  'I like your vibe. I am looking for clear expectations, low drama, and a table that actually shows up.',
+  'Your character sounds like someone my party would either trust immediately or regret trusting in the best way.',
+]
+
+const coordinatorReplies = [
+  'One-shot first sounds safe. I care about consent tools and no weird pressure.',
+  'That sounds fun. I would rather start with a table than endless small talk.',
+  'I am interested. If the vibe works, maybe this becomes a recurring party.',
+]
+
 function personaAt(index) {
   const roleSpec = roles[index % roles.length]
   const roleObject = typeof roleSpec === 'string' ? { role: roleSpec } : roleSpec
@@ -273,6 +288,174 @@ function authTokenFor(bot) {
     .replaceAll('{id}', safeTokenPart(bot.id))
     .replaceAll('{name}', safeTokenPart(bot.name.toLowerCase()))
     .replaceAll('{role}', safeTokenPart(bot.role.toLowerCase()))
+}
+
+async function api(bot, endpoint, options = {}) {
+  const token = authTokenFor(bot)
+  if (!token) throw new Error('social coordination requires BETABOT_AUTH_TOKEN_TEMPLATE')
+  const response = await fetch(`${config.backendUrl}${endpoint}`, {
+    method: options.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+  })
+  const text = await response.text()
+  let body = null
+  try {
+    body = text ? JSON.parse(text) : null
+  } catch {
+    body = text
+  }
+  if (!response.ok) throw new Error(`${options.method || 'GET'} ${endpoint} failed ${response.status}: ${text}`)
+  return body
+}
+
+async function optionalCoordination(state, label, fn) {
+  try {
+    return await fn()
+  } catch (error) {
+    state.errors.push(`${label}: ${error.message}`)
+    return null
+  }
+}
+
+function createCoordinatorState(bots) {
+  const pairs = []
+  for (let index = 0; index + 1 < bots.length; index += 2) {
+    pairs.push({
+      id: `thoughtful-pair-${String(pairs.length + 1).padStart(3, '0')}`,
+      a: bots[index].id,
+      b: bots[index + 1].id,
+      reactionId: null,
+      matchId: null,
+      status: 'waiting_for_characters',
+      messagesSeeded: 0,
+    })
+  }
+  return {
+    enabled: config.socialCoordination,
+    backendUrl: config.backendUrl,
+    intervalMs: config.coordinationIntervalMs,
+    pairs,
+    charactersByBotId: {},
+    events: [],
+    errors: [],
+  }
+}
+
+async function runCoordinationPass(bots, state) {
+  if (!state.enabled) return
+  const botsById = new Map(bots.map((bot) => [bot.id, bot]))
+
+  for (const bot of bots) {
+    if (state.charactersByBotId[bot.id]) continue
+    const characters = await optionalCoordination(state, `characters ${bot.id}`, () => api(bot, '/characters'))
+    if (characters?.[0]) {
+      state.charactersByBotId[bot.id] = characters[0]
+      state.events.push({ type: 'character_ready', botId: bot.id, characterId: characters[0].id, at: new Date().toISOString() })
+    }
+  }
+
+  for (const pair of state.pairs) {
+    if (pair.status === 'matched_and_messaged') continue
+    const botA = botsById.get(pair.a)
+    const botB = botsById.get(pair.b)
+    const charA = state.charactersByBotId[pair.a]
+    const charB = state.charactersByBotId[pair.b]
+    if (!botA || !botB || !charA || !charB) continue
+
+    if (!pair.reactionId) {
+      const reaction = await optionalCoordination(state, `reaction ${pair.a}->${pair.b}`, () => api(botA, '/reactions', {
+        method: 'POST',
+        body: {
+          fromCharacterId: charA.id,
+          toCharacterId: charB.id,
+          target: { type: 'card', field: 'hook' },
+          comment: pick(coordinatorOpeners),
+        },
+      }))
+      if (reaction?.id) {
+        pair.reactionId = reaction.id
+        pair.status = 'reaction_sent'
+        state.events.push({ type: 'reaction_sent', pairId: pair.id, from: pair.a, to: pair.b, reactionId: reaction.id, at: new Date().toISOString() })
+      }
+    }
+
+    const incoming = await optionalCoordination(state, `incoming ${pair.b}`, () => api(botB, `/reactions/incoming?characterId=${encodeURIComponent(charB.id)}`))
+    const incomingReaction = incoming?.find((item) => item.fromCharacter?.id === charA.id || item.fromCharacterId === charA.id) || incoming?.find((item) => item.id === pair.reactionId)
+    if (incomingReaction?.id && !pair.matchId) {
+      await optionalCoordination(state, `accept ${pair.b}`, () => api(botB, `/reactions/${incomingReaction.id}/accept`, { method: 'POST' }))
+      pair.status = 'accepted'
+      state.events.push({ type: 'reaction_accepted', pairId: pair.id, by: pair.b, reactionId: incomingReaction.id, at: new Date().toISOString() })
+    }
+
+    const matches = await optionalCoordination(state, `matches ${pair.a}`, () => api(botA, `/matches?characterId=${encodeURIComponent(charA.id)}`))
+    const match = matches?.find((item) => {
+      const ids = [item.characterAId, item.characterBId]
+      return ids.includes(charA.id) && ids.includes(charB.id)
+    })
+    if (match?.id) {
+      pair.matchId = match.id
+      pair.status = 'matched'
+      state.events.push({ type: 'match_found', pairId: pair.id, matchId: match.id, at: new Date().toISOString() })
+    }
+
+    if (pair.matchId && pair.messagesSeeded === 0) {
+      await optionalCoordination(state, `message ${pair.a}`, () => api(botA, `/matches/${pair.matchId}/messages`, {
+        method: 'POST',
+        body: { fromCharacterId: charA.id, body: pick(coordinatorOpeners) },
+      }))
+      await optionalCoordination(state, `message ${pair.b}`, () => api(botB, `/matches/${pair.matchId}/messages`, {
+        method: 'POST',
+        body: { fromCharacterId: charB.id, body: pick(coordinatorReplies) },
+      }))
+      pair.messagesSeeded = 2
+      pair.status = 'matched_and_messaged'
+      state.events.push({ type: 'messages_seeded', pairId: pair.id, matchId: pair.matchId, count: 2, at: new Date().toISOString() })
+    }
+  }
+}
+
+function writeCoordinatorState(state) {
+  if (!state.enabled) return
+  fs.writeFileSync(path.join(config.runDir, 'coordination.json'), JSON.stringify(state, null, 2))
+}
+
+function startSocialCoordinator(bots, state) {
+  if (!state.enabled) return () => {}
+  let stopped = false
+  let running = false
+  let currentRun = null
+  const run = async () => {
+    if (stopped) return
+    if (running) return currentRun
+    running = true
+    currentRun = (async () => {
+      try {
+        await runCoordinationPass(bots, state)
+      } catch (error) {
+        state.errors.push(`coordination pass: ${error.message}`)
+      } finally {
+        writeCoordinatorState(state)
+        running = false
+        currentRun = null
+      }
+    })()
+    return currentRun
+  }
+  run()
+  const timer = setInterval(run, Math.max(10000, config.coordinationIntervalMs))
+  return async () => {
+    stopped = true
+    clearInterval(timer)
+    if (currentRun) await currentRun
+    stopped = false
+    await run()
+    stopped = true
+    writeCoordinatorState(state)
+  }
 }
 
 function locatorForRole(page, label) {
@@ -608,7 +791,7 @@ async function runPool(items, worker, concurrency) {
   await Promise.all(workers)
 }
 
-function writeAnalysis(results, startedAt) {
+function writeAnalysis(results, startedAt, coordinationState) {
   const scores = results.map((result) => result.score).sort((a, b) => a - b)
   const happy = scores.filter((score) => score >= 70).length
   const unhappy = scores.filter((score) => score < 50).length
@@ -630,6 +813,13 @@ function writeAnalysis(results, startedAt) {
       roleCount: cohort.roles.length,
       routeCount: cohort.routes.length,
     },
+    coordination: coordinationState?.enabled ? {
+      enabled: true,
+      backendUrl: coordinationState.backendUrl,
+      pairs: coordinationState.pairs,
+      events: coordinationState.events.length,
+      errors: coordinationState.errors,
+    } : { enabled: false },
     elapsedSeconds,
     happy,
     unhappy,
@@ -646,6 +836,9 @@ function writeAnalysis(results, startedAt) {
 - Cohort source: ${cohort.source}
 - Role definitions: ${cohort.roles.length}
 - Route definitions: ${cohort.routes.length}
+- Social coordination: ${coordinationState?.enabled ? 'enabled' : 'disabled'}
+- Coordinated pairs: ${coordinationState?.enabled ? coordinationState.pairs.length : 0}
+- Coordinated matches messaged: ${coordinationState?.enabled ? coordinationState.pairs.filter((pair) => pair.status === 'matched_and_messaged').length : 0}
 - Bots: ${results.length}
 - App URL: ${config.appUrl}
 - Estimated minutes per bot: ${config.minutes}
@@ -673,6 +866,17 @@ function writeAnalysis(results, startedAt) {
 ## Top Bot Ideas
 ${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} bots: ${idea}`).join('\n') : '- None'}
 
+## Social Coordination
+${coordinationState?.enabled
+    ? [
+      `- Backend URL: ${coordinationState.backendUrl}`,
+      `- Ready characters: ${Object.keys(coordinationState.charactersByBotId).length}`,
+      `- Pair states: ${coordinationState.pairs.map((pair) => `${pair.id}=${pair.status}`).join(', ')}`,
+      `- Coordination events: ${coordinationState.events.length}`,
+      `- Coordination errors: ${coordinationState.errors.length ? coordinationState.errors.slice(0, 20).join('; ') : 'none'}`,
+    ].join('\n')
+    : '- Disabled'}
+
 ## Interpretation
 - Thoughtful mode launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
 - This mode evaluates comprehension and emotional product quality, not backend scale.
@@ -686,6 +890,7 @@ async function main() {
   const startedAt = Date.now()
   mkdirs()
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
+  const coordinationState = createCoordinatorState(bots)
   fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
     config,
     cohort: {
@@ -704,11 +909,16 @@ async function main() {
   const playwright = await requirePlaywright()
   const browser = await playwright.chromium.launch({ headless: config.headless })
   const results = []
-  await runPool(bots, async (bot) => {
-    results.push(await runBot(browser, bot))
-  }, config.concurrency)
-  await browser.close()
-  writeAnalysis(results, startedAt)
+  const stopCoordinator = startSocialCoordinator(bots, coordinationState)
+  try {
+    await runPool(bots, async (bot) => {
+      results.push(await runBot(browser, bot))
+    }, config.concurrency)
+  } finally {
+    await stopCoordinator()
+    await browser.close()
+  }
+  writeAnalysis(results, startedAt, coordinationState)
   console.log(JSON.stringify({
     runDir: config.runDir,
     bots: results.length,

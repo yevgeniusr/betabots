@@ -65,6 +65,18 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 `{id}`, `{name}`, and `{role}` are replaced per bot so sessions do not accidentally share user state.
 
+For social products, enable coordinated Thoughtful mode so browser users can reach each other after they create accounts or profiles. The browser still drives onboarding and discovery, while a background coordinator uses product APIs to pair ready bots, send reactions, accept matches, and seed initial messages when the UI would otherwise leave every new user in an empty cold-start state:
+
+```bash
+BETABOT_THOUGHTFUL_SOCIAL_COORDINATION=true \
+BETABOT_BACKEND_URL=http://localhost:3001/api \
+BETABOT_AUTH_LOCAL_STORAGE_KEY=your.auth.storage.key \
+BETABOT_AUTH_TOKEN_TEMPLATE='dev-token:{id}' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+Coordinated Thoughtful mode writes `coordination.json` with ready characters, pair states, seeded matches, seeded messages, and coordinator errors.
+
 For long-form research, set explicit minimum and maximum session lengths:
 
 ```bash
@@ -207,6 +219,8 @@ Optional auth isolation:
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
 - `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, keywords, and idea rules.
+- `BETABOT_THOUGHTFUL_SOCIAL_COORDINATION=true`: enables background social pairing for Thoughtful browser runs.
+- `BETABOT_BACKEND_URL`: API base URL used by the Thoughtful social coordinator.
 
 Persona and role definition:
 
