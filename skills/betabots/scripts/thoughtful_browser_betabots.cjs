@@ -38,6 +38,7 @@ const config = {
   openrouterBaseUrl: (process.env.BETABOT_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, ''),
   openrouterSiteUrl: process.env.BETABOT_OPENROUTER_SITE_URL || '',
   openrouterAppName: process.env.BETABOT_OPENROUTER_APP_NAME || 'Betabots',
+  visualEvidenceMode: (process.env.BETABOT_VISUAL_EVIDENCE_MODE || process.env.BETABOT_SCREENSHOT_EVIDENCE_MODE || 'audit').toLowerCase(),
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -922,7 +923,7 @@ async function selectByIndex(locator, index) {
   return true
 }
 
-async function tryCreateCharacter(page, bot, log, actions) {
+async function tryCreateCharacter(page, bot, log, actions, captureEvidence = null) {
   const before = await observe(page)
   const lower = before.text.toLowerCase()
   if (!lower.includes('character')) return false
@@ -934,8 +935,10 @@ async function tryCreateCharacter(page, bot, log, actions) {
     actions.push(`clicked ${clicked}`)
     log(`I start creating a character because the app keeps telling me that is the way in.`)
     await wait(1500 + random() * 2500)
+    if (captureEvidence) await captureEvidence('character-form-open', await observe(page))
   } else {
     log(`The character form is already open, so I stop wandering and fill it in.`)
+    if (captureEvidence) await captureEvidence('character-form-already-open', await observe(page))
   }
 
   const modalText = (await observe(page)).text.toLowerCase()
@@ -954,16 +957,19 @@ async function tryCreateCharacter(page, bot, log, actions) {
   await selectByIndex(page.locator('select').nth(2), 1 + Math.floor(random() * 6))
   actions.push(`filled character basics for ${characterName}`)
   log(`I name my character ${characterName}; this makes the product feel personal instead of abstract.`)
+  if (captureEvidence) await captureEvidence('character-basics-filled', await observe(page))
 
   await clickFirst(page, [/next step/i])
   await wait(1000 + random() * 2000)
   await clickFirst(page, [/next step/i])
   await wait(1000 + random() * 2000)
+  if (captureEvidence) await captureEvidence('character-hook-step', await observe(page))
 
   await page.locator('textarea').first().fill(hook, { timeout: 5000 })
   await selectByIndex(page.locator('select').first(), 1 + Math.floor(random() * 4))
   actions.push('filled character hook and vibe')
   log(`I write a hook instead of optimizing it; I am trying to sound like myself.`)
+  if (captureEvidence) await captureEvidence('character-hook-filled', await observe(page))
 
   await clickFirst(page, [/next step/i])
   await wait(1000 + random() * 2000)
@@ -972,6 +978,7 @@ async function tryCreateCharacter(page, bot, log, actions) {
   for (let index = 0; index < Math.min(sliderCount, 4); index += 1) {
     await sliders.nth(index).fill(String(35 + Math.floor(random() * 40))).catch(() => {})
   }
+  if (captureEvidence) await captureEvidence('character-sliders-adjusted', await observe(page))
   await clickFirst(page, [/finalize character/i])
   await wait(2500 + random() * 3500)
 
@@ -986,10 +993,32 @@ async function tryCreateCharacter(page, bot, log, actions) {
   return false
 }
 
-async function screenshot(page, bot, step) {
+function slugifyLabel(label) {
+  return String(label || 'screen')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'screen'
+}
+
+function textHash(text) {
+  let hash = 5381
+  for (const character of String(text || '')) {
+    hash = ((hash << 5) + hash) + character.charCodeAt(0)
+    hash &= 0xffffffff
+  }
+  return (hash >>> 0).toString(16)
+}
+
+function appendJsonl(file, event) {
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.appendFileSync(file, `${JSON.stringify(event)}\n`)
+}
+
+async function screenshot(page, bot, step, label = 'screen') {
   const dir = path.join(config.runDir, 'screenshots', bot.id)
   fs.mkdirSync(dir, { recursive: true })
-  const file = path.join(dir, `${String(step).padStart(2, '0')}.png`)
+  const file = path.join(dir, `${String(step).padStart(3, '0')}-${slugifyLabel(label)}.png`)
   await page.screenshot({ path: file, fullPage: true }).catch(() => {})
   return file
 }
@@ -1164,7 +1193,7 @@ function isMatchesScreen(text) {
   return text.includes('matches') && (text.includes('start the conversation') || text.includes('message ') || text.includes('select a match'))
 }
 
-async function tryDiscoverReaction(page, bot, log, actions, stats) {
+async function tryDiscoverReaction(page, bot, log, actions, stats, captureEvidence = null) {
   const observation = await observe(page)
   const text = observation.text.toLowerCase()
   if (!isDiscoverScreen(text)) return false
@@ -1176,6 +1205,7 @@ async function tryDiscoverReaction(page, bot, log, actions, stats) {
     actions.push(`clicked ${liked}`)
     log(`I choose to like this profile because browsing without signaling interest would not help me meet anyone.`)
     await wait(800 + random() * 1600)
+    if (captureEvidence) await captureEvidence('like-dialog-open', await observe(page))
 
     const fallbackComment = pick([
       'Your hook feels like it could turn into a real table conversation.',
@@ -1190,6 +1220,7 @@ async function tryDiscoverReaction(page, bot, log, actions, stats) {
     if (await textarea.isVisible({ timeout: 1500 }).catch(() => false)) {
       await textarea.fill(comment).catch(() => {})
       log(`I add a short note instead of sending a silent like: "${comment}"`)
+      if (captureEvidence) await captureEvidence('like-note-filled', await observe(page))
     }
     const sent = await clickFirst(page, [/send like/i, /^send$/i])
     if (sent) {
@@ -1197,6 +1228,7 @@ async function tryDiscoverReaction(page, bot, log, actions, stats) {
       stats.likes += 1
       stats.meaningfulSocialActions += 1
       await wait(1200 + random() * 2400)
+      if (captureEvidence) await captureEvidence('like-sent', await observe(page))
       return true
     }
   }
@@ -1212,7 +1244,7 @@ async function tryDiscoverReaction(page, bot, log, actions, stats) {
   return false
 }
 
-async function trySendMatchMessage(page, bot, log, actions, stats) {
+async function trySendMatchMessage(page, bot, log, actions, stats, captureEvidence = null) {
   let observation = await observe(page)
   let text = observation.text.toLowerCase()
   if (!isMatchesScreen(text)) return false
@@ -1223,6 +1255,7 @@ async function trySendMatchMessage(page, bot, log, actions, stats) {
     actions.push('opened a match thread')
     log(`I open a match because the point of matching is to see whether there is a real conversation.`)
     await wait(1000 + random() * 1800)
+    if (captureEvidence) await captureEvidence('match-thread-opened', await observe(page))
   }
 
   const textarea = page.locator('textarea[placeholder^="Message"]').last()
@@ -1242,6 +1275,7 @@ async function trySendMatchMessage(page, bot, log, actions, stats) {
     log(`I tried to message this match, but the message box disappeared before I could type.`)
     return false
   }
+  if (captureEvidence) await captureEvidence('match-message-composed', await observe(page))
   await page.keyboard.press('Enter').catch(async () => {
     await page.locator('form button[type="submit"]').last().click({ timeout: 2000 }).catch(() => {})
   })
@@ -1250,10 +1284,11 @@ async function trySendMatchMessage(page, bot, log, actions, stats) {
   stats.meaningfulSocialActions += 1
   log(`I send a message because a match without a next step would feel unfinished: "${body}"`)
   await wait(1200 + random() * 2400)
+  if (captureEvidence) await captureEvidence('match-message-sent', await observe(page))
   return true
 }
 
-async function tryCuriosityAction(page, bot, log, actions, stats, force = false) {
+async function tryCuriosityAction(page, bot, log, actions, stats, force = false, captureEvidence = null) {
   if (!force && random() > config.curiosityChance) return false
   if (stats.curiosityActions >= config.maxCuriosityActions) return false
 
@@ -1285,6 +1320,7 @@ async function tryCuriosityAction(page, bot, log, actions, stats, force = false)
       stats.meaningfulSocialActions += lower.includes('match') || lower.includes('discover') || lower.includes('table') ? 1 : 0
       log(`Curiosity gets me to try "${text || label}" instead of repeating the same path.`)
       await wait(900 + random() * 2200)
+      if (captureEvidence) await captureEvidence('curiosity-click', await observe(page))
       return true
     }
   }
@@ -1299,6 +1335,7 @@ async function tryCuriosityAction(page, bot, log, actions, stats, force = false)
       stats.curiosityActions += 1
       log(`Curiosity makes me change a filter/config option to see whether the product reacts.`)
       await wait(900 + random() * 2200)
+      if (captureEvidence) await captureEvidence('curiosity-select-changed', await observe(page))
       return true
     }
   }
@@ -1312,6 +1349,7 @@ async function tryCuriosityAction(page, bot, log, actions, stats, force = false)
     stats.curiosityActions += 1
     log(`Curiosity makes me adjust a slider to understand what control I have.`)
     await wait(900 + random() * 2200)
+    if (captureEvidence) await captureEvidence('curiosity-slider-adjusted', await observe(page))
     return true
   }
 
@@ -1342,6 +1380,8 @@ async function runBot(browser, bot, runtime = {}) {
   const betabookMoments = []
   const destinyMoments = []
   const screenCounts = new Map()
+  const evidenceFile = path.join(config.runDir, 'evidence', `${bot.id}.jsonl`)
+  const liveRawFile = path.join(config.runDir, 'live', `${bot.id}.md`)
   const stats = {
     repeatedScreens: 0,
     loopHelpRequests: 0,
@@ -1358,26 +1398,56 @@ async function runBot(browser, bot, runtime = {}) {
   let emptyCharacterViews = 0
   let createdCharacter = false
   let lastScreenshot = ''
+  let lastObservation = null
 
-  const log = (text) => notes.push(`- T+${elapsed(startedAt)} ${text}`)
+  fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
+  fs.writeFileSync(liveRawFile, `# ${bot.id} — Live Thoughtful Browser Storyline\n\n## Raw Journey\n`)
+
   const evidenceRef = () => lastScreenshot ? ` [screen: ${lastScreenshot}]` : ''
-  const captureScreenshot = async (label) => {
-    const file = await screenshot(page, bot, step++)
+  const log = (text, options = {}) => {
+    const shouldAttachEvidence = !options.noEvidence && lastScreenshot && !String(text).includes('[screen:')
+    const line = `- T+${elapsed(startedAt)} ${shouldAttachEvidence ? `${text}${evidenceRef()}` : text}`
+    notes.push(line)
+    fs.appendFileSync(liveRawFile, `${line}\n`)
+    appendJsonl(evidenceFile, {
+      type: options.type || 'log',
+      at: new Date().toISOString(),
+      elapsed: elapsed(startedAt),
+      text,
+      screenshot: lastScreenshot || null,
+      screenHash: lastObservation ? textHash(lastObservation.text) : null,
+    })
+  }
+  const captureScreenshot = async (label, observation = lastObservation) => {
+    if (config.visualEvidenceMode === 'off') return ''
+    const file = await screenshot(page, bot, step++, label)
     lastScreenshot = path.relative(config.runDir, file)
-    log(`Screenshot evidence (${label}): ${lastScreenshot}`)
+    lastObservation = observation || lastObservation
+    appendJsonl(evidenceFile, {
+      type: 'screenshot',
+      at: new Date().toISOString(),
+      elapsed: elapsed(startedAt),
+      label,
+      screenshot: lastScreenshot,
+      url: page.url(),
+      title: observation?.title || '',
+      screenHash: observation ? textHash(observation.text) : null,
+      visibleText: observation?.text ? observation.text.slice(0, 1400) : '',
+    })
+    log(`Screenshot evidence (${label}): ${lastScreenshot}`, { type: 'screenshot-note', noEvidence: true })
     return file
   }
   const recordThought = (thought) => {
     thoughts.push(thought)
-    log(`I think: ${thought}${evidenceRef()}`)
+    log(`I think: ${thought}`, { type: 'thought' })
   }
   const recordIdea = (idea) => {
     ideas.push(idea.replace(/^Idea:\s*/, ''))
-    log(`${idea}${evidenceRef()}`)
+    log(`${idea}`, { type: 'idea' })
   }
   const recordOpinion = (opinion) => {
     opinions.push(opinion)
-    log(`My reaction: ${opinion}${evidenceRef()}`)
+    log(`My reaction: ${opinion}`, { type: 'reaction' })
   }
   const recordScreenQuality = (observation) => {
     const fingerprint = screenFingerprint(observation)
@@ -1467,7 +1537,7 @@ async function runBot(browser, bot, runtime = {}) {
         log(`I follow a hunch and check ${nudge.route}.`)
         const destinyObservation = await observe(page)
         recordScreenQuality(destinyObservation)
-        await captureScreenshot(`destiny ${nudge.route}`)
+        await captureScreenshot(`destiny ${nudge.route}`, destinyObservation)
         log(`After following Destiny to ${nudge.route}, I see: ${destinyObservation.text}`)
       }
     }
@@ -1488,7 +1558,7 @@ async function runBot(browser, bot, runtime = {}) {
     await wait(2500 + random() * 5000)
     let observation = await observe(page)
     recordScreenQuality(observation)
-    await captureScreenshot('arrival')
+    await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
     await recordReflection(observation, 'arrival')
 
@@ -1518,7 +1588,7 @@ async function runBot(browser, bot, runtime = {}) {
       await wait(2500 + random() * 7000)
       observation = await observe(page)
       recordScreenQuality(observation)
-      await captureScreenshot('exploration')
+      await captureScreenshot('exploration', observation)
       log(`I now see: ${observation.text}`)
       await recordReflection(observation, 'exploration')
 
@@ -1528,7 +1598,7 @@ async function runBot(browser, bot, runtime = {}) {
         const asked = await askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation)
         if (asked) {
           trust -= 4
-          await tryCuriosityAction(page, bot, log, actions, stats, true)
+          await tryCuriosityAction(page, bot, log, actions, stats, true, captureScreenshot)
         }
       }
       const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
@@ -1538,7 +1608,7 @@ async function runBot(browser, bot, runtime = {}) {
       if (lower.includes('start with a character') || lower.includes('character required')) emptyCharacterViews += 1
 
       if (!createdCharacter && emptyCharacterViews > 0) {
-        createdCharacter = await tryCreateCharacter(page, bot, log, actions)
+        createdCharacter = await tryCreateCharacter(page, bot, log, actions, captureScreenshot)
         if (createdCharacter) {
           betabookPost(runtime.betabookState, {
             authorId: bot.id,
@@ -1551,7 +1621,7 @@ async function runBot(browser, bot, runtime = {}) {
           trust += 8
           observation = await observe(page)
           recordScreenQuality(observation)
-          await captureScreenshot('character-created')
+          await captureScreenshot('character-created', observation)
           log(`After creating a character, I see: ${observation.text}`)
           await recordReflection(observation, 'character-created')
         } else if (emptyCharacterViews >= 2) {
@@ -1560,13 +1630,13 @@ async function runBot(browser, bot, runtime = {}) {
         }
       }
 
-      const actedSocially = await trySendMatchMessage(page, bot, log, actions, stats)
-        || await tryDiscoverReaction(page, bot, log, actions, stats)
-        || await tryCuriosityAction(page, bot, log, actions, stats)
+      const actedSocially = await trySendMatchMessage(page, bot, log, actions, stats, captureScreenshot)
+        || await tryDiscoverReaction(page, bot, log, actions, stats, captureScreenshot)
+        || await tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot)
       if (actedSocially) {
         observation = await observe(page)
         recordScreenQuality(observation)
-        await captureScreenshot('post-social-action')
+        await captureScreenshot('post-social-action', observation)
         log(`After the social action, I see: ${observation.text}`)
       } else {
         const reserveClicked = await clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i])
@@ -1577,7 +1647,7 @@ async function runBot(browser, bot, runtime = {}) {
           await wait(2500 + random() * 5500)
           observation = await observe(page)
           recordScreenQuality(observation)
-          await captureScreenshot(`post-${reserveClicked}`)
+          await captureScreenshot(`post-${reserveClicked}`, observation)
           log(`After trying "${reserveClicked}", I see: ${observation.text}`)
         }
       }
@@ -1623,6 +1693,7 @@ async function runBot(browser, bot, runtime = {}) {
 - Emotional baseline: ${bot.emotionalBaseline}
 - Technical comfort: ${bot.technicalComfort}
 - Estimated session duration: ${bot.attentionSpanMinutes} minutes
+- Visual evidence mode: ${config.visualEvidenceMode}
 
 ## Raw Journey
 ${notes.join('\n')}
@@ -1651,6 +1722,12 @@ ${notes.join('\n')}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
+
+## Visual Evidence
+- Live raw log: ${path.relative(config.runDir, liveRawFile)}
+- Evidence manifest: ${path.relative(config.runDir, evidenceFile)}
+- Screenshot folder: ${path.relative(config.runDir, path.join(config.runDir, 'screenshots', bot.id))}
+- Screenshots captured: ${step - 1}
 
 ## Errors
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
