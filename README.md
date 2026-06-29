@@ -73,6 +73,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
 The runner aggregates first-person thoughts and ideas into `analysis.md` and `summary.json`.
+Thoughtful sessions keep thinking tied to product use: each observation can produce a thought, first reaction, similarity/comparison, or idea, but the runner should not spend most of a session in reflection-only mode.
 
 ## Repository Layout
 

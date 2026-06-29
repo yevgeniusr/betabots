@@ -251,6 +251,33 @@ function think(bot, observation, phase) {
   return `I scan for the next obvious action and whether the page gives me enough confidence to keep going.`
 }
 
+function opinionFrom(bot, observation) {
+  const text = observation.text.toLowerCase()
+  if (!observation.text) return `My first reaction is uncertainty because I cannot read enough of the product yet.`
+  if (text.includes('compatibility read') || text.includes('why this could work')) {
+    return `My first reaction is stronger trust because the app is explaining the match instead of asking me to guess.`
+  }
+  if (text.includes('no new likes') || text.includes('no matches yet')) {
+    return `My reaction is mild disappointment, but I can keep going if the page gives me a concrete next step.`
+  }
+  if (text.includes('tabletop marketplace') || text.includes('book open tables')) {
+    return `This feels more real than a normal dating app because I can imagine actually meeting at a table.`
+  }
+  if (text.includes('create') && text.includes('character')) {
+    return `I compare this to making a dating profile; it feels more playful, but I need it to be quick.`
+  }
+  if (text.includes('discover')) {
+    return `I am judging whether this person feels compatible with my table style, not just whether the card looks good.`
+  }
+  if (bot.role.includes('privacy')) {
+    return `I am checking whether I can participate without exposing too much too early.`
+  }
+  if (bot.role.includes('new D&D')) {
+    return `I am looking for beginner signals so I do not accidentally join a table that expects expertise.`
+  }
+  return `My reaction is to look for a reason to take the next step rather than browse passively.`
+}
+
 function ideaFrom(bot, observation) {
   const text = observation.text.toLowerCase()
   if (text.includes('beginner')) return 'Idea: make beginner-friendly safety cues visible before asking me to commit.'
@@ -280,6 +307,7 @@ async function runBot(browser, bot) {
   const errors = []
   const ideas = []
   const thoughts = []
+  const opinions = []
   let step = 1
   let value = 0
   let trust = 45
@@ -295,6 +323,10 @@ async function runBot(browser, bot) {
     ideas.push(idea.replace(/^Idea:\s*/, ''))
     log(idea)
   }
+  const recordOpinion = (opinion) => {
+    opinions.push(opinion)
+    log(`My reaction: ${opinion}`)
+  }
 
   try {
     log(`I arrive as ${bot.role}. My past: ${bot.past}`)
@@ -306,10 +338,11 @@ async function runBot(browser, bot) {
     await screenshot(page, bot, step++)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
     recordThought(think(bot, observation, 'arrival'))
+    recordOpinion(opinionFrom(bot, observation))
     recordIdea(ideaFrom(bot, observation))
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
-    const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 3), 8, 45)
+    const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
     const routes = [
       { labels: [/get started/i, /start/i, /try/i, /demo/i, /discover/i], fallback: '/discover' },
       { labels: [/create/i, /profile/i, /character/i], fallback: '/profile' },
@@ -317,11 +350,13 @@ async function runBot(browser, bot) {
       { labels: [/likes/i, /matches/i], fallback: '/likes-you' },
       { labels: [/matches/i, /chat/i], fallback: '/matches' },
       { labels: [/table/i, /marketplace/i, /sessions/i, /reserve/i], fallback: '/tabletop' },
+      { labels: [/discover/i, /browse/i, /find/i], fallback: '/discover' },
+      { labels: [/profile/i, /character/i], fallback: '/profile' },
     ]
 
     for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs; move += 1) {
       const remainingMs = sessionMs - (Date.now() - startedAt)
-      await wait(Math.min(remainingMs, 7000 + random() * 16000))
+      await wait(Math.min(remainingMs, 6000 + random() * 12000))
       if (Date.now() - startedAt >= sessionMs) break
       const route = routes[move % routes.length]
       const clicked = await clickFirst(page, route.labels)
@@ -342,6 +377,7 @@ async function runBot(browser, bot) {
       log(`I now see: ${observation.text}`)
       const thought = think(bot, observation, 'exploration')
       recordThought(thought)
+      recordOpinion(opinionFrom(bot, observation))
       recordIdea(ideaFrom(bot, observation))
 
       const lower = observation.text.toLowerCase()
@@ -358,6 +394,9 @@ async function runBot(browser, bot) {
           observation = await observe(page)
           await screenshot(page, bot, step++)
           log(`After creating a character, I see: ${observation.text}`)
+          recordThought(think(bot, observation, 'character-created'))
+          recordOpinion(opinionFrom(bot, observation))
+          recordIdea(ideaFrom(bot, observation))
         } else if (emptyCharacterViews >= 2) {
           trust -= 8
           log(`I am looping on the character requirement and starting to lose patience.`)
@@ -368,18 +407,8 @@ async function runBot(browser, bot) {
       if (reserveClicked) {
         actions.push(`clicked ${reserveClicked}`)
         log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
-        await wait(3000 + random() * 7000)
+        await wait(2500 + random() * 5500)
       }
-    }
-
-    while (Date.now() - startedAt < sessionMs) {
-      const remainingMs = sessionMs - (Date.now() - startedAt)
-      await wait(Math.min(remainingMs, 12000 + random() * 18000))
-      if (Date.now() - startedAt >= sessionMs) break
-      observation = await observe(page)
-      const thought = think(bot, observation, 'linger')
-      thoughts.push(thought)
-      log(`I linger instead of rushing. I think: ${thought}`)
     }
   } catch (error) {
     errors.push(error.message)
@@ -427,6 +456,7 @@ ${notes.join('\n')}
 - Character gate loops: ${emptyCharacterViews}
 - Ideas expressed: ${ideas.length}
 - Thoughts expressed: ${thoughts.length}
+- Opinions expressed: ${opinions.length}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
@@ -435,7 +465,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, attentionSpanMinutes: bot.attentionSpanMinutes }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, attentionSpanMinutes: bot.attentionSpanMinutes }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -497,6 +527,7 @@ function writeAnalysis(results, startedAt) {
 - Screenshots captured: ${results.reduce((sum, result) => sum + result.screenshots, 0)}
 - UI actions attempted: ${results.reduce((sum, result) => sum + result.actions, 0)}
 - Thoughts expressed: ${results.reduce((sum, result) => sum + result.thoughts, 0)}
+- Opinions expressed: ${results.reduce((sum, result) => sum + result.opinions, 0)}
 - Ideas expressed: ${results.reduce((sum, result) => sum + (result.ideas || []).length, 0)}
 - Error bots: ${errorBots.length}
 

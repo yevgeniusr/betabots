@@ -21,6 +21,7 @@ Use thoughtful mode when fast API traffic is not enough. It answers:
 - Prefer visible UI affordances over direct route jumps.
 - Save screenshots as supporting evidence, not as the primary artifact.
 - End sessions for human reasons: boredom, confusion, trust failure, success, curiosity, anxiety, or enough value.
+- Keep thinking attached to product use. A bot should form first impressions, reactions, comparisons, and ideas after seeing or doing something, not sit in a long reflection-only loop.
 
 ## Time
 
