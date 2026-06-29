@@ -74,6 +74,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 The runner aggregates first-person thoughts and ideas into `analysis.md` and `summary.json`.
 Thoughtful sessions keep thinking tied to product use: each observation can produce a thought, first reaction, similarity/comparison, or idea, but the runner should not spend most of a session in reflection-only mode.
+The default thoughtful cohort includes players, DMs, venue operators, board game cafe owners, local game stores, paid GMs, meetup organizers, convention organizers, school clubs, accessibility-focused hosts, corporate event buyers, and tourism experience operators.
 
 ## Repository Layout
 

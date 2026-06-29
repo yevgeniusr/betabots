@@ -27,6 +27,18 @@ const roles = [
   'romance-curious roleplayer',
   'friendship-first table seeker',
   'venue organizer evaluating demand',
+  'board game cafe owner filling weeknights',
+  'friendly local game store owner planning events',
+  'professional DM selling paid one-shots',
+  'homebrew campaign DM recruiting committed players',
+  'community meetup organizer coordinating strangers',
+  'cafe owner testing tabletop nights',
+  'board game publisher demoing new titles',
+  'convention organizer checking event demand',
+  'school club organizer protecting younger players',
+  'corporate team-building host sourcing GMs',
+  'accessibility-conscious event host',
+  'tourism experience operator packaging RPG nights',
 ]
 const names = ['Mira', 'Sol', 'Niko', 'Tara', 'Ren', 'Ari', 'Vale', 'June', 'Rook', 'Iris']
 const baselines = ['curious', 'guarded', 'skeptical', 'hopeful', 'impatient', 'playful']
@@ -64,6 +76,9 @@ function personaAt(index) {
       'I found it while searching for D&D dating alternatives.',
       'I saw a local tabletop post and wanted to see if it was real.',
       'I am bored at night and wondering if I can find people who get my hobby.',
+      'I am looking for a way to fill slow nights with tabletop events.',
+      'I heard tabletop meetups might bring repeat customers to venues.',
+      'I need a better way to find reliable players for hosted games.',
     ]),
     goal: goalFor(role),
     emotionalBaseline: pick(baselines),
@@ -73,6 +88,17 @@ function personaAt(index) {
 }
 
 function pastFor(role) {
+  if (role.includes('cafe owner')) return 'My cafe is full on weekends but dead on weeknights, and I need events that bring respectful repeat customers.'
+  if (role.includes('game store')) return 'I run a local game store and want events that sell seats without creating scheduling chaos.'
+  if (role.includes('professional DM')) return 'I run paid games and need players who understand expectations, price, tone, and attendance.'
+  if (role.includes('homebrew campaign DM')) return 'I have a campaign ready, but flaky players have killed previous groups.'
+  if (role.includes('community meetup')) return 'I coordinate strangers and worry about safety, no-shows, and whether newcomers feel welcome.'
+  if (role.includes('publisher')) return 'I need to demo games to the right crowd and prove people will show up before I commit staff time.'
+  if (role.includes('convention')) return 'I plan events months ahead and need demand signals, waitlists, capacity, and host reliability.'
+  if (role.includes('school club')) return 'I organize a school club and care about age-appropriate safety and moderation.'
+  if (role.includes('corporate')) return 'I book team-building sessions and need professional hosts, predictable logistics, and invoices.'
+  if (role.includes('accessibility')) return 'I host inclusive events and need accessibility details to be visible before people book.'
+  if (role.includes('tourism')) return 'I package local experiences and want RPG nights tourists can book with confidence.'
   if (role.includes('privacy')) return 'I have had weird experiences in online communities, so I look for safety cues before engaging.'
   if (role.includes('new D&D')) return 'I have only played a few sessions and worry about joining a table that expects too much.'
   if (role.includes('GM')) return 'I have run campaigns before, but unreliable players burned me out.'
@@ -82,6 +108,17 @@ function pastFor(role) {
 }
 
 function goalFor(role) {
+  if (role.includes('cafe owner')) return 'See whether this can turn quiet cafe nights into reliable tabletop bookings.'
+  if (role.includes('game store')) return 'Check whether events can be listed, filled, and managed without manual spreadsheet work.'
+  if (role.includes('professional DM')) return 'Understand whether paid sessions communicate value, expectations, and player fit.'
+  if (role.includes('homebrew campaign DM')) return 'Find whether I can recruit committed players with compatible playstyle.'
+  if (role.includes('community meetup')) return 'Evaluate safety, newcomer flow, waitlists, and no-show risk.'
+  if (role.includes('publisher')) return 'See if demo tables can reach players who fit the game.'
+  if (role.includes('convention')) return 'Look for capacity planning, demand signals, host controls, and waitlists.'
+  if (role.includes('school club')) return 'Check if safety, moderation, and age-appropriate controls are obvious.'
+  if (role.includes('corporate')) return 'See whether I can source professional tabletop events for a group.'
+  if (role.includes('accessibility')) return 'Verify whether accessibility and comfort details appear before booking.'
+  if (role.includes('tourism')) return 'Assess whether a tourist could confidently book a local RPG night.'
   if (role.includes('privacy')) return 'Understand whether I can browse without oversharing.'
   if (role.includes('new D&D')) return 'Find signs that beginners are welcome and safe.'
   if (role.includes('GM')) return 'See whether profiles reveal useful table compatibility.'
@@ -254,6 +291,14 @@ function think(bot, observation, phase) {
 function opinionFrom(bot, observation) {
   const text = observation.text.toLowerCase()
   if (!observation.text) return `My first reaction is uncertainty because I cannot read enough of the product yet.`
+  if (bot.role.includes('owner') || bot.role.includes('organizer') || bot.role.includes('DM') || bot.role.includes('host')) {
+    if (text.includes('tabletop marketplace') || text.includes('book open tables') || text.includes('waitlist')) {
+      return `As an organizer, I immediately look for capacity, demand, waitlists, pricing, and whether this can reduce manual coordination.`
+    }
+    if (text.includes('organizer') || text.includes('venue') || text.includes('session')) {
+      return `My first reaction is business-minded: I need proof this can produce reliable attendance, not just browsing.`
+    }
+  }
   if (text.includes('compatibility read') || text.includes('why this could work')) {
     return `My first reaction is stronger trust because the app is explaining the match instead of asking me to guess.`
   }
@@ -280,6 +325,11 @@ function opinionFrom(bot, observation) {
 
 function ideaFrom(bot, observation) {
   const text = observation.text.toLowerCase()
+  if (bot.role.includes('owner') || bot.role.includes('organizer') || bot.role.includes('DM') || bot.role.includes('host')) {
+    if (text.includes('tabletop marketplace') || text.includes('waitlist') || text.includes('bookable')) return 'Idea: show organizer-facing demand, capacity, waitlist, deposit, and no-show controls from the marketplace.'
+    if (text.includes('organizer') || text.includes('venue')) return 'Idea: give venues and GMs a clear organizer path with setup steps, pricing, and moderation expectations.'
+    return 'Idea: explain how a host turns player interest into reliable attendance and revenue.'
+  }
   if (text.includes('beginner')) return 'Idea: make beginner-friendly safety cues visible before asking me to commit.'
   if (text.includes('empty') || text.includes('no ')) return 'Idea: when nothing is available, show a concrete next step instead of only saying it is empty.'
   if (text.includes('match')) return 'Idea: explain why a match is compatible, not only that it happened.'
@@ -350,6 +400,8 @@ async function runBot(browser, bot) {
       { labels: [/likes/i, /matches/i], fallback: '/likes-you' },
       { labels: [/matches/i, /chat/i], fallback: '/matches' },
       { labels: [/table/i, /marketplace/i, /sessions/i, /reserve/i], fallback: '/tabletop' },
+      { labels: [/organizer/i, /host/i, /venue/i, /request access/i], fallback: '/organizer' },
+      { labels: [/tables/i, /sessions/i, /venues/i], fallback: '/tables' },
       { labels: [/discover/i, /browse/i, /find/i], fallback: '/discover' },
       { labels: [/profile/i, /character/i], fallback: '/profile' },
     ]
