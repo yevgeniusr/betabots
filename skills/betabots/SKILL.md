@@ -15,7 +15,7 @@ Betabots may open the UI, click buttons, send messages, wait for other users, re
 
 Use one of two explicit modes:
 
-1. **Fast mode**: API-level synthetic-live simulation. Use this to populate products with dozens or hundreds of users, test social graphs, stress backend contracts, and discover systemic failures quickly. Fast bots can create users, profiles, reactions, matches, messages, bookings, and return sessions through real product APIs, but they do not judge visual UI quality.
+1. **Fast mode**: API-level synthetic-live simulation with actual LLM-generated bot minds. Use this to populate products with dozens or hundreds of users, test social graphs, stress backend contracts, and discover systemic failures quickly. Fast bots can create users, profiles, reactions, matches, messages, bookings, and return sessions through real product APIs, but they do not judge visual UI quality.
 2. **Thoughtful mode**: real-browser human-speed sessions with an actual LLM mind layer by default. Use this when the question is comprehension, trust, emotion, taste, copy, interaction quality, onboarding, and whether the product feels usable to an actual person. Thoughtful bots open the UI in real browsers, pause, read, think, click, type, hesitate, take screenshots, and save first-person raw thoughts.
 
 Default rule:
@@ -23,6 +23,7 @@ Default rule:
 - Run **fast** first when the product needs population or backend confidence.
 - Run **thoughtful** after fast mode is clean, because thoughtful sessions are slower and should not waste human-like time on basic API crashes.
 - Do not replace thoughtful mode with fast metrics. A happy API bot is not proof that a human understood the product.
+- Do not implement either mode as fixed script text. Fast mode may batch LLM calls for speed, but bot motivations, messages, and lifecycle choices must be LLM-generated unless `BETABOT_LLM_PROVIDER=none` is explicitly used for runner debugging.
 
 ## Workflow
 
@@ -60,7 +61,7 @@ Use these bundled scripts from the plugin root:
 
 - `skills/betabots/scripts/generate_cohort.py`: create reusable persona cohorts.
 - `skills/betabots/scripts/analyze_sessions.py`: aggregate raw Markdown sessions.
-- `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level coordinated social lifecycle simulation against an app with bearer-token auth.
+- `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level coordinated social lifecycle simulation with batched LLM mind generation against an app with bearer-token auth.
 - `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with LLM-backed thoughts, screenshots, first-person raw logs, optional Betabook social board via `BETABOT_BETABOOK=true`, and optional Destiny master-plan orchestration via `BETABOT_DESTINY=true`.
 
 Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.

@@ -2,6 +2,8 @@
 
 Use API-level simulation when the goal is to make a social or marketplace product behave as if people are present.
 
+Fast mode is still LLM-backed. The speed comes from batching model calls and executing through APIs, not from replacing users with fixed scripts.
+
 ## Requirements
 
 - A local or staging backend URL.
@@ -26,6 +28,30 @@ The default fast runner is coordinated. It is not a single-session click-through
 11. **Analysis**: compute happiness from identity, matching, messages, table activation, dates, groups, retention, trust, errors, and ghosting.
 
 Set `BETABOT_SESSIONS=12` to run the full lifecycle. Smaller values stop at the corresponding lifecycle phase.
+
+## LLM Mind Layer
+
+Fast mode creates batched LLM-generated minds before lifecycle execution. Each generated mind includes character details, motivation, opener text, chat replies, flirt/roleplay lines, invitation text, ghosting likelihood, second-date likelihood, organizer motivation, retention reason, and churn reason.
+
+Provider settings match thoughtful mode:
+
+```bash
+BETABOT_LLM_PROVIDER=codex \
+BETABOT_LLM_BATCH_SIZE=25 \
+node skills/betabots/scripts/multi_session_betabots.cjs
+```
+
+Supported knobs:
+
+- `BETABOT_LLM_PROVIDER=codex|openrouter|none`
+- `BETABOT_LLM_MODEL`
+- `BETABOT_LLM_BATCH_SIZE`
+- `BETABOT_LLM_TIMEOUT_MS`
+- `BETABOT_LLM_MAX_CALLS`
+- `BETABOT_CODEX_COMMAND`
+- `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`
+
+Use `BETABOT_LLM_PROVIDER=none` only to debug the runner itself. It is not a valid product-quality betabot run.
 
 ## Recommended Scale
 

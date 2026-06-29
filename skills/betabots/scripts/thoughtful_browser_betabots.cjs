@@ -208,6 +208,15 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
 const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
 
+function publicConfig() {
+  const { openrouterApiKey, authTokenTemplate, ...safeConfig } = config
+  return {
+    ...safeConfig,
+    authTokenTemplate: authTokenTemplate ? '[redacted]' : '',
+    openrouterApiKey: openrouterApiKey ? '[redacted]' : '',
+  }
+}
+
 const llmStats = {
   provider: config.llmProvider,
   model: config.llmModel || null,
@@ -1651,7 +1660,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
   }
   const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
   const summary = {
-    config,
+    config: publicConfig(),
     cohort: {
       appName: cohort.appName,
       source: cohort.source,
@@ -1783,7 +1792,7 @@ async function main() {
   const destinyState = createDestinyState(bots)
   await initializeDestinyMasterPlan(bots, destinyState, betabookState)
   fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
-    config,
+    config: publicConfig(),
     cohort: {
       appName: cohort.appName,
       source: cohort.source,

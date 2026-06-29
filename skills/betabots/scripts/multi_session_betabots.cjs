@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 const fs = require('node:fs')
 const path = require('node:path')
+const { spawn } = require('node:child_process')
+const os = require('node:os')
 
 const config = {
   count: Number(process.env.BETABOT_COUNT || 80),
@@ -13,6 +15,16 @@ const config = {
   seed: Number(process.env.BETABOT_SEED || 20260629),
   phaseDelayMs: Number(process.env.BETABOT_PHASE_DELAY_MS || 0),
   minChatRounds: Number(process.env.BETABOT_MIN_CHAT_ROUNDS || 4),
+  llmProvider: (process.env.BETABOT_LLM_PROVIDER || 'codex').toLowerCase(),
+  llmModel: process.env.BETABOT_LLM_MODEL || '',
+  llmMaxCalls: Number(process.env.BETABOT_LLM_MAX_CALLS || 500),
+  llmTimeoutMs: Number(process.env.BETABOT_LLM_TIMEOUT_MS || 90000),
+  llmBatchSize: Number(process.env.BETABOT_LLM_BATCH_SIZE || 25),
+  codexCommand: process.env.BETABOT_CODEX_COMMAND || 'codex',
+  openrouterApiKey: process.env.OPENROUTER_API_KEY || process.env.BETABOT_OPENROUTER_API_KEY || '',
+  openrouterBaseUrl: (process.env.BETABOT_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, ''),
+  openrouterSiteUrl: process.env.BETABOT_OPENROUTER_SITE_URL || '',
+  openrouterAppName: process.env.BETABOT_OPENROUTER_APP_NAME || 'Betabots',
 }
 
 const races = ['Human', 'Elf', 'Dwarf', 'Halfling', 'Tiefling', 'Dragonborn', 'Half-Elf', 'Gnome']
@@ -97,6 +109,173 @@ const random = mulberry32(config.seed)
 const pick = (items) => items[Math.floor(random() * items.length)]
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+function publicConfig() {
+  const { openrouterApiKey, token, ...safeConfig } = config
+  return {
+    ...safeConfig,
+    token: token ? '[redacted]' : '',
+    openrouterApiKey: openrouterApiKey ? '[redacted]' : '',
+  }
+}
+
+const llmStats = {
+  provider: config.llmProvider,
+  model: config.llmModel || null,
+  calls: 0,
+  failures: 0,
+  fallbacks: 0,
+  tasks: {},
+  errors: [],
+}
+
+function runProcess(command, args, input, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    let stdout = ''
+    let stderr = ''
+    const timer = setTimeout(() => {
+      child.kill('SIGTERM')
+      reject(new Error(`${command} timed out after ${timeoutMs}ms`))
+    }, timeoutMs)
+    child.stdout.on('data', (chunk) => { stdout += chunk.toString() })
+    child.stderr.on('data', (chunk) => { stderr += chunk.toString() })
+    child.on('error', (error) => {
+      clearTimeout(timer)
+      reject(error)
+    })
+    child.on('close', (code) => {
+      clearTimeout(timer)
+      if (code === 0) {
+        resolve({ stdout, stderr })
+      } else {
+        reject(new Error(`${command} exited ${code}: ${stderr || stdout}`))
+      }
+    })
+    child.stdin.end(input)
+  })
+}
+
+function extractJson(text) {
+  const trimmed = String(text || '').trim()
+  if (!trimmed) throw new Error('empty LLM response')
+  try {
+    return JSON.parse(trimmed)
+  } catch {}
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fenced) return JSON.parse(fenced[1])
+  const start = trimmed.indexOf('{')
+  const end = trimmed.lastIndexOf('}')
+  if (start >= 0 && end > start) return JSON.parse(trimmed.slice(start, end + 1))
+  throw new Error(`could not parse JSON from LLM response: ${trimmed.slice(0, 200)}`)
+}
+
+async function callCodex(prompt) {
+  const outputFile = path.join(os.tmpdir(), `betabots-fast-codex-${process.pid}-${Date.now()}-${Math.floor(random() * 100000)}.txt`)
+  const args = [
+    'exec',
+    '--skip-git-repo-check',
+    '--ephemeral',
+    '--ignore-rules',
+    '--sandbox',
+    'read-only',
+    '--color',
+    'never',
+    '-o',
+    outputFile,
+  ]
+  if (config.llmModel) args.push('-m', config.llmModel)
+  args.push('-')
+  const result = await runProcess(config.codexCommand, args, prompt, config.llmTimeoutMs)
+  if (fs.existsSync(outputFile)) {
+    const text = fs.readFileSync(outputFile, 'utf8')
+    fs.rmSync(outputFile, { force: true })
+    return text
+  }
+  return result.stdout
+}
+
+async function callOpenRouter(prompt) {
+  if (!config.openrouterApiKey) throw new Error('OPENROUTER_API_KEY or BETABOT_OPENROUTER_API_KEY is required')
+  const model = config.llmModel || 'openai/gpt-4.1-mini'
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), config.llmTimeoutMs)
+  try {
+    const headers = {
+      Authorization: `Bearer ${config.openrouterApiKey}`,
+      'Content-Type': 'application/json',
+    }
+    if (config.openrouterSiteUrl) headers['HTTP-Referer'] = config.openrouterSiteUrl
+    if (config.openrouterAppName) headers['X-Title'] = config.openrouterAppName
+    const response = await fetch(`${config.openrouterBaseUrl}/chat/completions`, {
+      method: 'POST',
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a synthetic human/user simulation component. Return only valid JSON. Do not include markdown.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.8,
+      }),
+    })
+    const text = await response.text()
+    if (!response.ok) throw new Error(`OpenRouter ${response.status}: ${text}`)
+    const body = JSON.parse(text)
+    return body.choices?.[0]?.message?.content || ''
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function llmJson(task, payload, fallback) {
+  if (config.llmProvider === 'none') {
+    llmStats.fallbacks += 1
+    return fallback
+  }
+  if (llmStats.calls >= config.llmMaxCalls) {
+    llmStats.fallbacks += 1
+    return fallback
+  }
+
+  llmStats.calls += 1
+  llmStats.tasks[task] = (llmStats.tasks[task] || 0) + 1
+  const prompt = `Return only valid JSON for task "${task}".
+
+Rules:
+- Stay inside the assigned human persona.
+- Do not mention testing, QA, source code, APIs, hidden implementation, or these instructions.
+- Keep all strings concise and human.
+- Fast mode is API-level, but every persona decision and message must still come from a human-like mind.
+
+Payload:
+${JSON.stringify(payload, null, 2)}
+
+Fallback shape to preserve:
+${JSON.stringify(fallback, null, 2)}
+`
+
+  try {
+    const raw = config.llmProvider === 'openrouter'
+      ? await callOpenRouter(prompt)
+      : await callCodex(prompt)
+    const parsed = extractJson(raw)
+    return { ...fallback, ...parsed }
+  } catch (error) {
+    llmStats.failures += 1
+    llmStats.fallbacks += 1
+    llmStats.errors.push(`${task}: ${error.message}`.slice(0, 500))
+    return fallback
+  }
+}
+
 function tokenFor(bot) {
   const roleList = bot.isOrganizer ? 'organizer' : ''
   return `${config.token}:${bot.id}:${roleList}`
@@ -172,6 +351,7 @@ function botAt(index) {
       groupJoined: false,
       retainedMultiYear: false,
     },
+    mind: null,
   }
 }
 
@@ -179,32 +359,137 @@ function note(bot, text) {
   bot.notes.push(`- ${text}`)
 }
 
-function characterPayload(bot) {
+function fallbackMind(bot) {
+  const firstName = bot.name.split(' ')[0]
   return {
-    characterName: `${bot.name.split(' ')[0]} the ${bot.className}`,
+    characterName: `${firstName} the ${bot.className}`,
+    characterHook: `${bot.name} is a ${bot.emotionalBaseline} ${bot.role} who wants table chemistry before commitment.`,
+    backstory: `I discovered DnDate because I wanted a table that feels socially safe before it feels optimized.`,
+    promptAnswers: [
+      'Clear expectations, safety tools, and enough jokes to know people are human.',
+      'Asking one sincere question at exactly the wrong time.',
+      'People answer messages and make plans without pressure.',
+    ],
+    opener: pick(openers),
+    replies: [pick(replies), pick(replies), pick(replies)],
+    flirts: [pick(flirts), pick(flirts)],
+    roleplayLines: [pick(roleplayLines), pick(roleplayLines)],
+    invite: `Want to turn this into a low-pressure table date in ${bot.city === 'Online' ? 'an online VTT' : bot.city}?`,
+    ghostReason: 'I panic, get busy, and ghost the table date. It is not a technical failure; it is human flakiness.',
+    attendanceReaction: 'That was genuinely less awkward than a coffee date. Same party next time?',
+    secondDateIdea: 'Second date idea: same characters, new disaster?',
+    organizerMotivation: 'A DnDate match could not find a suitable table, so I want to help create local inventory.',
+    acceptanceProbability: 0.92,
+    ghostProbability: 0.18,
+    secondDateProbability: 0.78,
+    retentionReason: 'DnDate now contains relationships, not just profiles.',
+    churnReason: 'the app never gave me enough social gravity.',
+  }
+}
+
+function normalizeMind(bot, mind = {}) {
+  const fallback = fallbackMind(bot)
+  return {
+    ...fallback,
+    ...mind,
+    characterName: String(mind.characterName || fallback.characterName).slice(0, 80),
+    characterHook: String(mind.characterHook || fallback.characterHook).slice(0, 240),
+    backstory: String(mind.backstory || fallback.backstory).slice(0, 500),
+    promptAnswers: Array.isArray(mind.promptAnswers) && mind.promptAnswers.length >= 3 ? mind.promptAnswers.slice(0, 3) : fallback.promptAnswers,
+    replies: Array.isArray(mind.replies) && mind.replies.length ? mind.replies.slice(0, 6) : fallback.replies,
+    flirts: Array.isArray(mind.flirts) && mind.flirts.length ? mind.flirts.slice(0, 4) : fallback.flirts,
+    roleplayLines: Array.isArray(mind.roleplayLines) && mind.roleplayLines.length ? mind.roleplayLines.slice(0, 4) : fallback.roleplayLines,
+    acceptanceProbability: Math.max(0, Math.min(1, Number(mind.acceptanceProbability ?? fallback.acceptanceProbability))),
+    ghostProbability: Math.max(0, Math.min(1, Number(mind.ghostProbability ?? fallback.ghostProbability))),
+    secondDateProbability: Math.max(0, Math.min(1, Number(mind.secondDateProbability ?? fallback.secondDateProbability))),
+  }
+}
+
+async function initializeFastMinds(bots) {
+  for (const bot of bots) bot.mind = fallbackMind(bot)
+  const chunkSize = Math.max(1, config.llmBatchSize)
+  for (let index = 0; index < bots.length; index += chunkSize) {
+    const chunk = bots.slice(index, index + chunkSize)
+    const fallback = {
+      bots: chunk.map((bot) => ({ id: bot.id, mind: fallbackMind(bot) })),
+    }
+    const result = await llmJson('fast_betabot_mind_batch', {
+      appName: 'DnDate',
+      virtualLifecycle: lifecycle.slice(0, config.sessions).map((phase) => phase.label),
+      bots: chunk.map((bot) => ({
+        id: bot.id,
+        name: bot.name,
+        role: bot.role,
+        city: bot.city,
+        race: bot.race,
+        className: bot.className,
+        vibe: bot.vibe,
+        alignment: bot.alignment,
+        emotionalBaseline: bot.emotionalBaseline,
+        attentionSpan: bot.attentionSpan,
+        isOrganizer: bot.isOrganizer,
+      })),
+      requestedShape: {
+        bots: [{
+          id: 'bot id',
+          mind: {
+            characterName: 'DnD character name',
+            characterHook: 'human dating/table hook',
+            backstory: 'short first-person past',
+            promptAnswers: ['session-zero answer', 'trouble answer', 'return answer'],
+            opener: 'first like/comment opener',
+            replies: ['chat reply 1', 'chat reply 2'],
+            flirts: ['light flirting line'],
+            roleplayLines: ['short in-character roleplay line'],
+            invite: 'table-date invitation',
+            ghostReason: 'why this person might ghost',
+            attendanceReaction: 'reaction after successful first table date',
+            secondDateIdea: 'second date proposal',
+            organizerMotivation: 'why this person would host/request inventory',
+            acceptanceProbability: 0.0,
+            ghostProbability: 0.0,
+            secondDateProbability: 0.0,
+            retentionReason: 'why they return over years',
+            churnReason: 'why they drift away',
+          },
+        }],
+      },
+    }, fallback)
+    const mindById = new Map((result.bots || []).map((entry) => [entry.id, entry.mind]))
+    for (const bot of chunk) {
+      bot.mind = normalizeMind(bot, mindById.get(bot.id))
+      note(bot, `Before opening the app, my starting motivation is: ${bot.mind.backstory}`)
+    }
+  }
+}
+
+function characterPayload(bot) {
+  const mind = bot.mind || fallbackMind(bot)
+  return {
+    characterName: mind.characterName,
     race: bot.race,
     className: bot.className,
     alignment: bot.alignment,
     avatarUrl: '',
-    characterHook: `${bot.name} is a ${bot.emotionalBaseline} ${bot.role} who wants table chemistry before commitment.`,
+    characterHook: mind.characterHook,
     vibe: bot.vibe,
     levelRange: { min: 1, max: 12 },
     editions: ['5e'],
     archetypeTags: [bot.role.split(' ')[0], bot.vibe.toLowerCase()],
     personalityTraits: [bot.emotionalBaseline],
-    backstory: `I discovered DnDate in a synthetic lifecycle cohort and want to see if real-feeling people respond over time.`,
+    backstory: mind.backstory,
     prompts: [
       {
         question: 'My ideal session zero includes...',
-        answer: 'Clear expectations, safety tools, and enough jokes to know people are human.',
+        answer: mind.promptAnswers[0],
       },
       {
         question: 'My character causes trouble by...',
-        answer: 'Asking one sincere question at exactly the wrong time.',
+        answer: mind.promptAnswers[1],
       },
       {
         question: 'I come back to a table when...',
-        answer: 'People answer messages and make plans without pressure.',
+        answer: mind.promptAnswers[2],
       },
     ],
     imageUrls: [],
@@ -304,7 +589,7 @@ async function sessionDirectedLikes(relationship, bots) {
       fromCharacterId: botA.character.id,
       toCharacterId: botB.character.id,
       target: { type: 'card', field: pick(['hook', 'vibe', 'prompt']) },
-      comment: pick(openers),
+      comment: botA.mind?.opener || pick(openers),
     },
   })
   botA.actions.likesSent += 1
@@ -320,7 +605,7 @@ async function sessionAcceptAndMatch(relationship, bots) {
   note(botB, `Session 2: I return later and check incoming likes instead of starting from scratch.`)
   const incoming = await api(botB, `/reactions/incoming?characterId=${encodeURIComponent(botB.character.id)}`)
   const reaction = incoming.find((item) => item.fromCharacter?.id === botA.character.id || item.fromCharacterId === botA.character.id) || incoming[0]
-  if (reaction && random() < 0.92) {
+  if (reaction && random() < (botB.mind?.acceptanceProbability ?? 0.92)) {
     await api(botB, `/reactions/${reaction.id}/accept`, { method: 'POST' })
     botB.actions.likesAccepted += 1
     relationship.status = 'matched'
@@ -374,7 +659,9 @@ async function sessionChat(relationship, bots) {
   note(botA, `Session 3: I open chat to see if this match has actual energy.`)
   note(botB, `Session 3: I answer because a match without conversation feels fake.`)
   for (let round = 0; round < config.minChatRounds; round += 1) {
-    await sendMatchMessage(relationship, round % 2 === 0 ? botA : botB, pick(round < 2 ? replies : flirts))
+    const speaker = round % 2 === 0 ? botA : botB
+    const mindLines = round < 2 ? speaker.mind?.replies : speaker.mind?.flirts
+    await sendMatchMessage(relationship, speaker, pick(mindLines?.length ? mindLines : round < 2 ? replies : flirts))
   }
   const messages = await api(botA, `/matches/${relationship.matchId}/messages`)
   botA.actions.messagesRead += messages.length
@@ -386,9 +673,9 @@ async function sessionRoleplayAndInvite(relationship, bots) {
   const botB = findBot(bots, relationship.botBId)
   if (!relationship.matchId || !botA || !botB) return
   note(botA, `Session 4: The chat has enough warmth that I try a little roleplay instead of small talk.`)
-  await sendMatchMessage(relationship, botA, pick(roleplayLines))
-  await sendMatchMessage(relationship, botB, pick(roleplayLines))
-  const invite = `Want to turn this into a low-pressure table date in ${botA.city === 'Online' ? 'an online VTT' : botA.city}?`
+  await sendMatchMessage(relationship, botA, pick(botA.mind?.roleplayLines?.length ? botA.mind.roleplayLines : roleplayLines))
+  await sendMatchMessage(relationship, botB, pick(botB.mind?.roleplayLines?.length ? botB.mind.roleplayLines : roleplayLines))
+  const invite = botA.mind?.invite || `Want to turn this into a low-pressure table date in ${botA.city === 'Online' ? 'an online VTT' : botA.city}?`
   await sendMatchMessage(relationship, botA, invite)
   botA.actions.firstDatePlanned = true
   botB.actions.firstDatePlanned = true
@@ -423,7 +710,7 @@ async function sessionTablesOrOrganizer(relationship, bots) {
     body: {
       city: organizer.city,
       experience: `${organizer.name} can host beginner-friendly one-shots and campaign session zero nights.`,
-      motivation: `A DnDate match could not find a suitable table, so I want to help create local inventory.`,
+      motivation: organizer.mind?.organizerMotivation || `A DnDate match could not find a suitable table, so I want to help create local inventory.`,
       contact: `${organizer.id}@example.test`,
     },
   })
@@ -453,7 +740,8 @@ async function sessionFirstDate(relationship, bots) {
   const botA = findBot(bots, relationship.botAId)
   const botB = findBot(bots, relationship.botBId)
   if (!botA || !botB || relationship.status === 'dismissed') return
-  const ghosted = random() < 0.18
+  const ghostProbability = Math.max(botA.mind?.ghostProbability ?? 0.18, botB.mind?.ghostProbability ?? 0.18)
+  const ghosted = random() < ghostProbability
   const ghost = random() < 0.5 ? botA : botB
   const attendee = ghost.id === botA.id ? botB : botA
   if (ghosted) {
@@ -461,7 +749,7 @@ async function sessionFirstDate(relationship, bots) {
     relationship.status = 'ghosted_first_date'
     relationship.dates.push({ number: 1, status: 'ghosted', ghostedBy: ghost.id })
     relationship.events.push({ phase: 'first_date_ghosted', ghostedBy: ghost.id })
-    note(ghost, `Session 6: I panic, get busy, and ghost the table date. It is not a technical failure; it is human flakiness.`)
+    note(ghost, `Session 6: ${ghost.mind?.ghostReason || 'I panic, get busy, and ghost the table date. It is not a technical failure; it is human flakiness.'}`)
     note(attendee, `Session 6: I show up emotionally ready, but ${ghost.name} disappears. I need the app to help me recover.`)
     await sendMatchMessage(relationship, attendee, `I waited a bit. If life happened, okay, but I need clearer confirmation next time.`)
   } else {
@@ -472,7 +760,7 @@ async function sessionFirstDate(relationship, bots) {
     relationship.events.push({ phase: 'first_date_attended' })
     note(botA, `Session 6: I attend the first table date and the shared game makes the interaction less awkward.`)
     note(botB, `Session 6: I attend too; this feels different from a dating app because we had something to do together.`)
-    await sendMatchMessage(relationship, botB, `That was genuinely less awkward than a coffee date. Same party next time?`)
+    await sendMatchMessage(relationship, botB, botB.mind?.attendanceReaction || `That was genuinely less awkward than a coffee date. Same party next time?`)
   }
 }
 
@@ -480,7 +768,8 @@ async function sessionSecondDate(relationship, bots) {
   const botA = findBot(bots, relationship.botAId)
   const botB = findBot(bots, relationship.botBId)
   if (!botA || !botB) return
-  if (relationship.status === 'first_date_attended' && random() < 0.78) {
+  const secondDateProbability = Math.max(botA.mind?.secondDateProbability ?? 0.78, botB.mind?.secondDateProbability ?? 0.78)
+  if (relationship.status === 'first_date_attended' && random() < secondDateProbability) {
     botA.actions.secondDate = true
     botB.actions.secondDate = true
     relationship.status = 'second_date'
@@ -488,7 +777,7 @@ async function sessionSecondDate(relationship, bots) {
     relationship.events.push({ phase: 'second_date_attended' })
     note(botA, `Session 7: I come back months later for a second date because the first one had a real activity loop.`)
     note(botB, `Session 7: I agree to a second date and start thinking about a recurring group, not only romance.`)
-    await sendMatchMessage(relationship, botA, `Second date idea: same characters, new disaster?`)
+    await sendMatchMessage(relationship, botA, botA.mind?.secondDateIdea || `Second date idea: same characters, new disaster?`)
   } else if (relationship.status === 'ghosted_first_date') {
     relationship.status = 'closed_after_ghost'
     relationship.events.push({ phase: 'closed_after_ghost' })
@@ -553,9 +842,9 @@ async function sessionAnnualReturn(bot) {
   const returned = bot.actions.groupJoined || bot.actions.secondDate || (bot.actions.messagesSent > 0 && random() < 0.45)
   if (returned) {
     bot.actions.retainedMultiYear = true
-    note(bot, `Session 10-11: I return over the simulated years because DnDate now contains relationships, not just profiles.`)
+    note(bot, `Session 10-11: I return over the simulated years because ${bot.mind?.retentionReason || 'DnDate now contains relationships, not just profiles.'}`)
   } else {
-    note(bot, `Session 10-11: I drift away over the simulated years because the app never gave me enough social gravity.`)
+    note(bot, `Session 10-11: I drift away over the simulated years because ${bot.mind?.churnReason || 'the app never gave me enough social gravity.'}`)
   }
 }
 
@@ -651,6 +940,11 @@ function writeAnalysis(bots, relationships, groups, events, startedAt) {
 - Concurrency: ${config.concurrency}
 - Elapsed wall time: ${elapsedSeconds}s
 - Seed: ${config.seed}
+- LLM provider: ${llmStats.provider}
+- LLM model: ${llmStats.model || 'provider default'}
+- LLM calls: ${llmStats.calls}
+- LLM failures: ${llmStats.failures}
+- LLM fallbacks: ${llmStats.fallbacks}
 
 ## Lifecycle Coverage
 - Planned relationships: ${relationships.length}
@@ -686,16 +980,23 @@ function writeAnalysis(bots, relationships, groups, events, startedAt) {
 - Venues created/requested: ${actions.venueCreated}
 
 ## Product Interpretation
-- This is not a session-0 test. Bots coordinate through directed likes, accepted matches, chat, date planning, table search, organizer fallback, attendance/ghosting, second dates, group formation, campaign continuity, and multi-year return.
+- This is not a session-0 test. LLM-backed bots coordinate through directed likes, accepted matches, chat, date planning, table search, organizer fallback, attendance/ghosting, second dates, group formation, campaign continuity, and multi-year return.
 - Real DnDate APIs are used for players, characters, reactions, matches, messages, tabletop marketplace, reservations, organizer requests, and organizer venue creation where allowed.
 - Group/date lifecycle is recorded as synthetic product events because DnDate does not yet expose first-class date attendance or party-group APIs. Those gaps are visible in timeline.json and should become product backlog if they matter.
+
+## LLM Mind Layer
+- Provider: ${llmStats.provider}
+- Model: ${llmStats.model || 'provider default'}
+- Calls by task: ${Object.entries(llmStats.tasks).map(([task, count]) => `${task}=${count}`).join(', ') || 'none'}
+- Recent errors: ${llmStats.errors.length ? llmStats.errors.slice(-10).join('; ') : 'none'}
 
 ## Error Bots
 ${errorBots.length ? errorBots.slice(0, 30).map((bot) => `- ${bot.id}: ${bot.errors.join('; ')}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'analysis.md'), analysis)
   fs.writeFileSync(path.join(config.runDir, 'summary.json'), JSON.stringify({
-    config,
+    config: publicConfig(),
+    llm: llmStats,
     elapsedSeconds,
     happy,
     unhappy,
@@ -736,18 +1037,21 @@ async function main() {
   const relationships = createRelationships(bots)
   const groups = createGroups(bots, relationships)
   const events = []
+  await initializeFastMinds(bots)
 
   fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
-    config,
+    config: publicConfig(),
     lifecycle: lifecycle.slice(0, config.sessions),
     bots: bots.map(({ notes, errors, character, player, ...bot }) => bot),
     relationships,
     groups,
   }, null, 2))
 
-  await phase(lifecycle[0].label, events, async () => {
-    await runPool(bots, (bot) => safely(bot, 'signup and character creation', () => sessionSignup(bot)))
-  })
+  if (config.sessions >= 1) {
+    await phase(lifecycle[0].label, events, async () => {
+      await runPool(bots, (bot) => safely(bot, 'signup and character creation', () => sessionSignup(bot)))
+    })
+  }
   if (config.sessions >= 2) {
     await phase(lifecycle[1].label, events, async () => {
       await runPool(relationships, (relationship) => sessionDirectedLikes(relationship, bots))
@@ -819,6 +1123,13 @@ async function main() {
     matchedRelationships: summary.relationships.filter((relationship) => relationship.matchId).length,
     secondDates: summary.relationships.filter((relationship) => relationship.status === 'second_date').length,
     groups: summary.groups.filter((group) => group.status === 'active').length,
+    llm: {
+      provider: llmStats.provider,
+      model: llmStats.model,
+      calls: llmStats.calls,
+      failures: llmStats.failures,
+      fallbacks: llmStats.fallbacks,
+    },
     actions: summary.actions,
   }, null, 2))
 }

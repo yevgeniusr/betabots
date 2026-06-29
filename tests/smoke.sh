@@ -19,6 +19,10 @@ python3 "$ROOT/skills/betabots/scripts/analyze_sessions.py" /tmp/betabots-raw >/
 grep -q "Sessions analyzed: 1" /tmp/betabots-analysis.md
 node --check "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs" >/dev/null
+grep -q "BETABOT_LLM_PROVIDER" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
+grep -q "initializeFastMinds" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
+grep -q "callCodex" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
+grep -q "callOpenRouter" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
 grep -q "BETABOT_BETABOOK" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_DESTINY" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_LLM_PROVIDER" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"

@@ -22,7 +22,9 @@ Betabots has two official execution modes.
 
 ### Fast Mode
 
-Fast mode is API-level synthetic-live simulation. It is for speed, scale, backend confidence, social graph population, and repeated multi-session behavior. For social products, it now runs a coordinated lifecycle rather than isolated single-user sessions.
+Fast mode is API-level synthetic-live simulation with actual LLM-generated bot minds. It is for speed, scale, backend confidence, social graph population, and repeated multi-session behavior. For social products, it runs a coordinated lifecycle rather than isolated single-user sessions.
+
+Fast mode does not mean “no LLM.” It means the LLM generates personas, motivations, character details, messages, probabilities, and lifecycle choices in batches, then the harness executes those choices through product APIs instead of a browser.
 
 Use it when you need hundreds of users to sign up, like/pass, match, chat, flirt, roleplay, invite each other to tables, reserve or request venue/organizer support, ghost or attend dates, form groups, churn, and return across simulated years:
 
@@ -37,6 +39,13 @@ node skills/betabots/scripts/multi_session_betabots.cjs
 ```
 
 Fast mode writes `relationships.json`, `groups.json`, and `timeline.json` in addition to raw per-bot stories. Real APIs are used where available; missing lifecycle entities such as date attendance or first-class party groups are recorded as synthetic lifecycle events so product gaps remain visible.
+
+Both official modes use the same configurable LLM provider contract by default:
+
+- `BETABOT_LLM_PROVIDER=codex` uses local Codex CLI with the signed-in ChatGPT/Codex account.
+- `BETABOT_LLM_PROVIDER=openrouter` uses OpenRouter chat completions.
+- `BETABOT_LLM_PROVIDER=none` disables model calls and is only for runner debugging.
+- `BETABOT_LLM_BATCH_SIZE=25` controls batched fast-mode mind generation.
 
 ### Thoughtful Mode
 
@@ -55,7 +64,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 By default, thoughtful mode uses real-time pacing (`BETABOT_TIME_SCALE=1`). Lower the scale only for development dry-runs.
 
-Thoughtful mode also uses an actual LLM mind layer by default:
+Thoughtful mode uses the same actual LLM mind layer, but calls it continuously during browser use:
 
 - `BETABOT_LLM_PROVIDER=codex` uses local Codex CLI with the signed-in ChatGPT/Codex account.
 - `BETABOT_LLM_PROVIDER=openrouter` uses OpenRouter chat completions.
