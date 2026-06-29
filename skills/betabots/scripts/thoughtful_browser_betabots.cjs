@@ -24,6 +24,9 @@ const config = {
   destinyEnabled: destinyRequested,
   destinyIntervalMs: Number(process.env.BETABOT_DESTINY_INTERVAL_MS || process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
   strictScoring: String(process.env.BETABOT_STRICT_SCORING || 'true') === 'true',
+  loopRepeatThreshold: Number(process.env.BETABOT_LOOP_REPEAT_THRESHOLD || 4),
+  curiosityChance: Number(process.env.BETABOT_CURIOSITY_CHANCE || 0.18),
+  maxCuriosityActions: Number(process.env.BETABOT_MAX_CURIOSITY_ACTIONS || 8),
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -341,7 +344,7 @@ function createBetabookState(bots) {
   return {
     enabled: config.betabookEnabled,
     scope: config.runDir,
-    channels: ['introductions', 'looking-for-party', 'invites', 'missed-connections', 'venue-requests', 'table-talk'],
+    channels: ['introductions', 'looking-for-party', 'help', 'invites', 'missed-connections', 'venue-requests', 'table-talk'],
     participants: bots.map((bot) => ({ id: bot.id, name: bot.name, role: bot.role })),
     posts: [],
     comments: [],
@@ -449,6 +452,7 @@ function createDestinyState(bots) {
     masterPlan: plans,
     charactersByBotId: {},
     nudgesByBotId: Object.fromEntries(bots.map((bot) => [bot.id, []])),
+    rescuedHelpPostIds: [],
     events: [],
     errors: [],
   }
@@ -468,9 +472,44 @@ function takeDestinyNudges(state, botId) {
   return nudges
 }
 
+function runDestinyLoopRescue(bots, state, betabookState) {
+  if (!state.enabled || !betabookState?.enabled) return
+  const botsById = new Map(bots.map((bot) => [bot.id, bot]))
+  const rescued = new Set(state.rescuedHelpPostIds || [])
+  for (const post of betabookState.posts.filter((item) => item.tags?.includes('loop-help'))) {
+    if (rescued.has(post.id)) continue
+    const bot = botsById.get(post.authorId)
+    if (!bot) continue
+
+    const nudge = {
+      kind: 'loop_rescue',
+      thought: 'I am stuck in a loop, so I should stop doing the same thing and try a different path.',
+      route: pick(['/likes-you', '/matches', '/tables', '/profile', '/discover']),
+    }
+    addDestinyNudge(state, bot.id, nudge)
+    betabookComment(betabookState, {
+      postId: post.id,
+      authorId: 'destiny',
+      body: `Destiny notices ${bot.name} looping and quietly shifts the timing: try a different surface, then ask a person or table for a concrete next step.`,
+    })
+    betabookInvite(betabookState, {
+      fromBotId: 'destiny',
+      toBotId: bot.id,
+      kind: 'loop_rescue',
+      message: 'You seem stuck. Try a different part of the product, then make one concrete social move.',
+      postId: post.id,
+    })
+    rescued.add(post.id)
+    state.events.push({ type: 'loop_rescue_planned', botId: bot.id, postId: post.id, route: nudge.route, at: nowIso() })
+  }
+  state.rescuedHelpPostIds = [...rescued]
+}
+
 async function runDestinyPass(bots, state, betabookState) {
   if (!state.enabled) return
   const botsById = new Map(bots.map((bot) => [bot.id, bot]))
+
+  runDestinyLoopRescue(bots, state, betabookState)
 
   for (const bot of bots) {
     if (state.charactersByBotId[bot.id]) continue
@@ -870,6 +909,71 @@ async function trySendMatchMessage(page, bot, log, actions, stats) {
   return true
 }
 
+async function tryCuriosityAction(page, bot, log, actions, stats, force = false) {
+  if (!force && random() > config.curiosityChance) return false
+  if (stats.curiosityActions >= config.maxCuriosityActions) return false
+
+  const observation = await observe(page)
+  const lower = observation.text.toLowerCase()
+  const safeLabels = [
+    /filters/i,
+    /read/i,
+    /browse tables/i,
+    /discover characters/i,
+    /find characters/i,
+    /check likes/i,
+    /improve my character/i,
+    /invite friends/i,
+    /reset/i,
+    /apply filters/i,
+    /organizer console/i,
+  ]
+  const dangerous = /delete|remove|revoke|sign out|logout|pay|purchase|submit|publish|create invite|create venue|create table|publish session/i
+
+  for (const label of safeLabels.sort(() => random() - 0.5)) {
+    const locator = locatorForRole(page, label)
+    if (await locator.isVisible({ timeout: 600 }).catch(() => false)) {
+      const text = await locator.innerText({ timeout: 500 }).catch(() => String(label))
+      if (dangerous.test(text)) continue
+      await locator.click({ timeout: 2500 }).catch(() => {})
+      actions.push(`curiosity clicked ${label}`)
+      stats.curiosityActions += 1
+      stats.meaningfulSocialActions += lower.includes('match') || lower.includes('discover') || lower.includes('table') ? 1 : 0
+      log(`Curiosity gets me to try "${text || label}" instead of repeating the same path.`)
+      await wait(900 + random() * 2200)
+      return true
+    }
+  }
+
+  const selects = page.locator('select')
+  const selectCount = await selects.count().catch(() => 0)
+  if (selectCount > 0) {
+    const index = Math.floor(random() * Math.min(selectCount, 3))
+    const changed = await selectByIndex(selects.nth(index), 1 + Math.floor(random() * 3)).catch(() => false)
+    if (changed) {
+      actions.push(`curiosity changed select ${index + 1}`)
+      stats.curiosityActions += 1
+      log(`Curiosity makes me change a filter/config option to see whether the product reacts.`)
+      await wait(900 + random() * 2200)
+      return true
+    }
+  }
+
+  const ranges = page.locator('input[type="range"]')
+  const rangeCount = await ranges.count().catch(() => 0)
+  if (rangeCount > 0) {
+    const index = Math.floor(random() * Math.min(rangeCount, 4))
+    await ranges.nth(index).fill(String(20 + Math.floor(random() * 70))).catch(() => {})
+    actions.push(`curiosity adjusted range ${index + 1}`)
+    stats.curiosityActions += 1
+    log(`Curiosity makes me adjust a slider to understand what control I have.`)
+    await wait(900 + random() * 2200)
+    return true
+  }
+
+  return false
+}
+
 async function runBot(browser, bot, runtime = {}) {
   const startedAt = Date.now()
   const context = await browser.newContext({
@@ -896,6 +1000,9 @@ async function runBot(browser, bot, runtime = {}) {
   const screenCounts = new Map()
   const stats = {
     repeatedScreens: 0,
+    loopHelpRequests: 0,
+    loopRescuesFollowed: 0,
+    curiosityActions: 0,
     likes: 0,
     passes: 0,
     messages: 0,
@@ -920,7 +1027,7 @@ async function runBot(browser, bot, runtime = {}) {
     opinions.push(opinion)
     log(`My reaction: ${opinion}`)
   }
-  const recordScreenQuality = (observation) => {
+	  const recordScreenQuality = (observation) => {
     const fingerprint = screenFingerprint(observation)
     const count = (screenCounts.get(fingerprint) || 0) + 1
     screenCounts.set(fingerprint, count)
@@ -931,6 +1038,23 @@ async function runBot(browser, bot, runtime = {}) {
       }
     }
     return count
+  }
+  const askBetabookForHelp = (reason, observation) => {
+    if (!runtime.betabookState?.enabled) return false
+    if (stats.loopHelpRequests >= 3) return false
+    stats.loopHelpRequests += 1
+    const post = betabookPost(runtime.betabookState, {
+      authorId: bot.id,
+      channel: 'help',
+      title: `${bot.name} feels stuck`,
+      body: `I keep landing on the same kind of screen. Reason: ${reason}. Current screen starts with: "${observation.text.slice(0, 220)}"`,
+      tags: ['loop-help', 'stuck', bot.role],
+    })
+    log(`I feel stuck, so I ask Betabook for help instead of silently looping.`)
+    if (post) {
+      betabookMoments.push(`asked for help: ${post.title}`)
+    }
+    return true
   }
   const useBetabook = (reason) => {
     const betabookState = runtime.betabookState
@@ -956,6 +1080,7 @@ async function runBot(browser, bot, runtime = {}) {
     const nudges = takeDestinyNudges(destinyState, bot.id)
     for (const nudge of nudges) {
       destinyMoments.push(nudge.kind)
+      if (nudge.kind === 'loop_rescue') stats.loopRescuesFollowed += 1
       if (nudge.thought) recordThought(nudge.thought)
       if (nudge.route) {
         await page.goto(`${config.appUrl}${nudge.route}`, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch((error) => {
@@ -1012,7 +1137,7 @@ async function runBot(browser, bot, runtime = {}) {
       }
 
       await wait(2500 + random() * 7000)
-      observation = await observe(page)
+	      observation = await observe(page)
       recordScreenQuality(observation)
       await screenshot(page, bot, step++)
       log(`I now see: ${observation.text}`)
@@ -1023,6 +1148,13 @@ async function runBot(browser, bot, runtime = {}) {
 
       const lower = observation.text.toLowerCase()
       const currentFingerprintCount = screenCounts.get(screenFingerprint(observation)) || 1
+      if (currentFingerprintCount >= config.loopRepeatThreshold) {
+        const asked = askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation)
+        if (asked) {
+          trust -= 4
+          await tryCuriosityAction(page, bot, log, actions, stats, true)
+        }
+      }
       const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
       if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
@@ -1056,6 +1188,7 @@ async function runBot(browser, bot, runtime = {}) {
 
       const actedSocially = await trySendMatchMessage(page, bot, log, actions, stats)
         || await tryDiscoverReaction(page, bot, log, actions, stats)
+        || await tryCuriosityAction(page, bot, log, actions, stats)
       if (!actedSocially) {
         const reserveClicked = await clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i])
         if (reserveClicked) {
@@ -1078,6 +1211,7 @@ async function runBot(browser, bot, runtime = {}) {
     score -= Math.min(35, stats.repeatedScreens * 2)
     if (stats.passes > stats.likes + 3) score -= Math.min(20, (stats.passes - stats.likes - 3) * 2)
     if (stats.meaningfulSocialActions === 0) score -= 25
+    if (stats.loopHelpRequests > 0 && stats.loopRescuesFollowed === 0) score -= Math.min(18, stats.loopHelpRequests * 6)
     if (runtime.destinyState?.enabled && destinyMoments.length === 0) score -= 8
     if (runtime.betabookState?.enabled && betabookMoments.length === 0) score -= 8
     score = clamp(score, 0, 100)
@@ -1128,6 +1262,9 @@ ${notes.join('\n')}
 - Match messages sent: ${stats.messages}
 - Repeated screen penalty events: ${stats.repeatedScreens}
 - Meaningful social actions: ${stats.meaningfulSocialActions}
+- Betabook help requests: ${stats.loopHelpRequests}
+- Destiny loop rescues followed: ${stats.loopRescuesFollowed}
+- Curiosity actions: ${stats.curiosityActions}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
@@ -1136,7 +1273,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, attentionSpanMinutes: bot.attentionSpanMinutes }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -1237,6 +1374,9 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Match messages sent through UI: ${results.reduce((sum, result) => sum + (result.messages || 0), 0)}
 - Repeated screen penalty events: ${results.reduce((sum, result) => sum + (result.repeatedScreens || 0), 0)}
 - Meaningful social actions: ${results.reduce((sum, result) => sum + (result.meaningfulSocialActions || 0), 0)}
+- Betabook help requests: ${results.reduce((sum, result) => sum + (result.loopHelpRequests || 0), 0)}
+- Destiny loop rescues followed: ${results.reduce((sum, result) => sum + (result.loopRescuesFollowed || 0), 0)}
+- Curiosity actions: ${results.reduce((sum, result) => sum + (result.curiosityActions || 0), 0)}
 - Error bots: ${errorBots.length}
 
 ## Top Bot Ideas

@@ -130,6 +130,28 @@ BETABOT_STRICT_SCORING=false \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+## Loop Rescue and Curiosity
+
+Thoughtful bots should not silently repeat the same route forever. When a screen repeats past `BETABOT_LOOP_REPEAT_THRESHOLD`, the bot posts a `loop-help` request in Betabook instead of pretending the loop is fine.
+
+Destiny watches Betabook help posts and can rescue the bot by:
+
+- commenting on the help post;
+- sending a Betabook invite;
+- nudging the bot toward a different route;
+- reducing the score if the bot stays stuck.
+
+Bots also have controlled curiosity. On some moves, they may click safe visible controls, change filters/selects, or adjust sliders to see how the product reacts. This is intentionally bounded and avoids destructive actions.
+
+Useful knobs:
+
+```bash
+BETABOT_LOOP_REPEAT_THRESHOLD=4 \
+BETABOT_CURIOSITY_CHANCE=0.18 \
+BETABOT_MAX_CURIOSITY_ACTIONS=8 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
 ## Recommended Scale
 
 - Smoke: 1-3 bots, 3-6 minutes each.

@@ -229,6 +229,9 @@ Optional auth isolation:
 - `BETABOT_DESTINY_INTERVAL_MS`: interval for Destiny to inspect the cohort and apply interventions.
 - `BETABOT_BACKEND_URL`: API base URL Destiny uses when it needs product-level likes, matches, or messages.
 - `BETABOT_STRICT_SCORING=true`: default; discounts repeated screens, penalizes pass-heavy behavior, and requires meaningful social actions before declaring high happiness.
+- `BETABOT_LOOP_REPEAT_THRESHOLD=4`: repeated-screen threshold that makes a stuck bot ask Betabook for help.
+- `BETABOT_CURIOSITY_CHANCE=0.18`: chance per move that a bot tries a safe curiosity action instead of the planned route.
+- `BETABOT_MAX_CURIOSITY_ACTIONS=8`: cap on curiosity clicks/config changes per bot session.
 
 Persona and role definition:
 
