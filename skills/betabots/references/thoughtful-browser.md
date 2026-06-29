@@ -114,6 +114,22 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 The runner writes `destiny.json` with the master plan, ready users, interventions, path-crossing states, nudges, API events, and errors. If Destiny repeatedly has to force crossings that should happen organically, treat that as product evidence: real users may also fail to find active people, receive likes, or continue a social journey.
 
+## Strict Scoring
+
+Thoughtful mode defaults to `BETABOT_STRICT_SCORING=true`. Strict scoring prevents shallow browser loops from looking like success:
+
+- repeated screens stop adding full value/trust credit;
+- repeated pass-heavy discovery behavior lowers happiness;
+- high happiness requires at least one meaningful social action when the product is social;
+- reports include UI likes, passes, match messages, repeated-screen penalties, and meaningful social actions.
+
+Disable strict scoring only for low-level runner debugging:
+
+```bash
+BETABOT_STRICT_SCORING=false \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
 ## Recommended Scale
 
 - Smoke: 1-3 bots, 3-6 minutes each.

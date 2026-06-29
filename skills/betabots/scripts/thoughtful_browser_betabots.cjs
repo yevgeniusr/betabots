@@ -23,6 +23,7 @@ const config = {
   betabookEnabled: betabookRequested,
   destinyEnabled: destinyRequested,
   destinyIntervalMs: Number(process.env.BETABOT_DESTINY_INTERVAL_MS || process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
+  strictScoring: String(process.env.BETABOT_STRICT_SCORING || 'true') === 'true',
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -775,6 +776,100 @@ function ideaFrom(bot, observation) {
   return 'Idea: keep the next best action visually obvious after every page transition.'
 }
 
+function screenFingerprint(observation) {
+  return observation.text
+    .toLowerCase()
+    .replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/g, '<id>')
+    .replace(/\d+/g, '#')
+    .replace(/\s+/g, ' ')
+    .slice(0, 260)
+}
+
+function isDiscoverScreen(text) {
+  return text.includes('discover view as') && !text.includes('start with a character') && !text.includes('character required')
+}
+
+function isMatchesScreen(text) {
+  return text.includes('matches') && (text.includes('start the conversation') || text.includes('message ') || text.includes('select a match'))
+}
+
+async function tryDiscoverReaction(page, bot, log, actions, stats) {
+  const observation = await observe(page)
+  const text = observation.text.toLowerCase()
+  if (!isDiscoverScreen(text)) return false
+
+  const shouldLike = stats.likes < 2 || (stats.likes <= stats.passes && random() < 0.55)
+  if (shouldLike) {
+    const liked = await clickFirst(page, [/like profile/i, /like this/i, /^like$/i])
+    if (!liked) return false
+    actions.push(`clicked ${liked}`)
+    log(`I choose to like this profile because browsing without signaling interest would not help me meet anyone.`)
+    await wait(800 + random() * 1600)
+
+    const comment = pick([
+      'Your hook feels like it could turn into a real table conversation.',
+      'I like the vibe here. Want to see if our playstyles actually work together?',
+      'This sounds like the kind of party chemistry I am looking for.',
+    ])
+    const textarea = page.locator('textarea').last()
+    if (await textarea.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await textarea.fill(comment).catch(() => {})
+      log(`I add a short note instead of sending a silent like: "${comment}"`)
+    }
+    const sent = await clickFirst(page, [/send like/i, /^send$/i])
+    if (sent) {
+      actions.push(`clicked ${sent}`)
+      stats.likes += 1
+      stats.meaningfulSocialActions += 1
+      await wait(1200 + random() * 2400)
+      return true
+    }
+  }
+
+  const passed = await clickFirst(page, [/^pass$/i])
+  if (passed) {
+    actions.push(`clicked ${passed}`)
+    stats.passes += 1
+    log(`I pass because this profile does not feel like the right fit right now.`)
+    await wait(900 + random() * 1800)
+    return true
+  }
+  return false
+}
+
+async function trySendMatchMessage(page, bot, log, actions, stats) {
+  let observation = await observe(page)
+  let text = observation.text.toLowerCase()
+  if (!isMatchesScreen(text)) return false
+
+  const threadButton = page.getByRole('button').filter({ hasText: /↔|start the conversation|jun|jul|me /i }).first()
+  if (await threadButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await threadButton.click({ timeout: 3000 }).catch(() => {})
+    actions.push('opened a match thread')
+    log(`I open a match because the point of matching is to see whether there is a real conversation.`)
+    await wait(1000 + random() * 1800)
+  }
+
+  const textarea = page.locator('textarea[placeholder^="Message"]').last()
+  if (!(await textarea.isVisible({ timeout: 1500 }).catch(() => false))) return false
+
+  const body = pick([
+    'Your character hook caught me. Want to try a low-pressure one-shot first?',
+    'I am curious whether our table vibes work. What kind of first session would feel safe?',
+    'This match seems promising. Would you rather start with chat or pick an open table?',
+  ])
+  await textarea.fill(body)
+  await page.keyboard.press('Enter').catch(async () => {
+    await page.locator('form button[type="submit"]').last().click({ timeout: 2000 }).catch(() => {})
+  })
+  actions.push('sent match message')
+  stats.messages += 1
+  stats.meaningfulSocialActions += 1
+  log(`I send a message because a match without a next step would feel unfinished: "${body}"`)
+  await wait(1200 + random() * 2400)
+  return true
+}
+
 async function runBot(browser, bot, runtime = {}) {
   const startedAt = Date.now()
   const context = await browser.newContext({
@@ -798,6 +893,14 @@ async function runBot(browser, bot, runtime = {}) {
   const opinions = []
   const betabookMoments = []
   const destinyMoments = []
+  const screenCounts = new Map()
+  const stats = {
+    repeatedScreens: 0,
+    likes: 0,
+    passes: 0,
+    messages: 0,
+    meaningfulSocialActions: 0,
+  }
   let step = 1
   let value = 0
   let trust = 45
@@ -816,6 +919,18 @@ async function runBot(browser, bot, runtime = {}) {
   const recordOpinion = (opinion) => {
     opinions.push(opinion)
     log(`My reaction: ${opinion}`)
+  }
+  const recordScreenQuality = (observation) => {
+    const fingerprint = screenFingerprint(observation)
+    const count = (screenCounts.get(fingerprint) || 0) + 1
+    screenCounts.set(fingerprint, count)
+    if (count > 2) {
+      stats.repeatedScreens += 1
+      if (count === 3 || count % 5 === 0) {
+        log(`I notice I am seeing the same kind of screen again, so my patience drops a little.`)
+      }
+    }
+    return count
   }
   const useBetabook = (reason) => {
     const betabookState = runtime.betabookState
@@ -866,6 +981,7 @@ async function runBot(browser, bot, runtime = {}) {
     await page.goto(config.appUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
     await wait(2500 + random() * 5000)
     let observation = await observe(page)
+    recordScreenQuality(observation)
     await screenshot(page, bot, step++)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
     recordThought(think(bot, observation, 'arrival'))
@@ -897,6 +1013,7 @@ async function runBot(browser, bot, runtime = {}) {
 
       await wait(2500 + random() * 7000)
       observation = await observe(page)
+      recordScreenQuality(observation)
       await screenshot(page, bot, step++)
       log(`I now see: ${observation.text}`)
       const thought = think(bot, observation, 'exploration')
@@ -905,8 +1022,10 @@ async function runBot(browser, bot, runtime = {}) {
       recordIdea(ideaFrom(bot, observation))
 
       const lower = observation.text.toLowerCase()
-      if (hasAny(lower, cohort.keywords.value)) value += 12
-      if (hasAny(lower, cohort.keywords.trust)) trust += 8
+      const currentFingerprintCount = screenCounts.get(screenFingerprint(observation)) || 1
+      const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
+      if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
+      if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.risk)) trust -= 20
       if (lower.includes('start with a character') || lower.includes('character required')) emptyCharacterViews += 1
 
@@ -923,6 +1042,7 @@ async function runBot(browser, bot, runtime = {}) {
           value += 18
           trust += 8
           observation = await observe(page)
+          recordScreenQuality(observation)
           await screenshot(page, bot, step++)
           log(`After creating a character, I see: ${observation.text}`)
           recordThought(think(bot, observation, 'character-created'))
@@ -934,11 +1054,16 @@ async function runBot(browser, bot, runtime = {}) {
         }
       }
 
-      const reserveClicked = await clickFirst(page, [/^like$/i, /^pass$/i, /^reserve$/i, /^save$/i, /^message$/i])
-      if (reserveClicked) {
-        actions.push(`clicked ${reserveClicked}`)
-        log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
-        await wait(2500 + random() * 5500)
+      const actedSocially = await trySendMatchMessage(page, bot, log, actions, stats)
+        || await tryDiscoverReaction(page, bot, log, actions, stats)
+      if (!actedSocially) {
+        const reserveClicked = await clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i])
+        if (reserveClicked) {
+          actions.push(`clicked ${reserveClicked}`)
+          stats.meaningfulSocialActions += 1
+          log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
+          await wait(2500 + random() * 5500)
+        }
       }
     }
   } catch (error) {
@@ -949,6 +1074,14 @@ async function runBot(browser, bot, runtime = {}) {
   }
 
   let score = clamp(value + trust - errors.length * 20, 0, 100)
+  if (config.strictScoring) {
+    score -= Math.min(35, stats.repeatedScreens * 2)
+    if (stats.passes > stats.likes + 3) score -= Math.min(20, (stats.passes - stats.likes - 3) * 2)
+    if (stats.meaningfulSocialActions === 0) score -= 25
+    if (runtime.destinyState?.enabled && destinyMoments.length === 0) score -= 8
+    if (runtime.betabookState?.enabled && betabookMoments.length === 0) score -= 8
+    score = clamp(score, 0, 100)
+  }
   if (emptyCharacterViews >= 3 && !createdCharacter) {
     score = Math.min(score, 62)
   }
@@ -990,6 +1123,11 @@ ${notes.join('\n')}
 - Opinions expressed: ${opinions.length}
 - Betabook moments: ${betabookMoments.length}
 - Destiny nudges followed: ${destinyMoments.length}
+- Likes sent: ${stats.likes}
+- Passes: ${stats.passes}
+- Match messages sent: ${stats.messages}
+- Repeated screen penalty events: ${stats.repeatedScreens}
+- Meaningful social actions: ${stats.meaningfulSocialActions}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
@@ -998,7 +1136,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, attentionSpanMinutes: bot.attentionSpanMinutes }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, attentionSpanMinutes: bot.attentionSpanMinutes }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -1094,10 +1232,15 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Ideas expressed: ${results.reduce((sum, result) => sum + (result.ideas || []).length, 0)}
 - Betabook moments: ${results.reduce((sum, result) => sum + (result.betabookMoments || 0), 0)}
 - Destiny nudges followed: ${results.reduce((sum, result) => sum + (result.destinyMoments || 0), 0)}
+- Likes sent through UI: ${results.reduce((sum, result) => sum + (result.likes || 0), 0)}
+- Passes through UI: ${results.reduce((sum, result) => sum + (result.passes || 0), 0)}
+- Match messages sent through UI: ${results.reduce((sum, result) => sum + (result.messages || 0), 0)}
+- Repeated screen penalty events: ${results.reduce((sum, result) => sum + (result.repeatedScreens || 0), 0)}
+- Meaningful social actions: ${results.reduce((sum, result) => sum + (result.meaningfulSocialActions || 0), 0)}
 - Error bots: ${errorBots.length}
 
 ## Top Bot Ideas
-${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} bots: ${idea}`).join('\n') : '- None'}
+${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} mentions: ${idea}`).join('\n') : '- None'}
 
 ## Betabook
 ${betabookState?.enabled

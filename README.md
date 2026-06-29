@@ -228,6 +228,7 @@ Optional auth isolation:
 - `BETABOT_DESTINY=true`: enables the master-plan layer that makes paths cross, not cross, or almost cross.
 - `BETABOT_DESTINY_INTERVAL_MS`: interval for Destiny to inspect the cohort and apply interventions.
 - `BETABOT_BACKEND_URL`: API base URL Destiny uses when it needs product-level likes, matches, or messages.
+- `BETABOT_STRICT_SCORING=true`: default; discounts repeated screens, penalizes pass-heavy behavior, and requires meaningful social actions before declaring high happiness.
 
 Persona and role definition:
 
