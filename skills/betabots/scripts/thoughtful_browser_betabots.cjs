@@ -1237,7 +1237,11 @@ async function trySendMatchMessage(page, bot, log, actions, stats) {
     visibleScreen: observation.text.slice(0, 1400),
     action: 'send a first match message',
   }, fallbackBody)
-  await textarea.fill(body)
+  const filled = await textarea.fill(body, { timeout: 5000 }).then(() => true).catch(() => false)
+  if (!filled) {
+    log(`I tried to message this match, but the message box disappeared before I could type.`)
+    return false
+  }
   await page.keyboard.press('Enter').catch(async () => {
     await page.locator('form button[type="submit"]').last().click({ timeout: 2000 }).catch(() => {})
   })
