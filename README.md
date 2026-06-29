@@ -22,18 +22,21 @@ Betabots has two official execution modes.
 
 ### Fast Mode
 
-Fast mode is API-level synthetic-live simulation. It is for speed, scale, backend confidence, social graph population, and repeated multi-session behavior.
+Fast mode is API-level synthetic-live simulation. It is for speed, scale, backend confidence, social graph population, and repeated multi-session behavior. For social products, it now runs a coordinated lifecycle rather than isolated single-user sessions.
 
-Use it when you need hundreds of users to create profiles, like/pass, match, message, reserve, wait, and return:
+Use it when you need hundreds of users to sign up, like/pass, match, chat, flirt, roleplay, invite each other to tables, reserve or request venue/organizer support, ghost or attend dates, form groups, churn, and return across simulated years:
 
 ```bash
 BETABOT_COUNT=200 \
-BETABOT_SESSIONS=4 \
+BETABOT_SESSIONS=12 \
+BETABOT_YEARS=3 \
 BETABOT_CONCURRENCY=16 \
 BETABOT_BACKEND_URL=http://localhost:3001/api \
 BETABOT_AUTH_TOKEN=your-dev-e2e-token \
 node skills/betabots/scripts/multi_session_betabots.cjs
 ```
+
+Fast mode writes `relationships.json`, `groups.json`, and `timeline.json` in addition to raw per-bot stories. Real APIs are used where available; missing lifecycle entities such as date attendance or first-class party groups are recorded as synthetic lifecycle events so product gaps remain visible.
 
 ### Thoughtful Mode
 
@@ -176,14 +179,15 @@ Run a DnDate-style synthetic live simulation:
 
 ```bash
 BETABOT_COUNT=200 \
-BETABOT_SESSIONS=4 \
+BETABOT_SESSIONS=12 \
+BETABOT_YEARS=3 \
 BETABOT_CONCURRENCY=16 \
 BETABOT_BACKEND_URL=http://localhost:3001/api \
 BETABOT_AUTH_TOKEN=your-dev-e2e-token \
 node skills/betabots/scripts/multi_session_betabots.cjs
 ```
 
-The bundled live runner is an adapter for products with endpoints similar to DnDate: profiles, characters, reactions, matches, messages, and tables. For other products, adapt the endpoint functions and keep the same artifact format.
+The bundled live runner is an adapter for products with endpoints similar to DnDate: profiles, characters, reactions, matches, messages, tabletop marketplace, reservations, organizer requests, and organizer venues. It also records synthetic lifecycle events for domain concepts that are not yet first-class API resources, such as date attendance, ghosting, second dates, and party group continuity. For other products, adapt the endpoint functions and keep the same artifact format.
 
 Run thoughtful browser sessions:
 
