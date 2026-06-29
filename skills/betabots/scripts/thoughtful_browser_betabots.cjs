@@ -33,6 +33,7 @@ const config = {
   llmModel: process.env.BETABOT_LLM_MODEL || '',
   llmMaxCalls: Number(process.env.BETABOT_LLM_MAX_CALLS || 500),
   llmTimeoutMs: Number(process.env.BETABOT_LLM_TIMEOUT_MS || 90000),
+  actionTimeoutMs: Number(process.env.BETABOT_ACTION_TIMEOUT_MS || 60000),
   codexCommand: process.env.BETABOT_CODEX_COMMAND || 'codex',
   openrouterApiKey: process.env.OPENROUTER_API_KEY || process.env.BETABOT_OPENROUTER_API_KEY || '',
   openrouterBaseUrl: (process.env.BETABOT_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, ''),
@@ -209,6 +210,30 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
 const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
 
+function withTimeout(promise, timeoutMs, label) {
+  let timer
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs)
+  })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
+}
+
+function terminateProcessTree(child) {
+  if (!child?.pid) return
+  try {
+    spawn('pkill', ['-TERM', '-P', String(child.pid)], { stdio: 'ignore' }).on('error', () => {})
+  } catch {}
+  child.kill('SIGTERM')
+  setTimeout(() => {
+    try {
+      spawn('pkill', ['-KILL', '-P', String(child.pid)], { stdio: 'ignore' }).on('error', () => {})
+    } catch {}
+    try {
+      child.kill('SIGKILL')
+    } catch {}
+  }, 5000).unref()
+}
+
 function publicConfig() {
   const { openrouterApiKey, authTokenTemplate, ...safeConfig } = config
   return {
@@ -237,17 +262,24 @@ function runProcess(command, args, input, timeoutMs) {
     })
     let stdout = ''
     let stderr = ''
+    let settled = false
     const timer = setTimeout(() => {
-      child.kill('SIGTERM')
+      if (settled) return
+      settled = true
+      terminateProcessTree(child)
       reject(new Error(`${command} timed out after ${timeoutMs}ms`))
     }, timeoutMs)
     child.stdout.on('data', (chunk) => { stdout += chunk.toString() })
     child.stderr.on('data', (chunk) => { stderr += chunk.toString() })
     child.on('error', (error) => {
+      if (settled) return
+      settled = true
       clearTimeout(timer)
       reject(error)
     })
     child.on('close', (code) => {
+      if (settled) return
+      settled = true
       clearTimeout(timer)
       if (code === 0) {
         resolve({ stdout, stderr })
@@ -1449,6 +1481,15 @@ async function runBot(browser, bot, runtime = {}) {
     opinions.push(opinion)
     log(`My reaction: ${opinion}`, { type: 'reaction' })
   }
+  const runStep = async (label, operation, fallback = undefined, timeoutMs = config.actionTimeoutMs) => {
+    try {
+      return await withTimeout(Promise.resolve().then(operation), timeoutMs, `${bot.id} ${label}`)
+    } catch (error) {
+      errors.push(`${label}: ${error.message}`)
+      log(`I get stuck while trying to ${label}, so I stop waiting and try to recover.`)
+      return fallback
+    }
+  }
   const recordScreenQuality = (observation) => {
     const fingerprint = screenFingerprint(observation)
     const count = (screenCounts.get(fingerprint) || 0) + 1
@@ -1560,7 +1601,7 @@ async function runBot(browser, bot, runtime = {}) {
     recordScreenQuality(observation)
     await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
-    await recordReflection(observation, 'arrival')
+    await runStep('reflect on arrival', () => recordReflection(observation, 'arrival'))
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
@@ -1570,17 +1611,15 @@ async function runBot(browser, bot, runtime = {}) {
       const remainingMs = sessionMs - (Date.now() - startedAt)
       await wait(Math.min(remainingMs, 6000 + random() * 12000))
       if (Date.now() - startedAt >= sessionMs) break
-      await followDestiny()
-      if (move > 0 && move % 3 === 0) await useBetabook('between actions')
+      await runStep('follow destiny', followDestiny)
+      if (move > 0 && move % 3 === 0) await runStep('check Betabook', () => useBetabook('between actions'))
       const route = routes[move % routes.length]
-      const clicked = await clickFirst(page, route.labels)
+      const clicked = await runStep('click next navigation', () => clickFirst(page, route.labels), null, 15000)
       if (clicked) {
         actions.push(`clicked ${clicked}`)
         log(`I click "${clicked}" because it looks like the next natural thing.`)
       } else {
-        await page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch((error) => {
-          errors.push(`navigation ${route.fallback}: ${error.message}`)
-        })
+        await runStep(`navigate ${route.fallback}`, () => page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'domcontentloaded', timeout: 20000 }), null, 25000)
         actions.push(`navigated ${route.fallback}`)
         log(`I cannot find the obvious link, so I try ${route.fallback} like a determined user using the address bar.`)
       }
@@ -1590,15 +1629,15 @@ async function runBot(browser, bot, runtime = {}) {
       recordScreenQuality(observation)
       await captureScreenshot('exploration', observation)
       log(`I now see: ${observation.text}`)
-      await recordReflection(observation, 'exploration')
+      await runStep('reflect on exploration', () => recordReflection(observation, 'exploration'))
 
       const lower = observation.text.toLowerCase()
       const currentFingerprintCount = screenCounts.get(screenFingerprint(observation)) || 1
       if (currentFingerprintCount >= config.loopRepeatThreshold) {
-        const asked = await askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation)
+        const asked = await runStep('ask Betabook for help', () => askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation), false)
         if (asked) {
           trust -= 4
-          await tryCuriosityAction(page, bot, log, actions, stats, true, captureScreenshot)
+          await runStep('try curiosity rescue', () => tryCuriosityAction(page, bot, log, actions, stats, true, captureScreenshot), false)
         }
       }
       const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
@@ -1608,7 +1647,7 @@ async function runBot(browser, bot, runtime = {}) {
       if (lower.includes('start with a character') || lower.includes('character required')) emptyCharacterViews += 1
 
       if (!createdCharacter && emptyCharacterViews > 0) {
-        createdCharacter = await tryCreateCharacter(page, bot, log, actions, captureScreenshot)
+        createdCharacter = await runStep('create character', () => tryCreateCharacter(page, bot, log, actions, captureScreenshot), false, Math.max(config.actionTimeoutMs, 90000))
         if (createdCharacter) {
           betabookPost(runtime.betabookState, {
             authorId: bot.id,
@@ -1623,23 +1662,23 @@ async function runBot(browser, bot, runtime = {}) {
           recordScreenQuality(observation)
           await captureScreenshot('character-created', observation)
           log(`After creating a character, I see: ${observation.text}`)
-          await recordReflection(observation, 'character-created')
+          await runStep('reflect after character creation', () => recordReflection(observation, 'character-created'))
         } else if (emptyCharacterViews >= 2) {
           trust -= 8
           log(`I am looping on the character requirement and starting to lose patience.`)
         }
       }
 
-      const actedSocially = await trySendMatchMessage(page, bot, log, actions, stats, captureScreenshot)
-        || await tryDiscoverReaction(page, bot, log, actions, stats, captureScreenshot)
-        || await tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot)
+      const actedSocially = await runStep('send match message', () => trySendMatchMessage(page, bot, log, actions, stats, captureScreenshot), false)
+        || await runStep('react to discover profile', () => tryDiscoverReaction(page, bot, log, actions, stats, captureScreenshot), false)
+        || await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
       if (actedSocially) {
         observation = await observe(page)
         recordScreenQuality(observation)
         await captureScreenshot('post-social-action', observation)
         log(`After the social action, I see: ${observation.text}`)
       } else {
-        const reserveClicked = await clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i])
+        const reserveClicked = await runStep('try fallback action', () => clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i]), null, 15000)
         if (reserveClicked) {
           actions.push(`clicked ${reserveClicked}`)
           stats.meaningfulSocialActions += 1
