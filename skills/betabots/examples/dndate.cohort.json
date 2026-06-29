@@ -61,26 +61,227 @@
     "I need a better way to find reliable players for hosted games."
   ],
   "routes": [
-    { "labels": ["get started", "start", "try", "demo", "discover"], "fallback": "/discover" },
-    { "labels": ["create", "profile", "character"], "fallback": "/profile" },
-    { "labels": ["discover", "browse", "find"], "fallback": "/discover" },
-    { "labels": ["likes", "matches"], "fallback": "/likes-you" },
-    { "labels": ["matches", "chat"], "fallback": "/matches" },
-    { "labels": ["table", "marketplace", "sessions", "reserve"], "fallback": "/tabletop" },
-    { "labels": ["organizer", "host", "venue", "request access"], "fallback": "/organizer" },
-    { "labels": ["tables", "sessions", "venues"], "fallback": "/tables" }
+    {
+      "labels": [
+        "get started",
+        "start",
+        "try",
+        "demo",
+        "discover"
+      ],
+      "fallback": "/discover"
+    },
+    {
+      "labels": [
+        "create",
+        "profile",
+        "character"
+      ],
+      "fallback": "/profile"
+    },
+    {
+      "labels": [
+        "discover",
+        "browse",
+        "find"
+      ],
+      "fallback": "/discover"
+    },
+    {
+      "labels": [
+        "likes",
+        "matches"
+      ],
+      "fallback": "/likes-you"
+    },
+    {
+      "labels": [
+        "matches",
+        "chat"
+      ],
+      "fallback": "/matches"
+    },
+    {
+      "labels": [
+        "table",
+        "marketplace",
+        "sessions",
+        "reserve"
+      ],
+      "fallback": "/tabletop"
+    },
+    {
+      "labels": [
+        "organizer",
+        "host",
+        "venue",
+        "request access"
+      ],
+      "fallback": "/organizer"
+    },
+    {
+      "labels": [
+        "tables",
+        "sessions",
+        "venues"
+      ],
+      "fallback": "/tables"
+    }
   ],
   "keywords": {
-    "value": ["match", "character", "reserve", "session", "table", "marketplace", "message", "compatibility"],
-    "trust": ["safety", "privacy", "beginner", "verified", "accessibility", "moderation"],
-    "risk": ["error", "something went wrong", "failed", "unauthorized"],
-    "empty": ["empty", "no new likes", "no matches yet", "nothing yet"]
+    "value": [
+      "match",
+      "character",
+      "reserve",
+      "session",
+      "table",
+      "marketplace",
+      "message",
+      "compatibility"
+    ],
+    "trust": [
+      "safety",
+      "privacy",
+      "beginner",
+      "verified",
+      "accessibility",
+      "moderation"
+    ],
+    "risk": [
+      "error",
+      "something went wrong",
+      "failed",
+      "unauthorized"
+    ],
+    "empty": [
+      "empty",
+      "no new likes",
+      "no matches yet",
+      "nothing yet"
+    ]
   },
   "ideaRules": [
-    { "when": ["beginner"], "idea": "Make beginner-friendly safety cues visible before asking me to commit." },
-    { "when": ["empty", "no new likes", "no matches yet"], "idea": "When nothing is available, show a concrete next step instead of only saying it is empty." },
-    { "when": ["match", "compatibility"], "idea": "Explain why a match is compatible, not only that it happened." },
-    { "when": ["tabletop marketplace", "waitlist", "bookable"], "idea": "Show organizer-facing demand, capacity, waitlist, deposit, and no-show controls from the marketplace." },
-    { "when": ["organizer", "venue"], "idea": "Give venues and GMs a clear organizer path with setup steps, pricing, and moderation expectations." }
+    {
+      "when": [
+        "beginner"
+      ],
+      "idea": "Make beginner-friendly safety cues visible before asking me to commit."
+    },
+    {
+      "when": [
+        "empty",
+        "no new likes",
+        "no matches yet"
+      ],
+      "idea": "When nothing is available, show a concrete next step instead of only saying it is empty."
+    },
+    {
+      "when": [
+        "match",
+        "compatibility"
+      ],
+      "idea": "Explain why a match is compatible, not only that it happened."
+    },
+    {
+      "when": [
+        "tabletop marketplace",
+        "waitlist",
+        "bookable"
+      ],
+      "idea": "Show organizer-facing demand, capacity, waitlist, deposit, and no-show controls from the marketplace."
+    },
+    {
+      "when": [
+        "organizer",
+        "venue"
+      ],
+      "idea": "Give venues and GMs a clear organizer path with setup steps, pricing, and moderation expectations."
+    }
+  ],
+  "screenSizeDistribution": [
+    {
+      "category": "mobile",
+      "weight": 50,
+      "devices": [
+        {
+          "name": "iPhone SE",
+          "width": 375,
+          "height": 667,
+          "deviceScaleFactor": 2
+        },
+        {
+          "name": "iPhone 13",
+          "width": 390,
+          "height": 844,
+          "deviceScaleFactor": 3
+        },
+        {
+          "name": "iPhone 15 Pro Max",
+          "width": 430,
+          "height": 932,
+          "deviceScaleFactor": 3
+        },
+        {
+          "name": "Pixel 7",
+          "width": 412,
+          "height": 915,
+          "deviceScaleFactor": 2.625
+        },
+        {
+          "name": "Galaxy S22",
+          "width": 360,
+          "height": 780,
+          "deviceScaleFactor": 3
+        }
+      ]
+    },
+    {
+      "category": "tablet",
+      "weight": 20,
+      "devices": [
+        {
+          "name": "iPad Mini",
+          "width": 768,
+          "height": 1024,
+          "deviceScaleFactor": 2
+        },
+        {
+          "name": "iPad Air",
+          "width": 820,
+          "height": 1180,
+          "deviceScaleFactor": 2
+        },
+        {
+          "name": "Surface Pro",
+          "width": 912,
+          "height": 1368,
+          "deviceScaleFactor": 2
+        }
+      ]
+    },
+    {
+      "category": "desktop",
+      "weight": 30,
+      "devices": [
+        {
+          "name": "Laptop 13",
+          "width": 1280,
+          "height": 800,
+          "deviceScaleFactor": 1
+        },
+        {
+          "name": "Laptop 15",
+          "width": 1440,
+          "height": 900,
+          "deviceScaleFactor": 1
+        },
+        {
+          "name": "Desktop HD",
+          "width": 1920,
+          "height": 1080,
+          "deviceScaleFactor": 1
+        }
+      ]
+    }
   ]
 }

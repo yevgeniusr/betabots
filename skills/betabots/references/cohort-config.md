@@ -21,6 +21,23 @@ Betabot personas are defined by a cohort JSON file. The same thoughtful browser 
       "viewport": "mobile"
     }
   ],
+  "screenSizeDistribution": [
+    {
+      "category": "mobile",
+      "weight": 50,
+      "devices": [{ "name": "iPhone 13", "width": 390, "height": 844, "deviceScaleFactor": 3 }]
+    },
+    {
+      "category": "tablet",
+      "weight": 20,
+      "devices": [{ "name": "iPad Air", "width": 820, "height": 1180, "deviceScaleFactor": 2 }]
+    },
+    {
+      "category": "desktop",
+      "weight": 30,
+      "devices": [{ "name": "Laptop 15", "width": 1440, "height": 900, "deviceScaleFactor": 1 }]
+    }
+  ],
   "routes": [
     { "labels": ["get started", "start", "try"], "fallback": "/" },
     { "labels": ["dashboard", "pipeline"], "fallback": "/dashboard" },
@@ -52,7 +69,8 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ## Fields
 
 - `appName`: Human-readable product name used in thoughts and analysis.
-- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, and `attentionSpanMinutes`.
+- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, and `attentionSpanMinutes`.
+- `screenSizeDistribution`: Optional weighted screen-size buckets. Each bucket has `category`, `weight`, and `devices`; each device has `name`, `width`, `height`, optional `deviceScaleFactor`, `isMobile`, `hasTouch`, and `userAgent`. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Override per run with `BETABOT_SCREEN_SIZE_DISTRIBUTION` or legacy alias `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `names`: Optional reusable first names for generated personas.
 - `discoveries`: Optional discovery circumstances used when a role omits `discovery`.
 - `baselines`: Optional emotional baselines such as `curious`, `skeptical`, or `impatient`.

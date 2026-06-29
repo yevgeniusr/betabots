@@ -21,6 +21,7 @@ const config = {
   authLocalStorageKey: process.env.BETABOT_AUTH_LOCAL_STORAGE_KEY || '',
   authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
   cohortFile: process.env.BETABOT_COHORT_FILE || '',
+  cohortOnly: String(process.env.BETABOT_COHORT_ONLY || 'false') === 'true',
   backendUrl: (process.env.BETABOT_BACKEND_URL || 'http://localhost:3001/api').replace(/\/$/, ''),
   betabookEnabled: betabookRequested,
   destinyEnabled: destinyRequested,
@@ -40,6 +41,7 @@ const config = {
   openrouterSiteUrl: process.env.BETABOT_OPENROUTER_SITE_URL || '',
   openrouterAppName: process.env.BETABOT_OPENROUTER_APP_NAME || 'Betabots',
   visualEvidenceMode: (process.env.BETABOT_VISUAL_EVIDENCE_MODE || process.env.BETABOT_SCREENSHOT_EVIDENCE_MODE || 'audit').toLowerCase(),
+  screenSizeDistribution: process.env.BETABOT_SCREEN_SIZE_DISTRIBUTION || process.env.BETABOT_VIEWPORT_DISTRIBUTION || '',
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -109,6 +111,25 @@ const defaultCohort = {
       goal: 'Verify whether the product makes constraints and accommodations visible before commitment.',
     },
   ],
+  screenSizeDistribution: [
+    { category: 'mobile', weight: 50, devices: [
+      { name: 'iPhone SE', width: 375, height: 667, deviceScaleFactor: 2 },
+      { name: 'iPhone 13', width: 390, height: 844, deviceScaleFactor: 3 },
+      { name: 'iPhone 15 Pro Max', width: 430, height: 932, deviceScaleFactor: 3 },
+      { name: 'Pixel 7', width: 412, height: 915, deviceScaleFactor: 2.625 },
+      { name: 'Galaxy S22', width: 360, height: 780, deviceScaleFactor: 3 },
+    ] },
+    { category: 'tablet', weight: 20, devices: [
+      { name: 'iPad Mini', width: 768, height: 1024, deviceScaleFactor: 2 },
+      { name: 'iPad Air', width: 820, height: 1180, deviceScaleFactor: 2 },
+      { name: 'Surface Pro', width: 912, height: 1368, deviceScaleFactor: 2 },
+    ] },
+    { category: 'desktop', weight: 30, devices: [
+      { name: 'Laptop 13', width: 1280, height: 800, deviceScaleFactor: 1 },
+      { name: 'Laptop 15', width: 1440, height: 900, deviceScaleFactor: 1 },
+      { name: 'Desktop HD', width: 1920, height: 1080, deviceScaleFactor: 1 },
+    ] },
+  ],
   routes: [
     { labels: ['get started', 'start', 'try', 'demo', 'sign up', 'continue'], fallback: '/' },
     { labels: ['features', 'how it works', 'learn more', 'product'], fallback: '/features' },
@@ -165,6 +186,43 @@ function normalizeRoutes(routes) {
   }))
 }
 
+function parseJsonEnv(value, label) {
+  if (!value) return null
+  try {
+    return JSON.parse(value)
+  } catch (error) {
+    throw new Error(`${label} must be valid JSON: ${error.message}`)
+  }
+}
+
+function normalizeScreenSizeDistribution(value, fallback = defaultCohort.screenSizeDistribution) {
+  const source = normalizeList(value, fallback)
+  const distribution = source.map((entry) => {
+    if (typeof entry === 'string') return normalizeScreenSizeDistribution([{ category: entry, weight: 1 }], fallback)[0]
+    const category = String(entry.category || entry.viewport || entry.name || 'desktop').toLowerCase()
+    const hasExplicitDevices = entry.devices || entry.sizes || entry.viewports || entry.width || entry.viewport?.width
+    const fallbackBucket = fallback.find((bucket) => bucket.category === category) || fallback.find((bucket) => bucket.category === 'desktop')
+    const sourceDevices = hasExplicitDevices ? normalizeList(entry.devices || entry.sizes || entry.viewports, [entry]) : normalizeList(fallbackBucket?.devices, [entry])
+    const devices = sourceDevices.map((device) => ({
+      name: device.name || `${category}-${device.width || 'auto'}x${device.height || 'auto'}`,
+      category: String(device.category || device.viewport || category).toLowerCase(),
+      width: Number(device.width || device.viewport?.width || 1366),
+      height: Number(device.height || device.viewport?.height || 900),
+      deviceScaleFactor: Number(device.deviceScaleFactor || device.scale || 1),
+      isMobile: typeof device.isMobile === 'boolean' ? device.isMobile : undefined,
+      hasTouch: typeof device.hasTouch === 'boolean' ? device.hasTouch : undefined,
+      userAgent: device.userAgent || '',
+    })).filter((device) => Number.isFinite(device.width) && Number.isFinite(device.height) && device.width > 0 && device.height > 0)
+    return { category, weight: Number(entry.weight || entry.percent || 1), devices }
+  }).filter((entry) => entry.weight > 0 && entry.devices.length)
+  return distribution.length ? distribution : fallback
+}
+
+function screenDistributionFromEnv() {
+  const raw = parseJsonEnv(config.screenSizeDistribution, 'BETABOT_SCREEN_SIZE_DISTRIBUTION')
+  return raw ? normalizeScreenSizeDistribution(raw) : null
+}
+
 function loadCohortConfig() {
   let override = {}
   let source = 'built-in generic default'
@@ -181,6 +239,7 @@ function loadCohortConfig() {
     discoveries: normalizeList(override.discoveries, defaultCohort.discoveries),
     roles: normalizeList(override.roles || override.personas, defaultCohort.roles),
     routes: normalizeRoutes(override.routes || defaultCohort.routes),
+    screenSizeDistribution: screenDistributionFromEnv() || normalizeScreenSizeDistribution(override.screenSizeDistribution || override.screen_size_distribution || override.screenSizes || override.screen_sizes || override.viewports, defaultCohort.screenSizeDistribution),
     keywords: { ...defaultCohort.keywords, ...(override.keywords || {}) },
     ideaRules: normalizeList(override.ideaRules || override.ideas, defaultCohort.ideaRules),
     endings: normalizeList(override.endings, defaultCohort.endings),
@@ -207,6 +266,98 @@ function mulberry32(seed) {
 const random = mulberry32(config.seed)
 const pick = (items) => items[Math.floor(random() * items.length)]
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
+function pickWeighted(items) {
+  const total = items.reduce((sum, item) => sum + Number(item.weight || 0), 0)
+  let threshold = random() * total
+  for (const item of items) {
+    threshold -= Number(item.weight || 0)
+    if (threshold <= 0) return item
+  }
+  return items[items.length - 1]
+}
+
+function makeScreenSize(bucket) {
+  const device = pick(bucket.devices)
+  return {
+    ...device,
+    category: device.category || bucket.category,
+    viewport: { width: device.width, height: device.height },
+  }
+}
+
+function selectScreenSize(preferredCategory = '') {
+  const category = String(preferredCategory || '').toLowerCase()
+  const exact = cohort.screenSizeDistribution.find((entry) => entry.category === category)
+  return makeScreenSize(exact || pickWeighted(cohort.screenSizeDistribution))
+}
+
+function quotaByCategory(totalCount) {
+  const weightTotal = cohort.screenSizeDistribution.reduce((sum, entry) => sum + entry.weight, 0)
+  const rows = cohort.screenSizeDistribution.map((entry) => {
+    const exact = (totalCount * entry.weight) / weightTotal
+    const whole = Math.floor(exact)
+    return { category: entry.category, count: whole, remainder: exact - whole }
+  })
+  let assigned = rows.reduce((sum, row) => sum + row.count, 0)
+  for (const row of [...rows].sort((a, b) => b.remainder - a.remainder)) {
+    if (assigned >= totalCount) break
+    row.count += 1
+    assigned += 1
+  }
+  return new Map(rows.map((row) => [row.category, row.count]))
+}
+
+function rolePreferredScreenCategory(index) {
+  const roleSpec = roles[index % roles.length]
+  const roleObject = typeof roleSpec === 'string' ? { role: roleSpec } : roleSpec
+  const viewport = String(roleObject.viewport || '').toLowerCase()
+  if (viewport && cohort.screenSizeDistribution.some((entry) => entry.category === viewport)) return viewport
+  const role = String(roleObject.role || '').toLowerCase()
+  if (role.includes('mobile') && cohort.screenSizeDistribution.some((entry) => entry.category === 'mobile')) return 'mobile'
+  return ''
+}
+
+function buildScreenSizePlan(totalCount) {
+  const quotas = quotaByCategory(totalCount)
+  const categories = []
+  for (let index = 0; index < totalCount; index += 1) {
+    const preferred = rolePreferredScreenCategory(index)
+    if (preferred && (quotas.get(preferred) || 0) > 0) {
+      categories[index] = preferred
+      quotas.set(preferred, quotas.get(preferred) - 1)
+    }
+  }
+  const remaining = []
+  for (const [category, count] of quotas.entries()) {
+    for (let index = 0; index < count; index += 1) remaining.push(category)
+  }
+  for (let index = remaining.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1))
+    const current = remaining[index]
+    remaining[index] = remaining[swapIndex]
+    remaining[swapIndex] = current
+  }
+  let remainingIndex = 0
+  return Array.from({ length: totalCount }, (_, index) => {
+    const category = categories[index] || remaining[remainingIndex++] || cohort.screenSizeDistribution[0].category
+    return selectScreenSize(category)
+  })
+}
+
+function screenSizeForPersona(index, preferredCategory = '') {
+  const planned = screenSizePlan[index]
+  if (!preferredCategory || planned.category === preferredCategory) return planned
+  const preferredExists = cohort.screenSizeDistribution.some((entry) => entry.category === preferredCategory)
+  return preferredExists ? selectScreenSize(preferredCategory) : planned
+}
+
+function userAgentForScreen(screenSize) {
+  if (screenSize.userAgent) return screenSize.userAgent
+  if (screenSize.category === 'mobile') return 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  if (screenSize.category === 'tablet') return 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36'
+}
+const screenSizePlan = buildScreenSizePlan(config.count)
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
 const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
 
@@ -435,6 +586,10 @@ function personaAt(index) {
   const generatedName = `${names[index % names.length]} ${Math.floor(index / names.length) + 1}`
   const technicalComfort = roleObject.technicalComfort || pick(['low', 'medium', 'high'])
   const configuredMinutes = Number(roleObject.attentionSpanMinutes || roleObject.durationMinutes || 0)
+  const configuredScreenSize = roleObject.screenSize || roleObject.screen_size
+  const screenSize = configuredScreenSize
+    ? normalizeScreenSizeDistribution([{ category: configuredScreenSize.category || roleObject.viewport || 'custom', devices: [configuredScreenSize] }])[0].devices[0]
+    : screenSizeForPersona(index, roleObject.viewport || (role.toLowerCase().includes('mobile') ? 'mobile' : ''))
   return {
     id: `thoughtful-betabot-${String(index + 1).padStart(3, '0')}`,
     name: roleObject.name || generatedName,
@@ -445,7 +600,8 @@ function personaAt(index) {
     emotionalBaseline: roleObject.emotionalBaseline || pick(baselines),
     technicalComfort,
     traits: roleObject.traits || [],
-    viewport: roleObject.viewport || (role.toLowerCase().includes('mobile') ? 'mobile' : 'desktop'),
+    viewport: roleObject.viewport || screenSize.category || (role.toLowerCase().includes('mobile') ? 'mobile' : 'desktop'),
+    screenSize,
     attentionSpanMinutes: configuredMinutes || clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
   }
 }
@@ -1390,11 +1546,13 @@ async function tryCuriosityAction(page, bot, log, actions, stats, force = false,
 
 async function runBot(browser, bot, runtime = {}) {
   const startedAt = Date.now()
+  const screenSize = bot.screenSize || selectScreenSize(bot.viewport)
   const context = await browser.newContext({
-    viewport: bot.viewport === 'mobile' ? { width: 390, height: 844 } : { width: 1366, height: 900 },
-    userAgent: bot.viewport === 'mobile'
-      ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'
-      : undefined,
+    viewport: screenSize.viewport || { width: screenSize.width, height: screenSize.height },
+    deviceScaleFactor: screenSize.deviceScaleFactor || 1,
+    isMobile: typeof screenSize.isMobile === 'boolean' ? screenSize.isMobile : screenSize.category === 'mobile',
+    hasTouch: typeof screenSize.hasTouch === 'boolean' ? screenSize.hasTouch : ['mobile', 'tablet'].includes(screenSize.category),
+    userAgent: userAgentForScreen(screenSize),
   })
   const authToken = authTokenFor(bot)
   if (config.authLocalStorageKey && authToken) {
@@ -1586,6 +1744,7 @@ async function runBot(browser, bot, runtime = {}) {
 
   try {
     log(`I arrive as ${bot.role}. My past: ${bot.past}`)
+    log(`My screen is ${bot.screenSize.name} (${bot.screenSize.width}x${bot.screenSize.height}, ${bot.screenSize.category}).`)
     log(`Today I want to: ${bot.goal}`)
     if (authToken) log(`I have my own isolated test account for this session.`)
     betabookPost(runtime.betabookState, {
@@ -1772,7 +1931,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -1807,6 +1966,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
       source: cohort.source,
       roleCount: cohort.roles.length,
       routeCount: cohort.routes.length,
+      screenSizeDistribution: cohort.screenSizeDistribution,
     },
     betabook: betabookState?.enabled ? {
       enabled: true,
@@ -1840,6 +2000,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Cohort source: ${cohort.source}
 - Role definitions: ${cohort.roles.length}
 - Route definitions: ${cohort.routes.length}
+- Screen-size distribution: ${cohort.screenSizeDistribution.map((entry) => `${entry.category} ${entry.weight}`).join(', ')}
 - Betabook: ${betabookState?.enabled ? 'enabled' : 'disabled'}
 - Betabook posts: ${betabookState?.enabled ? betabookState.posts.length : 0}
 - Destiny: ${destinyState?.enabled ? 'enabled' : 'disabled'}
@@ -1942,11 +2103,16 @@ async function main() {
         labels: route.labels.map((label) => label.toString()),
         fallback: route.fallback,
       })),
+      screenSizeDistribution: cohort.screenSizeDistribution,
       keywords: cohort.keywords,
       ideaRules: cohort.ideaRules,
     },
     bots,
   }, null, 2))
+  if (config.cohortOnly) {
+    console.log(JSON.stringify({ runDir: config.runDir, bots: bots.length, cohortOnly: true }, null, 2))
+    return
+  }
   const playwright = await requirePlaywright()
   const browser = await playwright.chromium.launch({ headless: config.headless })
   const results = []

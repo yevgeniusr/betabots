@@ -253,7 +253,9 @@ Optional auth isolation:
 
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
-- `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, keywords, and idea rules.
+- `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, screen-size distribution, keywords, and idea rules.
+- `BETABOT_SCREEN_SIZE_DISTRIBUTION`: optional JSON array of weighted device buckets for thoughtful browser runs. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Legacy alias: `BETABOT_VIEWPORT_DISTRIBUTION`.
+- `BETABOT_COHORT_ONLY=true`: writes `cohort.json` and exits without launching browsers; useful for auditing persona and screen-size seeding.
 - `BETABOT_BETABOOK=true`: enables the run-scoped Reddit-like social board for bot-to-bot posts, comments, and invites.
 - `BETABOT_DESTINY=true`: enables the master-plan layer that makes paths cross, not cross, or almost cross.
 - `BETABOT_DESTINY_INTERVAL_MS`: interval for Destiny to inspect the cohort and apply interventions.
@@ -273,7 +275,8 @@ Optional auth isolation:
 Persona and role definition:
 
 - The runner accepts `roles` or `personas` as strings or objects.
-- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, and `attentionSpanMinutes`.
+- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, and `attentionSpanMinutes`.
+- Cohort files can define `screenSizeDistribution`; the bundled DnDate cohort uses 50% different mobile phones, 20% tablets, and 30% PCs.
 - Product-specific routes and words belong in cohort JSON, not in runner code.
 - Use `skills/betabots/examples/dndate.cohort.json` as a domain-specific pattern and `skills/betabots/examples/generic-saas.cohort.json` as a portable baseline.
 

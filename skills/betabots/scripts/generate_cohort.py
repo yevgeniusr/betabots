@@ -76,9 +76,79 @@ ENDINGS = [
     "saved/bookmarked for later",
 ]
 
+SCREEN_SIZE_DISTRIBUTION = [
+    {
+        "category": "mobile",
+        "weight": 50,
+        "devices": [
+            {"name": "iPhone SE", "width": 375, "height": 667, "deviceScaleFactor": 2},
+            {"name": "iPhone 13", "width": 390, "height": 844, "deviceScaleFactor": 3},
+            {"name": "iPhone 15 Pro Max", "width": 430, "height": 932, "deviceScaleFactor": 3},
+            {"name": "Pixel 7", "width": 412, "height": 915, "deviceScaleFactor": 2.625},
+            {"name": "Galaxy S22", "width": 360, "height": 780, "deviceScaleFactor": 3},
+        ],
+    },
+    {
+        "category": "tablet",
+        "weight": 20,
+        "devices": [
+            {"name": "iPad Mini", "width": 768, "height": 1024, "deviceScaleFactor": 2},
+            {"name": "iPad Air", "width": 820, "height": 1180, "deviceScaleFactor": 2},
+            {"name": "Surface Pro", "width": 912, "height": 1368, "deviceScaleFactor": 2},
+        ],
+    },
+    {
+        "category": "desktop",
+        "weight": 30,
+        "devices": [
+            {"name": "Laptop 13", "width": 1280, "height": 800, "deviceScaleFactor": 1},
+            {"name": "Laptop 15", "width": 1440, "height": 900, "deviceScaleFactor": 1},
+            {"name": "Desktop HD", "width": 1920, "height": 1080, "deviceScaleFactor": 1},
+        ],
+    },
+]
 
-def persona(index: int, rng: random.Random) -> dict:
+
+def weighted_choice(distribution: list[dict], rng: random.Random) -> dict:
+    total = sum(float(item.get("weight", 0)) for item in distribution)
+    threshold = rng.random() * total
+    for item in distribution:
+        threshold -= float(item.get("weight", 0))
+        if threshold <= 0:
+            return item
+    return distribution[-1]
+
+
+def select_screen_size(distribution: list[dict], rng: random.Random, category: str | None = None) -> dict:
+    bucket = next((item for item in distribution if item.get("category") == category), None)
+    if bucket is None:
+        bucket = weighted_choice(distribution, rng)
+    device = dict(rng.choice(bucket["devices"]))
+    device["category"] = device.get("category", bucket["category"])
+    return device
+
+
+def screen_category_plan(count: int, distribution: list[dict], rng: random.Random) -> list[str]:
+    total = sum(float(item.get("weight", 0)) for item in distribution)
+    rows = []
+    for item in distribution:
+        exact = count * float(item.get("weight", 0)) / total
+        whole = int(exact)
+        rows.append({"category": item["category"], "count": whole, "remainder": exact - whole})
+    assigned = sum(row["count"] for row in rows)
+    for row in sorted(rows, key=lambda item: item["remainder"], reverse=True):
+        if assigned >= count:
+            break
+        row["count"] += 1
+        assigned += 1
+    categories = [row["category"] for row in rows for _ in range(row["count"])]
+    rng.shuffle(categories)
+    return categories
+
+
+def persona(index: int, rng: random.Random, screen_distribution: list[dict], screen_plan: list[str]) -> dict:
     role = ROLES[index % len(ROLES)] if index < len(ROLES) else rng.choice(ROLES)
+    screen_size = select_screen_size(screen_distribution, rng, screen_plan[index])
     return {
         "id": f"metabot-{index + 1:02d}",
         "name": rng.choice(["Maya", "Leo", "Sam", "Nina", "Omar", "Iris", "Theo", "Jules", "Rae", "Max"]),
@@ -89,6 +159,8 @@ def persona(index: int, rng: random.Random) -> dict:
         "goal_today": rng.choice(GOALS),
         "emotional_baseline": rng.choice(EMOTIONS),
         "technical_comfort": rng.choice(TECH),
+        "viewport": screen_size["category"],
+        "screen_size": screen_size,
         "attention_span_minutes": rng.randint(3, 18),
         "likely_endings": rng.sample(ENDINGS, 3),
         "must_not_know": [
@@ -106,15 +178,23 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--product", default="the application")
     parser.add_argument("--out", default="-")
+    parser.add_argument(
+        "--screen-size-distribution",
+        default=None,
+        help="JSON array overriding weighted screen-size buckets. Defaults to 50% mobile, 20% tablet, 30% desktop.",
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
+    screen_distribution = json.loads(args.screen_size_distribution) if args.screen_size_distribution else SCREEN_SIZE_DISTRIBUTION
+    screen_plan = screen_category_plan(args.count, screen_distribution, rng)
     cohort = {
         "product": args.product,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "seed": args.seed,
         "session_rule": "Each persona behaves as a real human, not as QA, and knows nothing about code.",
-        "personas": [persona(index, rng) for index in range(args.count)],
+        "screen_size_distribution": screen_distribution,
+        "personas": [persona(index, rng, screen_distribution, screen_plan) for index in range(args.count)],
     }
 
     text = json.dumps(cohort, indent=2, ensure_ascii=False)

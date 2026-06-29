@@ -83,6 +83,8 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 Use `references/cohort-config.md` for the full schema. In short:
 
+Screen-size seeding is part of random character generation. By default, thoughtful mode uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Set `screenSizeDistribution` in the cohort file or pass `BETABOT_SCREEN_SIZE_DISTRIBUTION` as a JSON array to change the weighted buckets.
+
 - `roles` define who the betabots are, what happened before they arrived, how they discovered the app, and what they want today.
 - `routes` define visible labels and fallback URLs the bots can realistically try.
 - `keywords` define what counts as value, trust, risk, and empty-state evidence for that product.
