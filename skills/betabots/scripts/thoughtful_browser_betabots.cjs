@@ -1547,13 +1547,22 @@ async function runBot(browser, bot, runtime = {}) {
       const actedSocially = await trySendMatchMessage(page, bot, log, actions, stats)
         || await tryDiscoverReaction(page, bot, log, actions, stats)
         || await tryCuriosityAction(page, bot, log, actions, stats)
-      if (!actedSocially) {
+      if (actedSocially) {
+        observation = await observe(page)
+        recordScreenQuality(observation)
+        await screenshot(page, bot, step++)
+        log(`After the social action, I see: ${observation.text}`)
+      } else {
         const reserveClicked = await clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i])
         if (reserveClicked) {
           actions.push(`clicked ${reserveClicked}`)
           stats.meaningfulSocialActions += 1
           log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
           await wait(2500 + random() * 5500)
+          observation = await observe(page)
+          recordScreenQuality(observation)
+          await screenshot(page, bot, step++)
+          log(`After trying "${reserveClicked}", I see: ${observation.text}`)
         }
       }
     }
