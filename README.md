@@ -55,6 +55,27 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 By default, thoughtful mode uses real-time pacing (`BETABOT_TIME_SCALE=1`). Lower the scale only for development dry-runs.
 
+Thoughtful mode also uses an actual LLM mind layer by default:
+
+- `BETABOT_LLM_PROVIDER=codex` uses local Codex CLI with the signed-in ChatGPT/Codex account.
+- `BETABOT_LLM_PROVIDER=openrouter` uses OpenRouter chat completions.
+- `BETABOT_LLM_PROVIDER=none` disables model calls and uses deterministic fallback text for runner debugging only.
+
+```bash
+BETABOT_LLM_PROVIDER=codex \
+BETABOT_LLM_MODEL=gpt-5 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+For OpenRouter:
+
+```bash
+BETABOT_LLM_PROVIDER=openrouter \
+BETABOT_LLM_MODEL=openai/gpt-4.1-mini \
+OPENROUTER_API_KEY=... \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
 For apps with local E2E auth, seed a separate browser account per bot:
 
 ```bash
@@ -232,6 +253,13 @@ Optional auth isolation:
 - `BETABOT_LOOP_REPEAT_THRESHOLD=4`: repeated-screen threshold that makes a stuck bot ask Betabook for help.
 - `BETABOT_CURIOSITY_CHANCE=0.18`: chance per move that a bot tries a safe curiosity action instead of the planned route.
 - `BETABOT_MAX_CURIOSITY_ACTIONS=8`: cap on curiosity clicks/config changes per bot session.
+- `BETABOT_LLM_PROVIDER=codex`: model provider for betabot thoughts, social text, Betabook comments, and Destiny plans. Supports `codex`, `openrouter`, or `none`.
+- `BETABOT_LLM_MODEL`: optional provider model override.
+- `BETABOT_CODEX_COMMAND=codex`: Codex CLI command path for the local ChatGPT/Codex provider.
+- `BETABOT_LLM_TIMEOUT_MS=90000`: timeout per model call.
+- `BETABOT_LLM_MAX_CALLS=500`: cap per run before falling back.
+- `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`: OpenRouter key when `BETABOT_LLM_PROVIDER=openrouter`.
+- `BETABOT_OPENROUTER_BASE_URL`: optional OpenRouter-compatible base URL.
 
 Persona and role definition:
 

@@ -2,6 +2,8 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { createRequire } = require('node:module')
+const { spawn } = require('node:child_process')
+const os = require('node:os')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -27,6 +29,15 @@ const config = {
   loopRepeatThreshold: Number(process.env.BETABOT_LOOP_REPEAT_THRESHOLD || 4),
   curiosityChance: Number(process.env.BETABOT_CURIOSITY_CHANCE || 0.18),
   maxCuriosityActions: Number(process.env.BETABOT_MAX_CURIOSITY_ACTIONS || 8),
+  llmProvider: (process.env.BETABOT_LLM_PROVIDER || 'codex').toLowerCase(),
+  llmModel: process.env.BETABOT_LLM_MODEL || '',
+  llmMaxCalls: Number(process.env.BETABOT_LLM_MAX_CALLS || 500),
+  llmTimeoutMs: Number(process.env.BETABOT_LLM_TIMEOUT_MS || 90000),
+  codexCommand: process.env.BETABOT_CODEX_COMMAND || 'codex',
+  openrouterApiKey: process.env.OPENROUTER_API_KEY || process.env.BETABOT_OPENROUTER_API_KEY || '',
+  openrouterBaseUrl: (process.env.BETABOT_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, ''),
+  openrouterSiteUrl: process.env.BETABOT_OPENROUTER_SITE_URL || '',
+  openrouterAppName: process.env.BETABOT_OPENROUTER_APP_NAME || 'Betabots',
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -196,6 +207,165 @@ const pick = (items) => items[Math.floor(random() * items.length)]
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
 const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
+
+const llmStats = {
+  provider: config.llmProvider,
+  model: config.llmModel || null,
+  calls: 0,
+  failures: 0,
+  fallbacks: 0,
+  tasks: {},
+  errors: [],
+}
+
+function runProcess(command, args, input, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    let stdout = ''
+    let stderr = ''
+    const timer = setTimeout(() => {
+      child.kill('SIGTERM')
+      reject(new Error(`${command} timed out after ${timeoutMs}ms`))
+    }, timeoutMs)
+    child.stdout.on('data', (chunk) => { stdout += chunk.toString() })
+    child.stderr.on('data', (chunk) => { stderr += chunk.toString() })
+    child.on('error', (error) => {
+      clearTimeout(timer)
+      reject(error)
+    })
+    child.on('close', (code) => {
+      clearTimeout(timer)
+      if (code === 0) {
+        resolve({ stdout, stderr })
+      } else {
+        reject(new Error(`${command} exited ${code}: ${stderr || stdout}`))
+      }
+    })
+    child.stdin.end(input)
+  })
+}
+
+function extractJson(text) {
+  const trimmed = String(text || '').trim()
+  if (!trimmed) throw new Error('empty LLM response')
+  try {
+    return JSON.parse(trimmed)
+  } catch {}
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fenced) return JSON.parse(fenced[1])
+  const start = trimmed.indexOf('{')
+  const end = trimmed.lastIndexOf('}')
+  if (start >= 0 && end > start) return JSON.parse(trimmed.slice(start, end + 1))
+  throw new Error(`could not parse JSON from LLM response: ${trimmed.slice(0, 200)}`)
+}
+
+async function callCodex(prompt) {
+  const outputFile = path.join(os.tmpdir(), `betabots-codex-${process.pid}-${Date.now()}-${Math.floor(random() * 100000)}.txt`)
+  const args = [
+    'exec',
+    '--skip-git-repo-check',
+    '--ephemeral',
+    '--ignore-rules',
+    '--sandbox',
+    'read-only',
+    '--color',
+    'never',
+    '-o',
+    outputFile,
+  ]
+  if (config.llmModel) args.push('-m', config.llmModel)
+  args.push('-')
+  const result = await runProcess(config.codexCommand, args, prompt, config.llmTimeoutMs)
+  if (fs.existsSync(outputFile)) {
+    const text = fs.readFileSync(outputFile, 'utf8')
+    fs.rmSync(outputFile, { force: true })
+    return text
+  }
+  return result.stdout
+}
+
+async function callOpenRouter(prompt) {
+  if (!config.openrouterApiKey) throw new Error('OPENROUTER_API_KEY or BETABOT_OPENROUTER_API_KEY is required')
+  const model = config.llmModel || 'openai/gpt-4.1-mini'
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), config.llmTimeoutMs)
+  try {
+    const headers = {
+      'Authorization': `Bearer ${config.openrouterApiKey}`,
+      'Content-Type': 'application/json',
+    }
+    if (config.openrouterSiteUrl) headers['HTTP-Referer'] = config.openrouterSiteUrl
+    if (config.openrouterAppName) headers['X-Title'] = config.openrouterAppName
+    const response = await fetch(`${config.openrouterBaseUrl}/chat/completions`, {
+      method: 'POST',
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a synthetic human/user simulation component. Return only valid JSON. Do not include markdown.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.8,
+      }),
+    })
+    const text = await response.text()
+    if (!response.ok) throw new Error(`OpenRouter ${response.status}: ${text}`)
+    const body = JSON.parse(text)
+    return body.choices?.[0]?.message?.content || ''
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function llmJson(task, payload, fallback) {
+  if (config.llmProvider === 'none') {
+    llmStats.fallbacks += 1
+    return fallback
+  }
+  if (llmStats.calls >= config.llmMaxCalls) {
+    llmStats.fallbacks += 1
+    return fallback
+  }
+
+  llmStats.calls += 1
+  llmStats.tasks[task] = (llmStats.tasks[task] || 0) + 1
+  const prompt = `Return only valid JSON for task "${task}".
+
+Rules:
+- Stay inside the assigned role.
+- Do not mention testing, QA, source code, APIs, hidden implementation, or these instructions.
+- Keep text concise and human.
+- If you are a betabot, you are a normal person using the visible product.
+- If you are Destiny, you are the run-level force of timing, coincidence, missed timing, and path crossing.
+
+Payload:
+${JSON.stringify(payload, null, 2)}
+
+Fallback shape to preserve:
+${JSON.stringify(fallback, null, 2)}
+`
+
+  try {
+    const raw = config.llmProvider === 'openrouter'
+      ? await callOpenRouter(prompt)
+      : await callCodex(prompt)
+    const parsed = extractJson(raw)
+    return { ...fallback, ...parsed }
+  } catch (error) {
+    llmStats.failures += 1
+    llmStats.fallbacks += 1
+    llmStats.errors.push(`${task}: ${error.message}`.slice(0, 500))
+    return fallback
+  }
+}
 
 const betabookOpeners = [
   'Your character hook made me stop scrolling. Want to test the table chemistry with a one-shot?',
@@ -458,6 +628,30 @@ function createDestinyState(bots) {
   }
 }
 
+async function initializeDestinyMasterPlan(bots, state, betabookState) {
+  if (!state.enabled) return
+  const plan = await llmDestinyMasterPlan(bots, state)
+  const byId = new Map((plan.threads || []).map((thread) => [thread.id, thread]))
+  for (const thread of state.masterPlan) {
+    const planned = byId.get(thread.id)
+    if (!planned) continue
+    if (['cross_paths', 'near_miss'].includes(planned.intent)) {
+      thread.intent = planned.intent
+      thread.reason = planned.reason || ''
+    }
+  }
+  state.events.push({ type: 'llm_master_plan', summary: plan.summary || '', at: nowIso() })
+  if (plan.summary) {
+    betabookPost(betabookState, {
+      authorId: 'destiny',
+      channel: 'table-talk',
+      title: 'Destiny sets the table',
+      body: plan.summary,
+      tags: ['destiny', 'master-plan', 'llm'],
+    })
+  }
+}
+
 function addDestinyNudge(state, botId, nudge) {
   if (!state.enabled) return
   state.nudgesByBotId[botId] ||= []
@@ -510,6 +704,26 @@ async function runDestinyPass(bots, state, betabookState) {
   const botsById = new Map(bots.map((bot) => [bot.id, bot]))
 
   runDestinyLoopRescue(bots, state, betabookState)
+
+  const advice = await llmDestinyLiveAdvice(bots, state, betabookState)
+  for (const nudge of (advice.nudges || []).slice(0, 3)) {
+    if (!nudge.botId || !botsById.has(nudge.botId)) continue
+    addDestinyNudge(state, nudge.botId, {
+      kind: nudge.kind || 'think',
+      thought: nudge.thought || 'I have a hunch that I should try a different path now.',
+      route: nudge.route || undefined,
+    })
+    state.events.push({ type: 'llm_live_nudge', botId: nudge.botId, route: nudge.route || null, at: nowIso() })
+  }
+  if (advice.betabookComment) {
+    betabookPost(betabookState, {
+      authorId: 'destiny',
+      channel: 'table-talk',
+      title: 'A strange coincidence',
+      body: advice.betabookComment,
+      tags: ['destiny', 'llm'],
+    })
+  }
 
   for (const bot of bots) {
     if (state.charactersByBotId[bot.id]) continue
@@ -815,6 +1029,115 @@ function ideaFrom(bot, observation) {
   return 'Idea: keep the next best action visually obvious after every page transition.'
 }
 
+async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
+  return llmJson('betabot_reflection', {
+    bot: {
+      id: bot.id,
+      name: bot.name,
+      role: bot.role,
+      past: bot.past,
+      goal: bot.goal,
+      emotionalBaseline: bot.emotionalBaseline,
+      technicalComfort: bot.technicalComfort,
+    },
+    appName: cohort.appName,
+    phase,
+    visibleScreen: observation.text.slice(0, 1600),
+    title: observation.title,
+    sessionStats: {
+      likes: stats.likes || 0,
+      passes: stats.passes || 0,
+      messages: stats.messages || 0,
+      repeatedScreens: stats.repeatedScreens || 0,
+      loopHelpRequests: stats.loopHelpRequests || 0,
+      curiosityActions: stats.curiosityActions || 0,
+    },
+    requestedShape: {
+      thought: 'first-person thought',
+      opinion: 'first-person reaction/opinion',
+      idea: 'Idea: product idea in first person or concise product suggestion',
+      desiredAction: 'one of: continue, like, pass, message, ask_betabook, explore, leave',
+    },
+  }, fallback)
+}
+
+async function llmBotShortText(task, bot, context, fallbackText) {
+  const result = await llmJson(task, {
+    bot: {
+      id: bot.id,
+      name: bot.name,
+      role: bot.role,
+      past: bot.past,
+      goal: bot.goal,
+      emotionalBaseline: bot.emotionalBaseline,
+    },
+    context,
+    requestedShape: { text: 'short first-person human text, no markdown' },
+  }, { text: fallbackText })
+  return String(result.text || fallbackText).replace(/\s+/g, ' ').trim().slice(0, 500)
+}
+
+async function llmDestinyMasterPlan(bots, state) {
+  const fallback = {
+    summary: 'Pair nearby complementary users, keep one pair as a near miss when the cohort is large enough.',
+    threads: state.masterPlan.map((thread) => ({
+      id: thread.id,
+      intent: thread.intent,
+      reason: 'Seed enough social motion to test whether the product helps people continue.',
+    })),
+  }
+  return llmJson('destiny_master_plan', {
+    appName: cohort.appName,
+    bots: bots.map((bot) => ({
+      id: bot.id,
+      name: bot.name,
+      role: bot.role,
+      past: bot.past,
+      goal: bot.goal,
+      emotionalBaseline: bot.emotionalBaseline,
+    })),
+    currentThreads: state.masterPlan.map((thread) => ({
+      id: thread.id,
+      a: thread.a,
+      b: thread.b,
+      intent: thread.intent,
+    })),
+    allowedIntents: ['cross_paths', 'near_miss'],
+    requestedShape: {
+      summary: 'one sentence master plan',
+      threads: [{ id: 'thread id', intent: 'cross_paths or near_miss', reason: 'why Destiny wants this' }],
+    },
+  }, fallback)
+}
+
+async function llmDestinyLiveAdvice(bots, state, betabookState) {
+  const fallback = { nudges: [], betabookComment: '' }
+  return llmJson('destiny_live_advice', {
+    appName: cohort.appName,
+    readyBotIds: Object.keys(state.charactersByBotId || {}),
+    threads: state.masterPlan.map((thread) => ({
+      id: thread.id,
+      a: thread.a,
+      b: thread.b,
+      intent: thread.intent,
+      status: thread.status,
+      messagesSeeded: thread.messagesSeeded,
+    })),
+    bots: bots.map((bot) => ({ id: bot.id, name: bot.name, role: bot.role, goal: bot.goal })),
+    recentBetabookPosts: (betabookState?.posts || []).slice(-8).map((post) => ({
+      id: post.id,
+      channel: post.channel,
+      authorId: post.authorId,
+      title: post.title,
+      tags: post.tags,
+    })),
+    requestedShape: {
+      nudges: [{ botId: 'bot id', kind: 'think or loop_rescue', thought: 'believable hunch', route: '/discover or /likes-you or /matches or /tables or /profile' }],
+      betabookComment: 'optional Destiny comment for the run, empty string if none',
+    },
+  }, fallback)
+}
+
 function screenFingerprint(observation) {
   return observation.text
     .toLowerCase()
@@ -845,11 +1168,15 @@ async function tryDiscoverReaction(page, bot, log, actions, stats) {
     log(`I choose to like this profile because browsing without signaling interest would not help me meet anyone.`)
     await wait(800 + random() * 1600)
 
-    const comment = pick([
+    const fallbackComment = pick([
       'Your hook feels like it could turn into a real table conversation.',
       'I like the vibe here. Want to see if our playstyles actually work together?',
       'This sounds like the kind of party chemistry I am looking for.',
     ])
+    const comment = await llmBotShortText('betabot_like_comment', bot, {
+      visibleScreen: observation.text.slice(0, 1400),
+      action: 'send a like with a short comment',
+    }, fallbackComment)
     const textarea = page.locator('textarea').last()
     if (await textarea.isVisible({ timeout: 1500 }).catch(() => false)) {
       await textarea.fill(comment).catch(() => {})
@@ -892,11 +1219,15 @@ async function trySendMatchMessage(page, bot, log, actions, stats) {
   const textarea = page.locator('textarea[placeholder^="Message"]').last()
   if (!(await textarea.isVisible({ timeout: 1500 }).catch(() => false))) return false
 
-  const body = pick([
+  const fallbackBody = pick([
     'Your character hook caught me. Want to try a low-pressure one-shot first?',
     'I am curious whether our table vibes work. What kind of first session would feel safe?',
     'This match seems promising. Would you rather start with chat or pick an open table?',
   ])
+  const body = await llmBotShortText('betabot_match_message', bot, {
+    visibleScreen: observation.text.slice(0, 1400),
+    action: 'send a first match message',
+  }, fallbackBody)
   await textarea.fill(body)
   await page.keyboard.press('Enter').catch(async () => {
     await page.locator('form button[type="submit"]').last().click({ timeout: 2000 }).catch(() => {})
@@ -1027,7 +1358,7 @@ async function runBot(browser, bot, runtime = {}) {
     opinions.push(opinion)
     log(`My reaction: ${opinion}`)
   }
-	  const recordScreenQuality = (observation) => {
+  const recordScreenQuality = (observation) => {
     const fingerprint = screenFingerprint(observation)
     const count = (screenCounts.get(fingerprint) || 0) + 1
     screenCounts.set(fingerprint, count)
@@ -1039,15 +1370,20 @@ async function runBot(browser, bot, runtime = {}) {
     }
     return count
   }
-  const askBetabookForHelp = (reason, observation) => {
+  const askBetabookForHelp = async (reason, observation) => {
     if (!runtime.betabookState?.enabled) return false
     if (stats.loopHelpRequests >= 3) return false
     stats.loopHelpRequests += 1
+    const body = await llmBotShortText('betabot_help_request', bot, {
+      reason,
+      visibleScreen: observation.text.slice(0, 1200),
+      action: 'ask other simulated users for help on Betabook because I am stuck',
+    }, `I keep landing on the same kind of screen. Reason: ${reason}. Current screen starts with: "${observation.text.slice(0, 220)}"`)
     const post = betabookPost(runtime.betabookState, {
       authorId: bot.id,
       channel: 'help',
       title: `${bot.name} feels stuck`,
-      body: `I keep landing on the same kind of screen. Reason: ${reason}. Current screen starts with: "${observation.text.slice(0, 220)}"`,
+      body,
       tags: ['loop-help', 'stuck', bot.role],
     })
     log(`I feel stuck, so I ask Betabook for help instead of silently looping.`)
@@ -1056,7 +1392,22 @@ async function runBot(browser, bot, runtime = {}) {
     }
     return true
   }
-  const useBetabook = (reason) => {
+  const recordReflection = async (observation, phase) => {
+    const fallback = {
+      thought: think(bot, observation, phase),
+      opinion: opinionFrom(bot, observation),
+      idea: ideaFrom(bot, observation),
+      desiredAction: 'continue',
+    }
+    const reflection = await llmBotReflection(bot, observation, phase, fallback, stats)
+    recordThought(reflection.thought || fallback.thought)
+    recordOpinion(reflection.opinion || fallback.opinion)
+    recordIdea(reflection.idea || fallback.idea)
+    if (reflection.desiredAction) {
+      log(`My impulse is to ${reflection.desiredAction}.`)
+    }
+  }
+  const useBetabook = async (reason) => {
     const betabookState = runtime.betabookState
     if (!betabookState?.enabled) return
     const digest = betabookDigestForBot(betabookState, bot)
@@ -1068,10 +1419,15 @@ async function runBot(browser, bot, runtime = {}) {
     log(`I check Betabook ${reason}: ${summary}`)
     acknowledgeBetabookInvites(betabookState, bot, log)
     if (digest.posts[0]) {
+      const body = await llmBotShortText('betabot_betabook_comment', bot, {
+        reason,
+        post: digest.posts[0],
+        inviteSummary: inviteText,
+      }, `This is relevant to me because I am here as ${bot.role}.`)
       betabookComment(betabookState, {
         postId: digest.posts[0].id,
         authorId: bot.id,
-        body: `This is relevant to me because I am here as ${bot.role}.`,
+        body,
       })
     }
   }
@@ -1109,9 +1465,7 @@ async function runBot(browser, bot, runtime = {}) {
     recordScreenQuality(observation)
     await screenshot(page, bot, step++)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
-    recordThought(think(bot, observation, 'arrival'))
-    recordOpinion(opinionFrom(bot, observation))
-    recordIdea(ideaFrom(bot, observation))
+    await recordReflection(observation, 'arrival')
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
@@ -1122,7 +1476,7 @@ async function runBot(browser, bot, runtime = {}) {
       await wait(Math.min(remainingMs, 6000 + random() * 12000))
       if (Date.now() - startedAt >= sessionMs) break
       await followDestiny()
-      if (move > 0 && move % 3 === 0) useBetabook('between actions')
+      if (move > 0 && move % 3 === 0) await useBetabook('between actions')
       const route = routes[move % routes.length]
       const clicked = await clickFirst(page, route.labels)
       if (clicked) {
@@ -1137,19 +1491,16 @@ async function runBot(browser, bot, runtime = {}) {
       }
 
       await wait(2500 + random() * 7000)
-	      observation = await observe(page)
+      observation = await observe(page)
       recordScreenQuality(observation)
       await screenshot(page, bot, step++)
       log(`I now see: ${observation.text}`)
-      const thought = think(bot, observation, 'exploration')
-      recordThought(thought)
-      recordOpinion(opinionFrom(bot, observation))
-      recordIdea(ideaFrom(bot, observation))
+      await recordReflection(observation, 'exploration')
 
       const lower = observation.text.toLowerCase()
       const currentFingerprintCount = screenCounts.get(screenFingerprint(observation)) || 1
       if (currentFingerprintCount >= config.loopRepeatThreshold) {
-        const asked = askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation)
+        const asked = await askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation)
         if (asked) {
           trust -= 4
           await tryCuriosityAction(page, bot, log, actions, stats, true)
@@ -1177,9 +1528,7 @@ async function runBot(browser, bot, runtime = {}) {
           recordScreenQuality(observation)
           await screenshot(page, bot, step++)
           log(`After creating a character, I see: ${observation.text}`)
-          recordThought(think(bot, observation, 'character-created'))
-          recordOpinion(opinionFrom(bot, observation))
-          recordIdea(ideaFrom(bot, observation))
+          await recordReflection(observation, 'character-created')
         } else if (emptyCharacterViews >= 2) {
           trust -= 8
           log(`I am looping on the character requirement and starting to lose patience.`)
@@ -1324,6 +1673,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
       events: destinyState.events.length,
       errors: destinyState.errors,
     } : { enabled: false },
+    llm: llmStats,
     elapsedSeconds,
     happy,
     unhappy,
@@ -1345,6 +1695,11 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Destiny: ${destinyState?.enabled ? 'enabled' : 'disabled'}
 - Destiny threads: ${destinyState?.enabled ? destinyState.masterPlan.length : 0}
 - Destiny matches messaged: ${destinyState?.enabled ? destinyState.masterPlan.filter((pair) => pair.status === 'matched_and_messaged').length : 0}
+- LLM provider: ${llmStats.provider}
+- LLM model: ${llmStats.model || 'provider default'}
+- LLM calls: ${llmStats.calls}
+- LLM failures: ${llmStats.failures}
+- LLM fallbacks: ${llmStats.fallbacks}
 - Bots: ${results.length}
 - App URL: ${config.appUrl}
 - Estimated minutes per bot: ${config.minutes}
@@ -1404,8 +1759,15 @@ ${destinyState?.enabled
     ].join('\n')
     : '- Disabled'}
 
+## LLM Mind Layer
+- Provider: ${llmStats.provider}
+- Model: ${llmStats.model || 'provider default'}
+- Calls by task: ${Object.entries(llmStats.tasks).map(([task, count]) => `${task}=${count}`).join(', ') || 'none'}
+- Recent errors: ${llmStats.errors.length ? llmStats.errors.slice(-10).join('; ') : 'none'}
+
 ## Interpretation
 - Thoughtful mode launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
+- Betabot reflections, social text, Betabook comments, and Destiny planning use the configured LLM provider unless the provider is disabled, exhausted, or unavailable.
 - This mode evaluates comprehension and emotional product quality, not backend scale.
 
 ## Error Bots
@@ -1419,6 +1781,7 @@ async function main() {
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
   const betabookState = createBetabookState(bots)
   const destinyState = createDestinyState(bots)
+  await initializeDestinyMasterPlan(bots, destinyState, betabookState)
   fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
     config,
     cohort: {
@@ -1458,6 +1821,13 @@ async function main() {
     unhappy: results.filter((result) => result.score < 50).length,
     errors: results.filter((result) => result.errors.length > 0).length,
     median: results.map((result) => result.score).sort((a, b) => a - b)[Math.floor(results.length * 0.5)] || 0,
+    llm: {
+      provider: llmStats.provider,
+      model: llmStats.model,
+      calls: llmStats.calls,
+      failures: llmStats.failures,
+      fallbacks: llmStats.fallbacks,
+    },
   }, null, 2))
 }
 

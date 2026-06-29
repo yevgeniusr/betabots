@@ -36,6 +36,41 @@ BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES=75 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+## LLM Minds
+
+Thoughtful mode uses actual LLM calls for bot thoughts, opinions, ideas, social messages, Betabook help/comment text, and Destiny planning. Deterministic text is only a fallback when the provider is disabled, exhausted, or unavailable.
+
+Default provider:
+
+```bash
+BETABOT_LLM_PROVIDER=codex \
+BETABOT_LLM_MODEL=gpt-5 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The `codex` provider calls local Codex CLI in non-interactive exec mode and uses the currently signed-in ChatGPT/Codex account. Override the executable with `BETABOT_CODEX_COMMAND` when `codex` is not on `PATH`.
+
+OpenRouter provider:
+
+```bash
+BETABOT_LLM_PROVIDER=openrouter \
+BETABOT_LLM_MODEL=openai/gpt-4.1-mini \
+OPENROUTER_API_KEY=... \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+Provider knobs:
+
+- `BETABOT_LLM_PROVIDER=codex|openrouter|none`
+- `BETABOT_LLM_MODEL`
+- `BETABOT_CODEX_COMMAND`
+- `BETABOT_LLM_TIMEOUT_MS`
+- `BETABOT_LLM_MAX_CALLS`
+- `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`
+- `BETABOT_OPENROUTER_BASE_URL`
+
+Use `BETABOT_LLM_PROVIDER=none` only for runner smoke tests where model behavior is not under evaluation.
+
 ## Cohort Configuration
 
 Thoughtful mode is app-agnostic when you pass a cohort file:
