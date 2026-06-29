@@ -63,7 +63,7 @@ Use these bundled scripts from the plugin root:
 - `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level synthetic-live simulation against an app with bearer-token auth.
 - `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with thoughts, screenshots, and first-person raw logs.
 
-Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/session-template.md` when writing raw journey files manually.
+Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.
 
 ## Happiness Standard
 

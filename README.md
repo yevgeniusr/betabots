@@ -42,6 +42,7 @@ Thoughtful mode launches real browsers and runs human-speed sessions. It is for 
 Use it after fast mode is clean:
 
 ```bash
+BETABOT_COHORT_FILE=skills/betabots/examples/generic-saas.cohort.json \
 BETABOT_APP_URL=http://localhost:5173 \
 BETABOT_THOUGHTFUL_COUNT=5 \
 BETABOT_THOUGHTFUL_MINUTES=8 \
@@ -74,7 +75,15 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 The runner aggregates first-person thoughts and ideas into `analysis.md` and `summary.json`.
 Thoughtful sessions keep thinking tied to product use: each observation can produce a thought, first reaction, similarity/comparison, or idea, but the runner should not spend most of a session in reflection-only mode.
-The default thoughtful cohort includes players, DMs, venue operators, board game cafe owners, local game stores, paid GMs, meetup organizers, convention organizers, school clubs, accessibility-focused hosts, corporate event buyers, and tourism experience operators.
+By default, thoughtful mode uses a generic cross-product cohort. For domain-specific testing, pass `BETABOT_COHORT_FILE` with roles, pasts, discovery circumstances, routes, value keywords, trust keywords, and idea rules. See `skills/betabots/references/cohort-config.md`.
+
+Run the DnDate cohort explicitly:
+
+```bash
+BETABOT_COHORT_FILE=skills/betabots/examples/dndate.cohort.json \
+BETABOT_APP_URL=http://localhost:5173 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
 
 ## Repository Layout
 
@@ -84,6 +93,7 @@ The default thoughtful cohort includes players, DMs, venue operators, board game
 .cursor-plugin/plugin.json     Cursor plugin manifest
 skills/betabots/SKILL.md       Main Betabots skill
 skills/betabots/scripts/       Cohort, analysis, and live simulation scripts
+skills/betabots/examples/      Reusable cohort files for generic and domain-specific apps
 skills/betabots/references/    Session templates, safety, fast, and thoughtful guidance
 scripts/install-local.sh       Local installer for Codex, Claude, and Cursor
 tests/smoke.sh                 Lightweight validation
@@ -178,6 +188,7 @@ The bundled live runner is an adapter for products with endpoints similar to DnD
 Run thoughtful browser sessions:
 
 ```bash
+BETABOT_COHORT_FILE=skills/betabots/examples/generic-saas.cohort.json \
 BETABOT_APP_URL=http://localhost:5173 \
 BETABOT_THOUGHTFUL_COUNT=3 \
 BETABOT_THOUGHTFUL_MINUTES=10 \
@@ -191,6 +202,14 @@ Optional auth isolation:
 
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
+- `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, keywords, and idea rules.
+
+Persona and role definition:
+
+- The runner accepts `roles` or `personas` as strings or objects.
+- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, and `attentionSpanMinutes`.
+- Product-specific routes and words belong in cohort JSON, not in runner code.
+- Use `skills/betabots/examples/dndate.cohort.json` as a domain-specific pattern and `skills/betabots/examples/generic-saas.cohort.json` as a portable baseline.
 
 ## Safety
 

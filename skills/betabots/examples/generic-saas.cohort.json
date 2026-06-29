@@ -1,0 +1,50 @@
+{
+  "appName": "Generic SaaS",
+  "roles": [
+    {
+      "role": "new first-time user",
+      "past": "I have the problem this product claims to solve, but I do not know its language or assumptions yet.",
+      "goal": "Understand what this is, whether it is for me, and what the first safe step is."
+    },
+    {
+      "role": "skeptical buyer comparing alternatives",
+      "past": "I have tried similar products before and been burned by vague promises, hidden limits, or poor onboarding.",
+      "goal": "Find proof, pricing cues, and enough trust to justify spending time or money."
+    },
+    {
+      "role": "busy team operator",
+      "past": "I manage recurring work and notice quickly when a tool creates more coordination than it removes.",
+      "goal": "Decide whether this product reduces operational work without creating new risk."
+    },
+    {
+      "role": "privacy-sensitive lurker",
+      "past": "I have shared too much with products before and now look for privacy, control, and reversibility before engaging.",
+      "goal": "See enough value before handing over personal information."
+    },
+    {
+      "role": "mobile-first impatient user",
+      "past": "I usually discover products from my phone and abandon them quickly if the first screen is unclear.",
+      "goal": "Complete one meaningful action without needing a desktop or a tutorial.",
+      "viewport": "mobile"
+    }
+  ],
+  "routes": [
+    { "labels": ["get started", "start", "try", "demo", "sign up"], "fallback": "/" },
+    { "labels": ["features", "how it works", "learn more"], "fallback": "/features" },
+    { "labels": ["pricing", "plans", "upgrade"], "fallback": "/pricing" },
+    { "labels": ["dashboard", "app", "home"], "fallback": "/dashboard" },
+    { "labels": ["profile", "settings", "account"], "fallback": "/profile" },
+    { "labels": ["help", "docs", "support"], "fallback": "/help" }
+  ],
+  "keywords": {
+    "value": ["dashboard", "saved", "created", "report", "invite", "project", "workflow", "automation"],
+    "trust": ["privacy", "security", "verified", "support", "permissions", "transparent"],
+    "risk": ["error", "failed", "something went wrong", "unauthorized"],
+    "empty": ["empty", "no ", "nothing yet"]
+  },
+  "ideaRules": [
+    { "when": ["pricing", "plan"], "idea": "Show pricing, limits, and commitment level before asking me to invest effort." },
+    { "when": ["sign in", "auth", "account"], "idea": "Explain what I can see before signup and why an account is required." },
+    { "when": ["empty", "no ", "nothing yet"], "idea": "When a page is empty, show the next useful action instead of only the empty state." }
+  ]
+}

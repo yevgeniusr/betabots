@@ -15,40 +15,161 @@ const config = {
   seed: Number(process.env.BETABOT_SEED || 20260630),
   authLocalStorageKey: process.env.BETABOT_AUTH_LOCAL_STORAGE_KEY || '',
   authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
+  cohortFile: process.env.BETABOT_COHORT_FILE || '',
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
-const roles = [
-  'lonely player seeking party chemistry',
-  'privacy-sensitive lurker',
-  'new D&D player who needs beginner safety',
-  'mobile-first impatient user',
-  'GM looking for reliable players',
-  'romance-curious roleplayer',
-  'friendship-first table seeker',
-  'venue organizer evaluating demand',
-  'board game cafe owner filling weeknights',
-  'friendly local game store owner planning events',
-  'professional DM selling paid one-shots',
-  'homebrew campaign DM recruiting committed players',
-  'community meetup organizer coordinating strangers',
-  'cafe owner testing tabletop nights',
-  'board game publisher demoing new titles',
-  'convention organizer checking event demand',
-  'school club organizer protecting younger players',
-  'corporate team-building host sourcing GMs',
-  'accessibility-conscious event host',
-  'tourism experience operator packaging RPG nights',
-]
-const names = ['Mira', 'Sol', 'Niko', 'Tara', 'Ren', 'Ari', 'Vale', 'June', 'Rook', 'Iris']
-const baselines = ['curious', 'guarded', 'skeptical', 'hopeful', 'impatient', 'playful']
-const endings = [
-  'completed session and will come back later',
-  'understood value but needs more live people',
-  'got lost, did not know what to do, and left',
-  'felt cautious and left for now',
-  'found enough value for one session',
-]
+const defaultCohort = {
+  appName: 'the product',
+  names: ['Mira', 'Sol', 'Niko', 'Tara', 'Ren', 'Ari', 'Vale', 'June', 'Rook', 'Iris'],
+  baselines: ['curious', 'guarded', 'skeptical', 'hopeful', 'impatient', 'playful'],
+  discoveries: [
+    'A friend mentioned it during a practical problem I was already trying to solve.',
+    'I found it while searching for alternatives to a tool that disappointed me.',
+    'I saw someone mention it online and wanted to see if it was real.',
+    'I am bored with my current workflow and wondering whether this is better.',
+    'I need to decide whether this is worth trying before recommending it to anyone else.',
+  ],
+  roles: [
+    {
+      role: 'new first-time user',
+      past: 'I have the problem this product claims to solve, but I do not know its language or assumptions yet.',
+      goal: 'Understand what this is, whether it is for me, and what the first safe step is.',
+    },
+    {
+      role: 'skeptical buyer comparing alternatives',
+      past: 'I have tried similar products before and been burned by vague promises, hidden limits, or poor onboarding.',
+      goal: 'Find concrete proof, pricing cues, and enough trust to justify spending time or money.',
+    },
+    {
+      role: 'busy operator responsible for outcomes',
+      past: 'I manage work that breaks when tools are confusing, unreliable, or require too much manual coordination.',
+      goal: 'Decide whether this product reduces operational work without creating new risk.',
+    },
+    {
+      role: 'privacy-sensitive lurker',
+      past: 'I have shared too much with products before and now look for privacy, control, and reversibility before engaging.',
+      goal: 'See enough value before handing over personal information or committing.',
+    },
+    {
+      role: 'mobile-first impatient user',
+      past: 'I usually discover products from my phone and abandon them quickly if the first screen is unclear.',
+      goal: 'Complete one meaningful action without needing a desktop or a tutorial.',
+      viewport: 'mobile',
+      technicalComfort: 'medium',
+    },
+    {
+      role: 'power user seeking depth',
+      past: 'I already understand this category and care about speed, shortcuts, integrations, and control.',
+      goal: 'Find whether the product has enough depth after the first simple demo.',
+      technicalComfort: 'high',
+    },
+    {
+      role: 'team manager evaluating adoption',
+      past: 'I need other people to use this too, so unclear onboarding, permissions, or collaboration limits matter.',
+      goal: 'Understand whether a team could adopt this without constant hand-holding.',
+    },
+    {
+      role: 'support-seeking user with a live problem',
+      past: 'I came here because something in my current workflow is painful today, not because I wanted to browse.',
+      goal: 'Find immediate relief, help, or a clear next step before I lose patience.',
+    },
+    {
+      role: 'creator or supplier evaluating marketplace value',
+      past: 'I can contribute supply, content, services, or inventory, but only if demand and rules are clear.',
+      goal: 'Decide whether this marketplace or platform can bring real demand without wasting effort.',
+    },
+    {
+      role: 'accessibility-conscious user',
+      past: 'I have been excluded by products that hide accessibility, safety, language, or comfort details too late.',
+      goal: 'Verify whether the product makes constraints and accommodations visible before commitment.',
+    },
+  ],
+  routes: [
+    { labels: ['get started', 'start', 'try', 'demo', 'sign up', 'continue'], fallback: '/' },
+    { labels: ['features', 'how it works', 'learn more', 'product'], fallback: '/features' },
+    { labels: ['pricing', 'plans', 'upgrade'], fallback: '/pricing' },
+    { labels: ['dashboard', 'app', 'home', 'browse'], fallback: '/dashboard' },
+    { labels: ['profile', 'settings', 'account'], fallback: '/profile' },
+    { labels: ['help', 'docs', 'support', 'contact'], fallback: '/help' },
+  ],
+  keywords: {
+    value: ['dashboard', 'results', 'saved', 'created', 'match', 'booking', 'message', 'report', 'invite', 'project', 'workflow'],
+    trust: ['privacy', 'security', 'safe', 'verified', 'help', 'support', 'beginner', 'accessible', 'transparent'],
+    risk: ['error', 'failed', 'something went wrong', 'not found', 'forbidden', 'unauthorized'],
+    empty: ['empty', 'no ', 'nothing yet', 'not available'],
+  },
+  ideaRules: [
+    { when: ['pricing', 'plan'], idea: 'Idea: show pricing, limits, and commitment level before asking me to invest effort.' },
+    { when: ['sign in', 'auth', 'account'], idea: 'Idea: explain what I can see before signup and why an account is required.' },
+    { when: ['empty', 'no ', 'nothing yet'], idea: 'Idea: when a page is empty, show the next useful action instead of only the empty state.' },
+    { when: ['privacy', 'security'], idea: 'Idea: surface privacy and control choices before sensitive actions.' },
+    { when: ['help', 'support', 'docs'], idea: 'Idea: keep help close to the moment where users hesitate.' },
+  ],
+  endings: [
+    'completed session and will come back later',
+    'understood value but needs more proof or live content',
+    'got lost, did not know what to do, and left',
+    'felt cautious and left for now',
+    'found enough value for one session',
+  ],
+}
+
+function normalizeList(value, fallback = []) {
+  return Array.isArray(value) && value.length ? value : fallback
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function patternFromLabel(label) {
+  if (label instanceof RegExp) return label
+  if (label && typeof label === 'object' && label.pattern) {
+    return new RegExp(label.pattern, label.flags || 'i')
+  }
+  const text = String(label)
+  const regexMatch = text.match(/^\/(.+)\/([a-z]*)$/i)
+  if (regexMatch) return new RegExp(regexMatch[1], regexMatch[2] || 'i')
+  return new RegExp(escapeRegExp(text), 'i')
+}
+
+function normalizeRoutes(routes) {
+  return normalizeList(routes, defaultCohort.routes).map((route) => ({
+    labels: normalizeList(route.labels, []).map(patternFromLabel),
+    fallback: route.fallback || '/',
+  }))
+}
+
+function loadCohortConfig() {
+  let override = {}
+  let source = 'built-in generic default'
+  if (config.cohortFile) {
+    const file = path.resolve(process.cwd(), config.cohortFile)
+    override = JSON.parse(fs.readFileSync(file, 'utf8'))
+    source = file
+  }
+
+  const cohort = {
+    appName: override.appName || defaultCohort.appName,
+    names: normalizeList(override.names, defaultCohort.names),
+    baselines: normalizeList(override.baselines, defaultCohort.baselines),
+    discoveries: normalizeList(override.discoveries, defaultCohort.discoveries),
+    roles: normalizeList(override.roles || override.personas, defaultCohort.roles),
+    routes: normalizeRoutes(override.routes || defaultCohort.routes),
+    keywords: { ...defaultCohort.keywords, ...(override.keywords || {}) },
+    ideaRules: normalizeList(override.ideaRules || override.ideas, defaultCohort.ideaRules),
+    endings: normalizeList(override.endings, defaultCohort.endings),
+    source,
+  }
+  return cohort
+}
+
+const cohort = loadCohortConfig()
+const roles = cohort.roles
+const names = cohort.names
+const baselines = cohort.baselines
+const endings = cohort.endings
 
 function mulberry32(seed) {
   return function random() {
@@ -63,66 +184,49 @@ const random = mulberry32(config.seed)
 const pick = (items) => items[Math.floor(random() * items.length)]
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
+const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
 
 function personaAt(index) {
-  const role = roles[index % roles.length]
+  const roleSpec = roles[index % roles.length]
+  const roleObject = typeof roleSpec === 'string' ? { role: roleSpec } : roleSpec
+  const role = roleObject.role
+  const generatedName = `${names[index % names.length]} ${Math.floor(index / names.length) + 1}`
+  const technicalComfort = roleObject.technicalComfort || pick(['low', 'medium', 'high'])
+  const configuredMinutes = Number(roleObject.attentionSpanMinutes || roleObject.durationMinutes || 0)
   return {
     id: `thoughtful-betabot-${String(index + 1).padStart(3, '0')}`,
-    name: `${names[index % names.length]} ${Math.floor(index / names.length) + 1}`,
+    name: roleObject.name || generatedName,
     role,
-    past: pastFor(role),
-    discovery: pick([
-      'A friend mentioned this after a campaign dissolved.',
-      'I found it while searching for D&D dating alternatives.',
-      'I saw a local tabletop post and wanted to see if it was real.',
-      'I am bored at night and wondering if I can find people who get my hobby.',
-      'I am looking for a way to fill slow nights with tabletop events.',
-      'I heard tabletop meetups might bring repeat customers to venues.',
-      'I need a better way to find reliable players for hosted games.',
-    ]),
-    goal: goalFor(role),
-    emotionalBaseline: pick(baselines),
-    technicalComfort: pick(['low', 'medium', 'high']),
-    attentionSpanMinutes: clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
+    past: roleObject.past || pastFor(role),
+    discovery: roleObject.discovery || pick(cohort.discoveries),
+    goal: roleObject.goal || goalFor(role),
+    emotionalBaseline: roleObject.emotionalBaseline || pick(baselines),
+    technicalComfort,
+    traits: roleObject.traits || [],
+    viewport: roleObject.viewport || (role.toLowerCase().includes('mobile') ? 'mobile' : 'desktop'),
+    attentionSpanMinutes: configuredMinutes || clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
   }
 }
 
 function pastFor(role) {
-  if (role.includes('cafe owner')) return 'My cafe is full on weekends but dead on weeknights, and I need events that bring respectful repeat customers.'
-  if (role.includes('game store')) return 'I run a local game store and want events that sell seats without creating scheduling chaos.'
-  if (role.includes('professional DM')) return 'I run paid games and need players who understand expectations, price, tone, and attendance.'
-  if (role.includes('homebrew campaign DM')) return 'I have a campaign ready, but flaky players have killed previous groups.'
-  if (role.includes('community meetup')) return 'I coordinate strangers and worry about safety, no-shows, and whether newcomers feel welcome.'
-  if (role.includes('publisher')) return 'I need to demo games to the right crowd and prove people will show up before I commit staff time.'
-  if (role.includes('convention')) return 'I plan events months ahead and need demand signals, waitlists, capacity, and host reliability.'
-  if (role.includes('school club')) return 'I organize a school club and care about age-appropriate safety and moderation.'
-  if (role.includes('corporate')) return 'I book team-building sessions and need professional hosts, predictable logistics, and invoices.'
-  if (role.includes('accessibility')) return 'I host inclusive events and need accessibility details to be visible before people book.'
-  if (role.includes('tourism')) return 'I package local experiences and want RPG nights tourists can book with confidence.'
-  if (role.includes('privacy')) return 'I have had weird experiences in online communities, so I look for safety cues before engaging.'
-  if (role.includes('new D&D')) return 'I have only played a few sessions and worry about joining a table that expects too much.'
-  if (role.includes('GM')) return 'I have run campaigns before, but unreliable players burned me out.'
-  if (role.includes('organizer')) return 'I help organize small game nights and need to know whether people will actually show up.'
-  if (role.includes('romance')) return 'Dating apps feel shallow, but I like the idea of meeting through shared imagination.'
-  return 'My last group faded out, and I miss the feeling of table chemistry.'
+  const lower = role.toLowerCase()
+  if (lower.includes('buyer') || lower.includes('manager')) return 'I am responsible for a decision and need confidence before I spend time, money, or political capital.'
+  if (lower.includes('operator') || lower.includes('admin')) return 'I deal with practical work every day and notice quickly when a tool creates extra coordination.'
+  if (lower.includes('privacy')) return 'I have had bad experiences with products asking for too much too early, so I look for control first.'
+  if (lower.includes('mobile')) return 'I am on my phone between other tasks and will leave if the first few steps feel heavy.'
+  if (lower.includes('creator') || lower.includes('supplier')) return 'I can bring supply or content, but only if demand, rules, and setup effort are clear.'
+  if (lower.includes('accessibility')) return 'I need constraints, accommodations, and expectations to be visible before I can trust the product.'
+  return 'I have a real-world problem this product might solve, but I am not yet sure whether it understands my situation.'
 }
 
 function goalFor(role) {
-  if (role.includes('cafe owner')) return 'See whether this can turn quiet cafe nights into reliable tabletop bookings.'
-  if (role.includes('game store')) return 'Check whether events can be listed, filled, and managed without manual spreadsheet work.'
-  if (role.includes('professional DM')) return 'Understand whether paid sessions communicate value, expectations, and player fit.'
-  if (role.includes('homebrew campaign DM')) return 'Find whether I can recruit committed players with compatible playstyle.'
-  if (role.includes('community meetup')) return 'Evaluate safety, newcomer flow, waitlists, and no-show risk.'
-  if (role.includes('publisher')) return 'See if demo tables can reach players who fit the game.'
-  if (role.includes('convention')) return 'Look for capacity planning, demand signals, host controls, and waitlists.'
-  if (role.includes('school club')) return 'Check if safety, moderation, and age-appropriate controls are obvious.'
-  if (role.includes('corporate')) return 'See whether I can source professional tabletop events for a group.'
-  if (role.includes('accessibility')) return 'Verify whether accessibility and comfort details appear before booking.'
-  if (role.includes('tourism')) return 'Assess whether a tourist could confidently book a local RPG night.'
-  if (role.includes('privacy')) return 'Understand whether I can browse without oversharing.'
-  if (role.includes('new D&D')) return 'Find signs that beginners are welcome and safe.'
-  if (role.includes('GM')) return 'See whether profiles reveal useful table compatibility.'
-  if (role.includes('organizer')) return 'Check whether the product can drive real tabletop attendance.'
+  const lower = role.toLowerCase()
+  if (lower.includes('buyer') || lower.includes('manager')) return 'Decide whether this is credible enough to recommend or pay for.'
+  if (lower.includes('operator') || lower.includes('admin')) return 'Check whether the product makes an operational task simpler and safer.'
+  if (lower.includes('privacy')) return 'Understand whether I can get value without oversharing.'
+  if (lower.includes('mobile')) return 'Complete one meaningful action from my phone.'
+  if (lower.includes('creator') || lower.includes('supplier')) return 'Decide whether contributing supply or content would be worth the effort.'
+  if (lower.includes('accessibility')) return 'Verify whether important constraints and accommodations are visible early.'
   return 'Figure out whether this is worth returning to later.'
 }
 
@@ -280,68 +384,52 @@ async function screenshot(page, bot, step) {
 function think(bot, observation, phase) {
   const text = observation.text.toLowerCase()
   if (!observation.text) return `I am not sure the page loaded, and that makes me hesitate.`
-  if (text.includes('create') && text.includes('character')) return `I understand this wants me to express myself through a character, which fits my reason for being here.`
-  if (text.includes('match') || text.includes('likes')) return `I am looking for signs that real people are here, not just static profiles.`
-  if (text.includes('table') || text.includes('session') || text.includes('reserve')) return `This feels more concrete because it connects online browsing to an actual table.`
+  if (hasAny(text, cohort.keywords.risk)) return `I see a failure signal, and now I am wondering whether I can trust this enough to continue.`
+  if (hasAny(text, cohort.keywords.empty)) return `This page feels unfinished or empty, so I need a specific next step to stay oriented.`
+  if (hasAny(text, cohort.keywords.value)) return `I can see a possible value path now, so I am checking whether it fits my situation.`
+  if (hasAny(text, cohort.keywords.trust)) return `I notice trust cues, and that lowers the risk of taking the next step.`
   if (text.includes('sign in') || text.includes('auth')) return `I pause because account walls make me wonder how much information I must give before seeing value.`
-  if (phase === 'arrival') return `I am trying to figure out, in plain language, whether this is for dating, friendship, campaigns, or all of them.`
+  if (phase === 'arrival') return `I am trying to figure out, in plain language, who ${cohort.appName} is for and what problem it solves.`
   return `I scan for the next obvious action and whether the page gives me enough confidence to keep going.`
 }
 
 function opinionFrom(bot, observation) {
   const text = observation.text.toLowerCase()
   if (!observation.text) return `My first reaction is uncertainty because I cannot read enough of the product yet.`
-  if (bot.role.includes('owner') || bot.role.includes('organizer') || bot.role.includes('DM') || bot.role.includes('host')) {
-    if (text.includes('tabletop marketplace') || text.includes('book open tables') || text.includes('waitlist')) {
-      return `As an organizer, I immediately look for capacity, demand, waitlists, pricing, and whether this can reduce manual coordination.`
-    }
-    if (text.includes('organizer') || text.includes('venue') || text.includes('session')) {
-      return `My first reaction is business-minded: I need proof this can produce reliable attendance, not just browsing.`
-    }
+  const role = bot.role.toLowerCase()
+  if (hasAny(text, cohort.keywords.risk)) return `My reaction is frustration because visible errors make the product feel less safe to rely on.`
+  if (hasAny(text, cohort.keywords.empty)) return `My reaction is mild disappointment, but I can keep going if the page gives me a concrete next step.`
+  if (hasAny(text, cohort.keywords.value)) return `My reaction is more engaged because I can connect the screen to a practical outcome.`
+  if (hasAny(text, cohort.keywords.trust)) return `My reaction is more comfortable because the product is answering risk questions before I ask them.`
+  if (role.includes('buyer') || role.includes('manager')) {
+    return `I am judging proof, cost, and adoption risk more than visual polish.`
   }
-  if (text.includes('compatibility read') || text.includes('why this could work')) {
-    return `My first reaction is stronger trust because the app is explaining the match instead of asking me to guess.`
+  if (role.includes('operator') || role.includes('admin')) {
+    return `I am looking for evidence this removes work instead of moving work somewhere else.`
   }
-  if (text.includes('no new likes') || text.includes('no matches yet')) {
-    return `My reaction is mild disappointment, but I can keep going if the page gives me a concrete next step.`
-  }
-  if (text.includes('tabletop marketplace') || text.includes('book open tables')) {
-    return `This feels more real than a normal dating app because I can imagine actually meeting at a table.`
-  }
-  if (text.includes('create') && text.includes('character')) {
-    return `I compare this to making a dating profile; it feels more playful, but I need it to be quick.`
-  }
-  if (text.includes('discover')) {
-    return `I am judging whether this person feels compatible with my table style, not just whether the card looks good.`
-  }
-  if (bot.role.includes('privacy')) {
+  if (role.includes('privacy')) {
     return `I am checking whether I can participate without exposing too much too early.`
-  }
-  if (bot.role.includes('new D&D')) {
-    return `I am looking for beginner signals so I do not accidentally join a table that expects expertise.`
   }
   return `My reaction is to look for a reason to take the next step rather than browse passively.`
 }
 
 function ideaFrom(bot, observation) {
   const text = observation.text.toLowerCase()
-  if (bot.role.includes('owner') || bot.role.includes('organizer') || bot.role.includes('DM') || bot.role.includes('host')) {
-    if (text.includes('tabletop marketplace') || text.includes('waitlist') || text.includes('bookable')) return 'Idea: show organizer-facing demand, capacity, waitlist, deposit, and no-show controls from the marketplace.'
-    if (text.includes('organizer') || text.includes('venue')) return 'Idea: give venues and GMs a clear organizer path with setup steps, pricing, and moderation expectations.'
-    return 'Idea: explain how a host turns player interest into reliable attendance and revenue.'
+  for (const rule of cohort.ideaRules) {
+    if (hasAny(text, rule.when || [])) return rule.idea.startsWith('Idea:') ? rule.idea : `Idea: ${rule.idea}`
   }
-  if (text.includes('beginner')) return 'Idea: make beginner-friendly safety cues visible before asking me to commit.'
-  if (text.includes('empty') || text.includes('no ')) return 'Idea: when nothing is available, show a concrete next step instead of only saying it is empty.'
-  if (text.includes('match')) return 'Idea: explain why a match is compatible, not only that it happened.'
-  if (bot.role.includes('privacy')) return 'Idea: show privacy controls early, before I create too much.'
+  if (hasAny(text, cohort.keywords.empty)) return 'Idea: when nothing is available, show a concrete next step instead of only saying it is empty.'
+  if (hasAny(text, cohort.keywords.risk)) return 'Idea: make failures recoverable with plain-language explanations and a safe next action.'
+  if (hasAny(text, cohort.keywords.value)) return 'Idea: make the successful outcome visible as soon as the user takes a meaningful action.'
+  if (bot.role.toLowerCase().includes('privacy')) return 'Idea: show privacy controls early, before I create too much.'
   return 'Idea: keep the next best action visually obvious after every page transition.'
 }
 
 async function runBot(browser, bot) {
   const startedAt = Date.now()
   const context = await browser.newContext({
-    viewport: bot.role.includes('mobile') ? { width: 390, height: 844 } : { width: 1366, height: 900 },
-    userAgent: bot.role.includes('mobile')
+    viewport: bot.viewport === 'mobile' ? { width: 390, height: 844 } : { width: 1366, height: 900 },
+    userAgent: bot.viewport === 'mobile'
       ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'
       : undefined,
   })
@@ -393,18 +481,7 @@ async function runBot(browser, bot) {
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
-    const routes = [
-      { labels: [/get started/i, /start/i, /try/i, /demo/i, /discover/i], fallback: '/discover' },
-      { labels: [/create/i, /profile/i, /character/i], fallback: '/profile' },
-      { labels: [/discover/i, /browse/i, /find/i], fallback: '/discover' },
-      { labels: [/likes/i, /matches/i], fallback: '/likes-you' },
-      { labels: [/matches/i, /chat/i], fallback: '/matches' },
-      { labels: [/table/i, /marketplace/i, /sessions/i, /reserve/i], fallback: '/tabletop' },
-      { labels: [/organizer/i, /host/i, /venue/i, /request access/i], fallback: '/organizer' },
-      { labels: [/tables/i, /sessions/i, /venues/i], fallback: '/tables' },
-      { labels: [/discover/i, /browse/i, /find/i], fallback: '/discover' },
-      { labels: [/profile/i, /character/i], fallback: '/profile' },
-    ]
+    const routes = cohort.routes
 
     for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs; move += 1) {
       const remainingMs = sessionMs - (Date.now() - startedAt)
@@ -433,9 +510,9 @@ async function runBot(browser, bot) {
       recordIdea(ideaFrom(bot, observation))
 
       const lower = observation.text.toLowerCase()
-      if (lower.includes('match') || lower.includes('character') || lower.includes('reserve') || lower.includes('session')) value += 12
-      if (lower.includes('safety') || lower.includes('privacy') || lower.includes('beginner')) trust += 8
-      if (lower.includes('error') || lower.includes('something went wrong')) trust -= 20
+      if (hasAny(lower, cohort.keywords.value)) value += 12
+      if (hasAny(lower, cohort.keywords.trust)) trust += 8
+      if (hasAny(lower, cohort.keywords.risk)) trust -= 20
       if (lower.includes('start with a character') || lower.includes('character required')) emptyCharacterViews += 1
 
       if (!createdCharacter && emptyCharacterViews > 0) {
@@ -547,6 +624,12 @@ function writeAnalysis(results, startedAt) {
   const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
   const summary = {
     config,
+    cohort: {
+      appName: cohort.appName,
+      source: cohort.source,
+      roleCount: cohort.roles.length,
+      routeCount: cohort.routes.length,
+    },
     elapsedSeconds,
     happy,
     unhappy,
@@ -559,6 +642,10 @@ function writeAnalysis(results, startedAt) {
   fs.writeFileSync(path.join(config.runDir, 'analysis.md'), `# Thoughtful Browser Betabot Analysis
 
 ## Run Configuration
+- App name: ${cohort.appName}
+- Cohort source: ${cohort.source}
+- Role definitions: ${cohort.roles.length}
+- Route definitions: ${cohort.routes.length}
 - Bots: ${results.length}
 - App URL: ${config.appUrl}
 - Estimated minutes per bot: ${config.minutes}
@@ -599,7 +686,21 @@ async function main() {
   const startedAt = Date.now()
   mkdirs()
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
-  fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({ config, bots }, null, 2))
+  fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
+    config,
+    cohort: {
+      appName: cohort.appName,
+      source: cohort.source,
+      roles: cohort.roles,
+      routes: cohort.routes.map((route) => ({
+        labels: route.labels.map((label) => label.toString()),
+        fallback: route.fallback,
+      })),
+      keywords: cohort.keywords,
+      ideaRules: cohort.ideaRules,
+    },
+    bots,
+  }, null, 2))
   const playwright = await requirePlaywright()
   const browser = await playwright.chromium.launch({ headless: config.headless })
   const results = []

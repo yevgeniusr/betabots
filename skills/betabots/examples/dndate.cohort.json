@@ -1,0 +1,86 @@
+{
+  "appName": "DnDate",
+  "roles": [
+    {
+      "role": "lonely player seeking party chemistry",
+      "past": "My last group faded out, and I miss the feeling of table chemistry.",
+      "goal": "Figure out whether this is worth returning to later."
+    },
+    {
+      "role": "privacy-sensitive lurker",
+      "past": "I have had weird experiences in online communities, so I look for safety cues before engaging.",
+      "goal": "Understand whether I can browse without oversharing."
+    },
+    {
+      "role": "new D&D player who needs beginner safety",
+      "past": "I have only played a few sessions and worry about joining a table that expects too much.",
+      "goal": "Find signs that beginners are welcome and safe."
+    },
+    {
+      "role": "mobile-first impatient user",
+      "past": "I found this on my phone at night and will leave if onboarding feels heavy.",
+      "goal": "See compatible people or tables quickly from mobile.",
+      "viewport": "mobile"
+    },
+    {
+      "role": "GM looking for reliable players",
+      "past": "I have run campaigns before, but unreliable players burned me out.",
+      "goal": "See whether profiles reveal useful table compatibility."
+    },
+    {
+      "role": "board game cafe owner filling weeknights",
+      "past": "My cafe is full on weekends but dead on weeknights, and I need events that bring respectful repeat customers.",
+      "goal": "See whether this can turn quiet cafe nights into reliable tabletop bookings."
+    },
+    {
+      "role": "professional DM selling paid one-shots",
+      "past": "I run paid games and need players who understand expectations, price, tone, and attendance.",
+      "goal": "Understand whether paid sessions communicate value, expectations, and player fit."
+    },
+    {
+      "role": "community meetup organizer coordinating strangers",
+      "past": "I coordinate strangers and worry about safety, no-shows, and whether newcomers feel welcome.",
+      "goal": "Evaluate safety, newcomer flow, waitlists, and no-show risk."
+    },
+    {
+      "role": "corporate team-building host sourcing GMs",
+      "past": "I book team-building sessions and need professional hosts, predictable logistics, and invoices.",
+      "goal": "See whether I can source professional tabletop events for a group."
+    },
+    {
+      "role": "accessibility-conscious event host",
+      "past": "I host inclusive events and need accessibility details to be visible before people book.",
+      "goal": "Verify whether accessibility and comfort details appear before booking."
+    }
+  ],
+  "discoveries": [
+    "A friend mentioned this after a campaign dissolved.",
+    "I found it while searching for D&D dating alternatives.",
+    "I saw a local tabletop post and wanted to see if it was real.",
+    "I am looking for a way to fill slow nights with tabletop events.",
+    "I need a better way to find reliable players for hosted games."
+  ],
+  "routes": [
+    { "labels": ["get started", "start", "try", "demo", "discover"], "fallback": "/discover" },
+    { "labels": ["create", "profile", "character"], "fallback": "/profile" },
+    { "labels": ["discover", "browse", "find"], "fallback": "/discover" },
+    { "labels": ["likes", "matches"], "fallback": "/likes-you" },
+    { "labels": ["matches", "chat"], "fallback": "/matches" },
+    { "labels": ["table", "marketplace", "sessions", "reserve"], "fallback": "/tabletop" },
+    { "labels": ["organizer", "host", "venue", "request access"], "fallback": "/organizer" },
+    { "labels": ["tables", "sessions", "venues"], "fallback": "/tables" }
+  ],
+  "keywords": {
+    "value": ["match", "character", "reserve", "session", "table", "marketplace", "message", "compatibility"],
+    "trust": ["safety", "privacy", "beginner", "verified", "accessibility", "moderation"],
+    "risk": ["error", "something went wrong", "failed", "unauthorized"],
+    "empty": ["empty", "no new likes", "no matches yet", "nothing yet"]
+  },
+  "ideaRules": [
+    { "when": ["beginner"], "idea": "Make beginner-friendly safety cues visible before asking me to commit." },
+    { "when": ["empty", "no new likes", "no matches yet"], "idea": "When nothing is available, show a concrete next step instead of only saying it is empty." },
+    { "when": ["match", "compatibility"], "idea": "Explain why a match is compatible, not only that it happened." },
+    { "when": ["tabletop marketplace", "waitlist", "bookable"], "idea": "Show organizer-facing demand, capacity, waitlist, deposit, and no-show controls from the marketplace." },
+    { "when": ["organizer", "venue"], "idea": "Give venues and GMs a clear organizer path with setup steps, pricing, and moderation expectations." }
+  ]
+}

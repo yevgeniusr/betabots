@@ -36,6 +36,25 @@ BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES=75 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+## Cohort Configuration
+
+Thoughtful mode is app-agnostic when you pass a cohort file:
+
+```bash
+BETABOT_COHORT_FILE=skills/betabots/examples/generic-saas.cohort.json \
+BETABOT_APP_URL=http://localhost:5173 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+Use `references/cohort-config.md` for the full schema. In short:
+
+- `roles` define who the betabots are, what happened before they arrived, how they discovered the app, and what they want today.
+- `routes` define visible labels and fallback URLs the bots can realistically try.
+- `keywords` define what counts as value, trust, risk, and empty-state evidence for that product.
+- `ideaRules` turn observed product text into first-person product ideas.
+
+The runner has generic defaults, but serious product testing should provide a cohort file for the target domain.
+
 ## Auth Isolation
 
 When the target app supports local E2E auth, use per-bot browser storage so one bot does not inherit another bot's account:
