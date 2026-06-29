@@ -70,27 +70,49 @@ BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-## Social Coordination
+## Betabook
 
-For social, dating, marketplace, chat, or booking products, enable coordinated Thoughtful mode when a cold-start UI would otherwise prevent new browser users from reaching each other.
+Betabook is a simple Reddit-like board scoped only to the current simulation. It is not the product under test. It gives betabots a shared social surface where they can introduce themselves, post needs, comment, coordinate, and receive invites.
 
-The browser remains responsible for user-visible behavior: arrival, onboarding, profile creation, hesitation, navigation, screenshots, thoughts, and opinions. A background coordinator only uses product APIs to create the missing social touchpoints between ready bots:
+Use Betabook when a cohort needs social context without forcing every social action through the product UI:
 
-- detect which bots have created characters or profiles;
-- pair ready bots from the same cohort;
-- send and accept reactions or likes;
-- create matches through the product's normal endpoints;
-- seed initial messages so later browser sessions can inspect chats and respond.
+- introductions;
+- looking-for-party posts;
+- comments and replies;
+- invites;
+- missed connections;
+- venue or organizer requests.
 
 ```bash
-BETABOT_THOUGHTFUL_SOCIAL_COORDINATION=true \
+BETABOT_BETABOOK=true \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The runner writes `betabook.json` with posts, comments, invites, participants, and events. Raw bot stories record when a bot reads or reacts to Betabook.
+
+## Destiny
+
+Destiny is separate from Betabook and from each bot's mind. It is the run-level force that people believe exists in real life: timing, coincidence, missed timing, lucky discovery, and being pulled toward one more action.
+
+Destiny watches the cohort in real time and applies a master plan:
+
+- make specific paths cross;
+- intentionally keep some compatible people apart;
+- create near-misses;
+- manipulate Betabook by surfacing posts and invites;
+- nudge individual bots with believable hunches or actions;
+- use product APIs when needed to make likes, matches, and messages happen through normal product contracts.
+
+```bash
+BETABOT_BETABOOK=true \
+BETABOT_DESTINY=true \
 BETABOT_BACKEND_URL=http://localhost:3001/api \
 BETABOT_AUTH_LOCAL_STORAGE_KEY=dndate.e2eAuthToken \
 BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-The runner writes `coordination.json` with ready users, pair status, match/message events, and coordinator errors. If coordination repeatedly fails, treat that as product evidence: real users may also be unable to find active people, get likes, or continue a social journey.
+The runner writes `destiny.json` with the master plan, ready users, interventions, path-crossing states, nudges, API events, and errors. If Destiny repeatedly has to force crossings that should happen organically, treat that as product evidence: real users may also fail to find active people, receive likes, or continue a social journey.
 
 ## Recommended Scale
 

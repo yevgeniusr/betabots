@@ -61,7 +61,7 @@ Use these bundled scripts from the plugin root:
 - `skills/betabots/scripts/generate_cohort.py`: create reusable persona cohorts.
 - `skills/betabots/scripts/analyze_sessions.py`: aggregate raw Markdown sessions.
 - `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level coordinated social lifecycle simulation against an app with bearer-token auth.
-- `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with thoughts, screenshots, first-person raw logs, and optional social coordination via `BETABOT_THOUGHTFUL_SOCIAL_COORDINATION=true`.
+- `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with thoughts, screenshots, first-person raw logs, optional Betabook social board via `BETABOT_BETABOOK=true`, and optional Destiny master-plan orchestration via `BETABOT_DESTINY=true`.
 
 Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.
 

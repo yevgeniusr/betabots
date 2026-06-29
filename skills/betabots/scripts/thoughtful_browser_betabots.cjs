@@ -3,6 +3,9 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { createRequire } = require('node:module')
 
+const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
+const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
+
 const config = {
   appUrl: (process.env.BETABOT_APP_URL || 'http://localhost:5173').replace(/\/$/, ''),
   count: Number(process.env.BETABOT_THOUGHTFUL_COUNT || process.env.BETABOT_COUNT || 3),
@@ -17,8 +20,9 @@ const config = {
   authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
   cohortFile: process.env.BETABOT_COHORT_FILE || '',
   backendUrl: (process.env.BETABOT_BACKEND_URL || 'http://localhost:3001/api').replace(/\/$/, ''),
-  socialCoordination: String(process.env.BETABOT_THOUGHTFUL_SOCIAL_COORDINATION || 'false') === 'true',
-  coordinationIntervalMs: Number(process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
+  betabookEnabled: betabookRequested,
+  destinyEnabled: destinyRequested,
+  destinyIntervalMs: Number(process.env.BETABOT_DESTINY_INTERVAL_MS || process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -189,16 +193,23 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
 const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
 
-const coordinatorOpeners = [
+const betabookOpeners = [
   'Your character hook made me stop scrolling. Want to test the table chemistry with a one-shot?',
   'I like your vibe. I am looking for clear expectations, low drama, and a table that actually shows up.',
   'Your character sounds like someone my party would either trust immediately or regret trusting in the best way.',
 ]
 
-const coordinatorReplies = [
+const betabookReplies = [
   'One-shot first sounds safe. I care about consent tools and no weird pressure.',
   'That sounds fun. I would rather start with a table than endless small talk.',
   'I am interested. If the vibe works, maybe this becomes a recurring party.',
+]
+
+const destinyThoughts = [
+  'I have a hunch that checking the social side now will matter.',
+  'Something about this profile makes me want to take one more step instead of leaving.',
+  'I suddenly feel like waiting a little longer could pay off.',
+  'I feel pulled toward organizing something concrete rather than browsing forever.',
 ]
 
 function personaAt(index) {
@@ -292,7 +303,7 @@ function authTokenFor(bot) {
 
 async function api(bot, endpoint, options = {}) {
   const token = authTokenFor(bot)
-  if (!token) throw new Error('social coordination requires BETABOT_AUTH_TOKEN_TEMPLATE')
+  if (!token) throw new Error('Destiny API actions require BETABOT_AUTH_TOKEN_TEMPLATE')
   const response = await fetch(`${config.backendUrl}${endpoint}`, {
     method: options.method || 'GET',
     headers: {
@@ -312,7 +323,7 @@ async function api(bot, endpoint, options = {}) {
   return body
 }
 
-async function optionalCoordination(state, label, fn) {
+async function optionalDestiny(state, label, fn) {
   try {
     return await fn()
   } catch (error) {
@@ -321,77 +332,226 @@ async function optionalCoordination(state, label, fn) {
   }
 }
 
-function createCoordinatorState(bots) {
-  const pairs = []
-  for (let index = 0; index + 1 < bots.length; index += 2) {
-    pairs.push({
-      id: `thoughtful-pair-${String(pairs.length + 1).padStart(3, '0')}`,
-      a: bots[index].id,
-      b: bots[index + 1].id,
-      reactionId: null,
-      matchId: null,
-      status: 'waiting_for_characters',
-      messagesSeeded: 0,
-    })
-  }
+function nowIso() {
+  return new Date().toISOString()
+}
+
+function createBetabookState(bots) {
   return {
-    enabled: config.socialCoordination,
-    backendUrl: config.backendUrl,
-    intervalMs: config.coordinationIntervalMs,
-    pairs,
-    charactersByBotId: {},
+    enabled: config.betabookEnabled,
+    scope: config.runDir,
+    channels: ['introductions', 'looking-for-party', 'invites', 'missed-connections', 'venue-requests', 'table-talk'],
+    participants: bots.map((bot) => ({ id: bot.id, name: bot.name, role: bot.role })),
+    posts: [],
+    comments: [],
+    invites: [],
     events: [],
     errors: [],
   }
 }
 
-async function runCoordinationPass(bots, state) {
+function writeBetabookState(state) {
+  if (!state?.enabled) return
+  fs.writeFileSync(path.join(config.runDir, 'betabook.json'), JSON.stringify(state, null, 2))
+}
+
+function betabookPost(state, input) {
+  if (!state?.enabled) return null
+  const post = {
+    id: `post-${String(state.posts.length + 1).padStart(4, '0')}`,
+    at: nowIso(),
+    channel: input.channel || 'table-talk',
+    authorId: input.authorId || 'destiny',
+    title: input.title || 'Untitled',
+    body: input.body || '',
+    tags: input.tags || [],
+    score: 1,
+  }
+  state.posts.push(post)
+  state.events.push({ type: 'post_created', postId: post.id, authorId: post.authorId, channel: post.channel, at: post.at })
+  writeBetabookState(state)
+  return post
+}
+
+function betabookComment(state, input) {
+  if (!state?.enabled || !input.postId) return null
+  const comment = {
+    id: `comment-${String(state.comments.length + 1).padStart(4, '0')}`,
+    at: nowIso(),
+    postId: input.postId,
+    authorId: input.authorId,
+    body: input.body || '',
+  }
+  state.comments.push(comment)
+  state.events.push({ type: 'comment_created', commentId: comment.id, postId: comment.postId, authorId: comment.authorId, at: comment.at })
+  writeBetabookState(state)
+  return comment
+}
+
+function betabookInvite(state, input) {
+  if (!state?.enabled) return null
+  const invite = {
+    id: `invite-${String(state.invites.length + 1).padStart(4, '0')}`,
+    at: nowIso(),
+    fromBotId: input.fromBotId || 'destiny',
+    toBotId: input.toBotId,
+    kind: input.kind || 'cross_paths',
+    message: input.message || '',
+    status: 'pending',
+    postId: input.postId || null,
+  }
+  state.invites.push(invite)
+  state.events.push({ type: 'invite_created', inviteId: invite.id, fromBotId: invite.fromBotId, toBotId: invite.toBotId, at: invite.at })
+  writeBetabookState(state)
+  return invite
+}
+
+function betabookDigestForBot(state, bot) {
+  if (!state?.enabled) return { posts: [], invites: [] }
+  return {
+    posts: state.posts.filter((post) => post.authorId !== bot.id).slice(-3),
+    invites: state.invites.filter((invite) => invite.toBotId === bot.id && invite.status === 'pending').slice(-3),
+  }
+}
+
+function acknowledgeBetabookInvites(state, bot, log) {
+  if (!state?.enabled) return 0
+  let acknowledged = 0
+  for (const invite of state.invites.filter((item) => item.toBotId === bot.id && item.status === 'pending')) {
+    invite.status = 'seen'
+    acknowledged += 1
+    log(`I notice a Betabook invite: ${invite.message}`)
+  }
+  if (acknowledged) writeBetabookState(state)
+  return acknowledged
+}
+
+function createDestinyState(bots) {
+  const plans = []
+  for (let index = 0; index + 1 < bots.length; index += 2) {
+    plans.push({
+      id: `destiny-thread-${String(plans.length + 1).padStart(3, '0')}`,
+      a: bots[index].id,
+      b: bots[index + 1].id,
+      intent: plans.length % 5 === 4 ? 'near_miss' : 'cross_paths',
+      reactionId: null,
+      matchId: null,
+      postId: null,
+      status: 'waiting_for_characters',
+      messagesSeeded: 0,
+    })
+  }
+  return {
+    enabled: config.destinyEnabled,
+    backendUrl: config.backendUrl,
+    intervalMs: config.destinyIntervalMs,
+    masterPlan: plans,
+    charactersByBotId: {},
+    nudgesByBotId: Object.fromEntries(bots.map((bot) => [bot.id, []])),
+    events: [],
+    errors: [],
+  }
+}
+
+function addDestinyNudge(state, botId, nudge) {
+  if (!state.enabled) return
+  state.nudgesByBotId[botId] ||= []
+  state.nudgesByBotId[botId].push({ ...nudge, at: nowIso() })
+  state.events.push({ type: 'nudge_created', botId, kind: nudge.kind, at: nowIso() })
+}
+
+function takeDestinyNudges(state, botId) {
+  if (!state?.enabled) return []
+  const nudges = state.nudgesByBotId[botId] || []
+  state.nudgesByBotId[botId] = []
+  return nudges
+}
+
+async function runDestinyPass(bots, state, betabookState) {
   if (!state.enabled) return
   const botsById = new Map(bots.map((bot) => [bot.id, bot]))
 
   for (const bot of bots) {
     if (state.charactersByBotId[bot.id]) continue
-    const characters = await optionalCoordination(state, `characters ${bot.id}`, () => api(bot, '/characters'))
+    const characters = await optionalDestiny(state, `characters ${bot.id}`, () => api(bot, '/characters'))
     if (characters?.[0]) {
       state.charactersByBotId[bot.id] = characters[0]
-      state.events.push({ type: 'character_ready', botId: bot.id, characterId: characters[0].id, at: new Date().toISOString() })
+      state.events.push({ type: 'character_ready', botId: bot.id, characterId: characters[0].id, at: nowIso() })
     }
   }
 
-  for (const pair of state.pairs) {
+  for (const pair of state.masterPlan) {
     if (pair.status === 'matched_and_messaged') continue
+    if (pair.status === 'paths_kept_apart') continue
     const botA = botsById.get(pair.a)
     const botB = botsById.get(pair.b)
     const charA = state.charactersByBotId[pair.a]
     const charB = state.charactersByBotId[pair.b]
     if (!botA || !botB || !charA || !charB) continue
 
+    if (pair.intent === 'near_miss') {
+      const post = betabookPost(betabookState, {
+        authorId: 'destiny',
+        channel: 'missed-connections',
+        title: `${botA.name} and ${botB.name} almost cross paths`,
+        body: 'Two compatible people are active, but Destiny keeps them in adjacent rooms to test whether the product creates enough organic momentum without intervention.',
+        tags: ['near-miss', 'destiny'],
+      })
+      pair.postId = post?.id || null
+      pair.status = 'paths_kept_apart'
+      addDestinyNudge(state, pair.a, { kind: 'think', thought: 'I feel like there are people nearby, but I do not see a clear path to them yet.' })
+      addDestinyNudge(state, pair.b, { kind: 'think', thought: 'I wonder if the app has enough live people for me, because I keep missing the moment.' })
+      state.events.push({ type: 'paths_kept_apart', pairId: pair.id, at: nowIso() })
+      continue
+    }
+
+    if (!pair.postId) {
+      const post = betabookPost(betabookState, {
+        authorId: pair.a,
+        channel: 'looking-for-party',
+        title: `${botA.name} is looking for a table`,
+        body: `${botA.name} wants a low-pressure table and seems compatible with ${botB.name}.`,
+        tags: ['looking-for-party', 'destiny-surface'],
+      })
+      pair.postId = post?.id || null
+      betabookInvite(betabookState, {
+        fromBotId: pair.a,
+        toBotId: pair.b,
+        kind: 'cross_paths',
+        message: `${botA.name} looks compatible. Maybe check their character before leaving.`,
+        postId: pair.postId,
+      })
+      addDestinyNudge(state, pair.a, { kind: 'think', thought: pick(destinyThoughts), route: '/discover' })
+      addDestinyNudge(state, pair.b, { kind: 'think', thought: pick(destinyThoughts), route: '/likes-you' })
+      state.events.push({ type: 'paths_set_to_cross', pairId: pair.id, postId: pair.postId, at: nowIso() })
+    }
+
     if (!pair.reactionId) {
-      const reaction = await optionalCoordination(state, `reaction ${pair.a}->${pair.b}`, () => api(botA, '/reactions', {
+      const reaction = await optionalDestiny(state, `reaction ${pair.a}->${pair.b}`, () => api(botA, '/reactions', {
         method: 'POST',
         body: {
           fromCharacterId: charA.id,
           toCharacterId: charB.id,
           target: { type: 'card', field: 'hook' },
-          comment: pick(coordinatorOpeners),
+          comment: pick(betabookOpeners),
         },
       }))
       if (reaction?.id) {
         pair.reactionId = reaction.id
         pair.status = 'reaction_sent'
-        state.events.push({ type: 'reaction_sent', pairId: pair.id, from: pair.a, to: pair.b, reactionId: reaction.id, at: new Date().toISOString() })
+        state.events.push({ type: 'reaction_sent', pairId: pair.id, from: pair.a, to: pair.b, reactionId: reaction.id, at: nowIso() })
       }
     }
 
-    const incoming = await optionalCoordination(state, `incoming ${pair.b}`, () => api(botB, `/reactions/incoming?characterId=${encodeURIComponent(charB.id)}`))
+    const incoming = await optionalDestiny(state, `incoming ${pair.b}`, () => api(botB, `/reactions/incoming?characterId=${encodeURIComponent(charB.id)}`))
     const incomingReaction = incoming?.find((item) => item.fromCharacter?.id === charA.id || item.fromCharacterId === charA.id) || incoming?.find((item) => item.id === pair.reactionId)
     if (incomingReaction?.id && !pair.matchId) {
-      await optionalCoordination(state, `accept ${pair.b}`, () => api(botB, `/reactions/${incomingReaction.id}/accept`, { method: 'POST' }))
+      await optionalDestiny(state, `accept ${pair.b}`, () => api(botB, `/reactions/${incomingReaction.id}/accept`, { method: 'POST' }))
       pair.status = 'accepted'
-      state.events.push({ type: 'reaction_accepted', pairId: pair.id, by: pair.b, reactionId: incomingReaction.id, at: new Date().toISOString() })
+      state.events.push({ type: 'reaction_accepted', pairId: pair.id, by: pair.b, reactionId: incomingReaction.id, at: nowIso() })
     }
 
-    const matches = await optionalCoordination(state, `matches ${pair.a}`, () => api(botA, `/matches?characterId=${encodeURIComponent(charA.id)}`))
+    const matches = await optionalDestiny(state, `matches ${pair.a}`, () => api(botA, `/matches?characterId=${encodeURIComponent(charA.id)}`))
     const match = matches?.find((item) => {
       const ids = [item.characterAId, item.characterBId]
       return ids.includes(charA.id) && ids.includes(charB.id)
@@ -399,31 +559,36 @@ async function runCoordinationPass(bots, state) {
     if (match?.id) {
       pair.matchId = match.id
       pair.status = 'matched'
-      state.events.push({ type: 'match_found', pairId: pair.id, matchId: match.id, at: new Date().toISOString() })
+      betabookComment(betabookState, {
+        postId: pair.postId,
+        authorId: pair.b,
+        body: pick(betabookReplies),
+      })
+      state.events.push({ type: 'match_found', pairId: pair.id, matchId: match.id, at: nowIso() })
     }
 
     if (pair.matchId && pair.messagesSeeded === 0) {
-      await optionalCoordination(state, `message ${pair.a}`, () => api(botA, `/matches/${pair.matchId}/messages`, {
+      await optionalDestiny(state, `message ${pair.a}`, () => api(botA, `/matches/${pair.matchId}/messages`, {
         method: 'POST',
-        body: { fromCharacterId: charA.id, body: pick(coordinatorOpeners) },
+        body: { fromCharacterId: charA.id, body: pick(betabookOpeners) },
       }))
-      await optionalCoordination(state, `message ${pair.b}`, () => api(botB, `/matches/${pair.matchId}/messages`, {
+      await optionalDestiny(state, `message ${pair.b}`, () => api(botB, `/matches/${pair.matchId}/messages`, {
         method: 'POST',
-        body: { fromCharacterId: charB.id, body: pick(coordinatorReplies) },
+        body: { fromCharacterId: charB.id, body: pick(betabookReplies) },
       }))
       pair.messagesSeeded = 2
       pair.status = 'matched_and_messaged'
-      state.events.push({ type: 'messages_seeded', pairId: pair.id, matchId: pair.matchId, count: 2, at: new Date().toISOString() })
+      state.events.push({ type: 'messages_seeded', pairId: pair.id, matchId: pair.matchId, count: 2, at: nowIso() })
     }
   }
 }
 
-function writeCoordinatorState(state) {
+function writeDestinyState(state) {
   if (!state.enabled) return
-  fs.writeFileSync(path.join(config.runDir, 'coordination.json'), JSON.stringify(state, null, 2))
+  fs.writeFileSync(path.join(config.runDir, 'destiny.json'), JSON.stringify(state, null, 2))
 }
 
-function startSocialCoordinator(bots, state) {
+function startDestiny(bots, state, betabookState) {
   if (!state.enabled) return () => {}
   let stopped = false
   let running = false
@@ -434,11 +599,12 @@ function startSocialCoordinator(bots, state) {
     running = true
     currentRun = (async () => {
       try {
-        await runCoordinationPass(bots, state)
+        await runDestinyPass(bots, state, betabookState)
       } catch (error) {
-        state.errors.push(`coordination pass: ${error.message}`)
+        state.errors.push(`destiny pass: ${error.message}`)
       } finally {
-        writeCoordinatorState(state)
+        writeDestinyState(state)
+        writeBetabookState(betabookState)
         running = false
         currentRun = null
       }
@@ -446,7 +612,7 @@ function startSocialCoordinator(bots, state) {
     return currentRun
   }
   run()
-  const timer = setInterval(run, Math.max(10000, config.coordinationIntervalMs))
+  const timer = setInterval(run, Math.max(10000, config.destinyIntervalMs))
   return async () => {
     stopped = true
     clearInterval(timer)
@@ -454,7 +620,8 @@ function startSocialCoordinator(bots, state) {
     stopped = false
     await run()
     stopped = true
-    writeCoordinatorState(state)
+    writeDestinyState(state)
+    writeBetabookState(betabookState)
   }
 }
 
@@ -608,7 +775,7 @@ function ideaFrom(bot, observation) {
   return 'Idea: keep the next best action visually obvious after every page transition.'
 }
 
-async function runBot(browser, bot) {
+async function runBot(browser, bot, runtime = {}) {
   const startedAt = Date.now()
   const context = await browser.newContext({
     viewport: bot.viewport === 'mobile' ? { width: 390, height: 844 } : { width: 1366, height: 900 },
@@ -629,6 +796,8 @@ async function runBot(browser, bot) {
   const ideas = []
   const thoughts = []
   const opinions = []
+  const betabookMoments = []
+  const destinyMoments = []
   let step = 1
   let value = 0
   let trust = 45
@@ -648,11 +817,52 @@ async function runBot(browser, bot) {
     opinions.push(opinion)
     log(`My reaction: ${opinion}`)
   }
+  const useBetabook = (reason) => {
+    const betabookState = runtime.betabookState
+    if (!betabookState?.enabled) return
+    const digest = betabookDigestForBot(betabookState, bot)
+    if (!digest.posts.length && !digest.invites.length) return
+    const postText = digest.posts.map((post) => `${post.channel}: ${post.title}`).join('; ')
+    const inviteText = digest.invites.map((invite) => invite.message).join('; ')
+    const summary = [postText, inviteText].filter(Boolean).join(' | ')
+    betabookMoments.push(summary)
+    log(`I check Betabook ${reason}: ${summary}`)
+    acknowledgeBetabookInvites(betabookState, bot, log)
+    if (digest.posts[0]) {
+      betabookComment(betabookState, {
+        postId: digest.posts[0].id,
+        authorId: bot.id,
+        body: `This is relevant to me because I am here as ${bot.role}.`,
+      })
+    }
+  }
+  const followDestiny = async () => {
+    const destinyState = runtime.destinyState
+    const nudges = takeDestinyNudges(destinyState, bot.id)
+    for (const nudge of nudges) {
+      destinyMoments.push(nudge.kind)
+      if (nudge.thought) recordThought(nudge.thought)
+      if (nudge.route) {
+        await page.goto(`${config.appUrl}${nudge.route}`, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch((error) => {
+          errors.push(`destiny navigation ${nudge.route}: ${error.message}`)
+        })
+        actions.push(`followed a hunch to ${nudge.route}`)
+        log(`I follow a hunch and check ${nudge.route}.`)
+      }
+    }
+  }
 
   try {
     log(`I arrive as ${bot.role}. My past: ${bot.past}`)
     log(`Today I want to: ${bot.goal}`)
     if (authToken) log(`I have my own isolated test account for this session.`)
+    betabookPost(runtime.betabookState, {
+      authorId: bot.id,
+      channel: 'introductions',
+      title: `${bot.name} arrives`,
+      body: `${bot.name} is a ${bot.role}. Goal: ${bot.goal}`,
+      tags: ['arrival', bot.role],
+    })
     await page.goto(config.appUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
     await wait(2500 + random() * 5000)
     let observation = await observe(page)
@@ -670,6 +880,8 @@ async function runBot(browser, bot) {
       const remainingMs = sessionMs - (Date.now() - startedAt)
       await wait(Math.min(remainingMs, 6000 + random() * 12000))
       if (Date.now() - startedAt >= sessionMs) break
+      await followDestiny()
+      if (move > 0 && move % 3 === 0) useBetabook('between actions')
       const route = routes[move % routes.length]
       const clicked = await clickFirst(page, route.labels)
       if (clicked) {
@@ -701,6 +913,13 @@ async function runBot(browser, bot) {
       if (!createdCharacter && emptyCharacterViews > 0) {
         createdCharacter = await tryCreateCharacter(page, bot, log, actions)
         if (createdCharacter) {
+          betabookPost(runtime.betabookState, {
+            authorId: bot.id,
+            channel: 'looking-for-party',
+            title: `${bot.name} has a character now`,
+            body: 'I finished enough setup that I can plausibly meet, match, chat, or join a table.',
+            tags: ['ready', 'character-created'],
+          })
           value += 18
           trust += 8
           observation = await observe(page)
@@ -769,6 +988,8 @@ ${notes.join('\n')}
 - Ideas expressed: ${ideas.length}
 - Thoughts expressed: ${thoughts.length}
 - Opinions expressed: ${opinions.length}
+- Betabook moments: ${betabookMoments.length}
+- Destiny nudges followed: ${destinyMoments.length}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
@@ -777,7 +998,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, attentionSpanMinutes: bot.attentionSpanMinutes }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, attentionSpanMinutes: bot.attentionSpanMinutes }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -791,7 +1012,7 @@ async function runPool(items, worker, concurrency) {
   await Promise.all(workers)
 }
 
-function writeAnalysis(results, startedAt, coordinationState) {
+function writeAnalysis(results, startedAt, betabookState, destinyState) {
   const scores = results.map((result) => result.score).sort((a, b) => a - b)
   const happy = scores.filter((score) => score >= 70).length
   const unhappy = scores.filter((score) => score < 50).length
@@ -813,12 +1034,20 @@ function writeAnalysis(results, startedAt, coordinationState) {
       roleCount: cohort.roles.length,
       routeCount: cohort.routes.length,
     },
-    coordination: coordinationState?.enabled ? {
+    betabook: betabookState?.enabled ? {
       enabled: true,
-      backendUrl: coordinationState.backendUrl,
-      pairs: coordinationState.pairs,
-      events: coordinationState.events.length,
-      errors: coordinationState.errors,
+      posts: betabookState.posts.length,
+      comments: betabookState.comments.length,
+      invites: betabookState.invites.length,
+      events: betabookState.events.length,
+      errors: betabookState.errors,
+    } : { enabled: false },
+    destiny: destinyState?.enabled ? {
+      enabled: true,
+      backendUrl: destinyState.backendUrl,
+      masterPlan: destinyState.masterPlan,
+      events: destinyState.events.length,
+      errors: destinyState.errors,
     } : { enabled: false },
     elapsedSeconds,
     happy,
@@ -836,9 +1065,11 @@ function writeAnalysis(results, startedAt, coordinationState) {
 - Cohort source: ${cohort.source}
 - Role definitions: ${cohort.roles.length}
 - Route definitions: ${cohort.routes.length}
-- Social coordination: ${coordinationState?.enabled ? 'enabled' : 'disabled'}
-- Coordinated pairs: ${coordinationState?.enabled ? coordinationState.pairs.length : 0}
-- Coordinated matches messaged: ${coordinationState?.enabled ? coordinationState.pairs.filter((pair) => pair.status === 'matched_and_messaged').length : 0}
+- Betabook: ${betabookState?.enabled ? 'enabled' : 'disabled'}
+- Betabook posts: ${betabookState?.enabled ? betabookState.posts.length : 0}
+- Destiny: ${destinyState?.enabled ? 'enabled' : 'disabled'}
+- Destiny threads: ${destinyState?.enabled ? destinyState.masterPlan.length : 0}
+- Destiny matches messaged: ${destinyState?.enabled ? destinyState.masterPlan.filter((pair) => pair.status === 'matched_and_messaged').length : 0}
 - Bots: ${results.length}
 - App URL: ${config.appUrl}
 - Estimated minutes per bot: ${config.minutes}
@@ -861,19 +1092,32 @@ function writeAnalysis(results, startedAt, coordinationState) {
 - Thoughts expressed: ${results.reduce((sum, result) => sum + result.thoughts, 0)}
 - Opinions expressed: ${results.reduce((sum, result) => sum + result.opinions, 0)}
 - Ideas expressed: ${results.reduce((sum, result) => sum + (result.ideas || []).length, 0)}
+- Betabook moments: ${results.reduce((sum, result) => sum + (result.betabookMoments || 0), 0)}
+- Destiny nudges followed: ${results.reduce((sum, result) => sum + (result.destinyMoments || 0), 0)}
 - Error bots: ${errorBots.length}
 
 ## Top Bot Ideas
 ${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} bots: ${idea}`).join('\n') : '- None'}
 
-## Social Coordination
-${coordinationState?.enabled
+## Betabook
+${betabookState?.enabled
     ? [
-      `- Backend URL: ${coordinationState.backendUrl}`,
-      `- Ready characters: ${Object.keys(coordinationState.charactersByBotId).length}`,
-      `- Pair states: ${coordinationState.pairs.map((pair) => `${pair.id}=${pair.status}`).join(', ')}`,
-      `- Coordination events: ${coordinationState.events.length}`,
-      `- Coordination errors: ${coordinationState.errors.length ? coordinationState.errors.slice(0, 20).join('; ') : 'none'}`,
+      `- Posts: ${betabookState.posts.length}`,
+      `- Comments: ${betabookState.comments.length}`,
+      `- Invites: ${betabookState.invites.length}`,
+      `- Events: ${betabookState.events.length}`,
+      `- Errors: ${betabookState.errors.length ? betabookState.errors.slice(0, 20).join('; ') : 'none'}`,
+    ].join('\n')
+    : '- Disabled'}
+
+## Destiny
+${destinyState?.enabled
+    ? [
+      `- Backend URL: ${destinyState.backendUrl}`,
+      `- Ready characters: ${Object.keys(destinyState.charactersByBotId).length}`,
+      `- Master plan states: ${destinyState.masterPlan.map((pair) => `${pair.id}=${pair.intent}:${pair.status}`).join(', ')}`,
+      `- Destiny events: ${destinyState.events.length}`,
+      `- Destiny errors: ${destinyState.errors.length ? destinyState.errors.slice(0, 20).join('; ') : 'none'}`,
     ].join('\n')
     : '- Disabled'}
 
@@ -890,7 +1134,8 @@ async function main() {
   const startedAt = Date.now()
   mkdirs()
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
-  const coordinationState = createCoordinatorState(bots)
+  const betabookState = createBetabookState(bots)
+  const destinyState = createDestinyState(bots)
   fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
     config,
     cohort: {
@@ -909,16 +1154,20 @@ async function main() {
   const playwright = await requirePlaywright()
   const browser = await playwright.chromium.launch({ headless: config.headless })
   const results = []
-  const stopCoordinator = startSocialCoordinator(bots, coordinationState)
+  writeBetabookState(betabookState)
+  writeDestinyState(destinyState)
+  const stopDestiny = startDestiny(bots, destinyState, betabookState)
   try {
     await runPool(bots, async (bot) => {
-      results.push(await runBot(browser, bot))
+      results.push(await runBot(browser, bot, { betabookState, destinyState }))
     }, config.concurrency)
   } finally {
-    await stopCoordinator()
+    await stopDestiny()
     await browser.close()
   }
-  writeAnalysis(results, startedAt, coordinationState)
+  writeBetabookState(betabookState)
+  writeDestinyState(destinyState)
+  writeAnalysis(results, startedAt, betabookState, destinyState)
   console.log(JSON.stringify({
     runDir: config.runDir,
     bots: results.length,

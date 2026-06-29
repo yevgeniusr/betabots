@@ -19,6 +19,10 @@ python3 "$ROOT/skills/betabots/scripts/analyze_sessions.py" /tmp/betabots-raw >/
 grep -q "Sessions analyzed: 1" /tmp/betabots-analysis.md
 node --check "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs" >/dev/null
+grep -q "BETABOT_BETABOOK" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_DESTINY" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "betabook.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "destiny.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 BETABOT_COHORT_FILE="$ROOT/skills/betabots/examples/generic-saas.cohort.json" \
 BETABOT_THOUGHTFUL_COUNT=1 \
 BETABOT_RUN_DIR=/tmp/betabots-loader-check \
