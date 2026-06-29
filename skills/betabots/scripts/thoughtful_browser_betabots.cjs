@@ -1207,8 +1207,12 @@ async function screenshot(page, bot, step, label = 'screen') {
   const dir = path.join(config.runDir, 'screenshots', bot.id)
   fs.mkdirSync(dir, { recursive: true })
   const file = path.join(dir, `${String(step).padStart(3, '0')}-${slugifyLabel(label)}.png`)
-  await page.screenshot({ path: file, fullPage: true }).catch(() => {})
-  return file
+  try {
+    await page.screenshot({ path: file, fullPage: true })
+    return file
+  } catch {
+    return ''
+  }
 }
 
 function think(bot, observation, phase) {
@@ -1611,8 +1615,20 @@ async function runBot(browser, bot, runtime = {}) {
   const captureScreenshot = async (label, observation = lastObservation) => {
     if (config.visualEvidenceMode === 'off') return ''
     const file = await screenshot(page, bot, step++, label)
-    lastScreenshot = path.relative(config.runDir, file)
     lastObservation = observation || lastObservation
+    if (!file || !fs.existsSync(file)) {
+      appendJsonl(evidenceFile, {
+        type: 'screenshot-error',
+        at: new Date().toISOString(),
+        elapsed: elapsed(startedAt),
+        label,
+        url: page.url(),
+        title: observation?.title || '',
+        screenHash: observation ? textHash(observation.text) : null,
+      })
+      return ''
+    }
+    lastScreenshot = path.relative(config.runDir, file)
     appendJsonl(evidenceFile, {
       type: 'screenshot',
       at: new Date().toISOString(),
