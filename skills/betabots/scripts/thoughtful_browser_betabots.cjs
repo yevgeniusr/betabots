@@ -1357,19 +1357,27 @@ async function runBot(browser, bot, runtime = {}) {
   let trust = 45
   let emptyCharacterViews = 0
   let createdCharacter = false
+  let lastScreenshot = ''
 
   const log = (text) => notes.push(`- T+${elapsed(startedAt)} ${text}`)
+  const evidenceRef = () => lastScreenshot ? ` [screen: ${lastScreenshot}]` : ''
+  const captureScreenshot = async (label) => {
+    const file = await screenshot(page, bot, step++)
+    lastScreenshot = path.relative(config.runDir, file)
+    log(`Screenshot evidence (${label}): ${lastScreenshot}`)
+    return file
+  }
   const recordThought = (thought) => {
     thoughts.push(thought)
-    log(`I think: ${thought}`)
+    log(`I think: ${thought}${evidenceRef()}`)
   }
   const recordIdea = (idea) => {
     ideas.push(idea.replace(/^Idea:\s*/, ''))
-    log(idea)
+    log(`${idea}${evidenceRef()}`)
   }
   const recordOpinion = (opinion) => {
     opinions.push(opinion)
-    log(`My reaction: ${opinion}`)
+    log(`My reaction: ${opinion}${evidenceRef()}`)
   }
   const recordScreenQuality = (observation) => {
     const fingerprint = screenFingerprint(observation)
@@ -1457,6 +1465,10 @@ async function runBot(browser, bot, runtime = {}) {
         })
         actions.push(`followed a hunch to ${nudge.route}`)
         log(`I follow a hunch and check ${nudge.route}.`)
+        const destinyObservation = await observe(page)
+        recordScreenQuality(destinyObservation)
+        await captureScreenshot(`destiny ${nudge.route}`)
+        log(`After following Destiny to ${nudge.route}, I see: ${destinyObservation.text}`)
       }
     }
   }
@@ -1476,7 +1488,7 @@ async function runBot(browser, bot, runtime = {}) {
     await wait(2500 + random() * 5000)
     let observation = await observe(page)
     recordScreenQuality(observation)
-    await screenshot(page, bot, step++)
+    await captureScreenshot('arrival')
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
     await recordReflection(observation, 'arrival')
 
@@ -1506,7 +1518,7 @@ async function runBot(browser, bot, runtime = {}) {
       await wait(2500 + random() * 7000)
       observation = await observe(page)
       recordScreenQuality(observation)
-      await screenshot(page, bot, step++)
+      await captureScreenshot('exploration')
       log(`I now see: ${observation.text}`)
       await recordReflection(observation, 'exploration')
 
@@ -1539,7 +1551,7 @@ async function runBot(browser, bot, runtime = {}) {
           trust += 8
           observation = await observe(page)
           recordScreenQuality(observation)
-          await screenshot(page, bot, step++)
+          await captureScreenshot('character-created')
           log(`After creating a character, I see: ${observation.text}`)
           await recordReflection(observation, 'character-created')
         } else if (emptyCharacterViews >= 2) {
@@ -1554,7 +1566,7 @@ async function runBot(browser, bot, runtime = {}) {
       if (actedSocially) {
         observation = await observe(page)
         recordScreenQuality(observation)
-        await screenshot(page, bot, step++)
+        await captureScreenshot('post-social-action')
         log(`After the social action, I see: ${observation.text}`)
       } else {
         const reserveClicked = await clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i])
@@ -1565,7 +1577,7 @@ async function runBot(browser, bot, runtime = {}) {
           await wait(2500 + random() * 5500)
           observation = await observe(page)
           recordScreenQuality(observation)
-          await screenshot(page, bot, step++)
+          await captureScreenshot(`post-${reserveClicked}`)
           log(`After trying "${reserveClicked}", I see: ${observation.text}`)
         }
       }
