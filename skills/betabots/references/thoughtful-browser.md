@@ -25,7 +25,7 @@ Use thoughtful mode when fast API traffic is not enough. It answers:
 
 ## Time
 
-Default `BETABOT_TIME_SCALE=1` means real pacing. A 10-minute session should take about 10 minutes. Use lower scales only for development dry-runs and mark the limitation in `analysis.md`.
+Default `BETABOT_TIME_SCALE=1` means real pacing. A 10-minute session should take about 10 minutes. Thoughtful mode is human-paced; the bundled runner clamps values below `1` back to `1`. Do not present accelerated dry-runs as product-quality research.
 
 For minimum-duration studies, set both target and minimum session length:
 
@@ -38,7 +38,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 ## LLM Minds
 
-Thoughtful mode uses actual LLM calls for bot thoughts, opinions, ideas, social messages, Betabook help/comment text, and Destiny planning. Deterministic text is only a fallback when the provider is disabled, exhausted, or unavailable.
+Thoughtful mode uses actual LLM calls for bot thoughts, opinions, ideas, social messages, Betabook help/comment text, and Destiny planning. The LLM mind layer is mandatory for product-quality runs; the bundled runner rejects `BETABOT_LLM_PROVIDER=none`.
 
 Default provider:
 
@@ -61,7 +61,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 Provider knobs:
 
-- `BETABOT_LLM_PROVIDER=codex|openrouter|none`
+- `BETABOT_LLM_PROVIDER=codex|openrouter`
 - `BETABOT_LLM_MODEL`
 - `BETABOT_CODEX_COMMAND`
 - `BETABOT_LLM_TIMEOUT_MS`
@@ -69,19 +69,18 @@ Provider knobs:
 - `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`
 - `BETABOT_OPENROUTER_BASE_URL`
 
-Use `BETABOT_LLM_PROVIDER=none` only for runner smoke tests where model behavior is not under evaluation.
-
 ## Cohort Configuration
 
-Thoughtful mode is app-agnostic when you pass a cohort file:
+Thoughtful mode is app-agnostic when you pass a research-backed cohort file:
 
 ```bash
 BETABOT_COHORT_FILE=skills/betabots/examples/generic-saas.cohort.json \
+BETABOT_AUDIENCE_RESEARCH_FILE=.betabots/audience-research.json \
 BETABOT_APP_URL=http://localhost:5173 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-Use `references/cohort-config.md` for the full schema. In short:
+Read `references/audience-research.md` before creating a product-quality cohort. Use `references/cohort-config.md` for the full schema. In short:
 
 Screen-size seeding is part of random character generation. By default, thoughtful mode uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Set `screenSizeDistribution` in the cohort file or pass `BETABOT_SCREEN_SIZE_DISTRIBUTION` as a JSON array to change the weighted buckets.
 
@@ -90,7 +89,7 @@ Screen-size seeding is part of random character generation. By default, thoughtf
 - `keywords` define what counts as value, trust, risk, and empty-state evidence for that product.
 - `ideaRules` turn observed product text into first-person product ideas.
 
-The runner has generic defaults, but serious product testing should provide a cohort file for the target domain.
+The runner has generic defaults, but serious product testing must provide a cohort file and audience research for the target domain. Generic defaults are only for smoke tests.
 
 ## Auth Isolation
 
@@ -167,6 +166,8 @@ BETABOT_STRICT_SCORING=false \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+Do not disable strict scoring for reports that claim replacement-grade research confidence.
+
 ## Loop Rescue and Curiosity
 
 Thoughtful bots should not silently repeat the same route forever. When a screen repeats past `BETABOT_LOOP_REPEAT_THRESHOLD`, the bot posts a `loop-help` request in Betabook instead of pretending the loop is fine.
@@ -191,9 +192,9 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 ## Recommended Scale
 
-- Smoke: 1-3 bots, 3-6 minutes each.
-- Product signal: 5-12 bots, 8-20 minutes each.
-- Deep research: 15+ bots, multiple real sessions over hours or days.
+- Smoke: 1-3 bots, 3-6 human-paced minutes each, clearly labeled as smoke.
+- Product signal: 5-12 research-backed bots, 8-20 human-paced minutes each.
+- Deep research: 15+ research-backed bots, multiple real sessions over hours or days.
 
 Thoughtful mode is not for hundreds of simultaneous browsers unless you are deliberately testing browser infrastructure.
 
@@ -202,10 +203,17 @@ Thoughtful mode is not for hundreds of simultaneous browsers unless you are deli
 Save:
 
 - `cohort.json`
+- `audience-research.md` or `audience-research.json`
 - `raw/<bot-id>.md`
 - `screenshots/<bot-id>/...png`
 - `summary.json`
 - `analysis.md`
+
+`analysis.md` should include confidence tiers:
+
+- High: repeated across at least 25% of bots or 5+ bots, backed by screenshots/raw logs, and consistent with audience research.
+- Medium: repeated across at least 10% of bots or 3+ bots, plausible for a researched segment.
+- Low: isolated, taste-based, weakly grounded, or contradicted by research.
 
 Raw logs should contain:
 

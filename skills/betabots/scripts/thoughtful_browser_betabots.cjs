@@ -16,11 +16,13 @@ const config = {
   maxMinutes: Number(process.env.BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES || Math.max(Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8) + 4, 180)),
   concurrency: Number(process.env.BETABOT_THOUGHTFUL_CONCURRENCY || 1),
   headless: String(process.env.BETABOT_HEADLESS || 'false') === 'true',
-  timeScale: Number(process.env.BETABOT_TIME_SCALE || 1),
+  requestedTimeScale: Number(process.env.BETABOT_TIME_SCALE || 1),
+  timeScale: Math.max(1, Number(process.env.BETABOT_TIME_SCALE || 1)),
   seed: Number(process.env.BETABOT_SEED || 20260630),
   authLocalStorageKey: process.env.BETABOT_AUTH_LOCAL_STORAGE_KEY || '',
   authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
   cohortFile: process.env.BETABOT_COHORT_FILE || '',
+  audienceResearchFile: process.env.BETABOT_AUDIENCE_RESEARCH_FILE || '',
   cohortOnly: String(process.env.BETABOT_COHORT_ONLY || 'false') === 'true',
   backendUrl: (process.env.BETABOT_BACKEND_URL || 'http://localhost:3001/api').replace(/\/$/, ''),
   betabookEnabled: betabookRequested,
@@ -223,6 +225,17 @@ function screenDistributionFromEnv() {
   return raw ? normalizeScreenSizeDistribution(raw) : null
 }
 
+function loadAudienceResearchFile() {
+  if (!config.audienceResearchFile) return null
+  const file = path.resolve(process.cwd(), config.audienceResearchFile)
+  const text = fs.readFileSync(file, 'utf8')
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { file, notes: text }
+  }
+}
+
 function loadCohortConfig() {
   let override = {}
   let source = 'built-in generic default'
@@ -231,9 +244,14 @@ function loadCohortConfig() {
     override = JSON.parse(fs.readFileSync(file, 'utf8'))
     source = file
   }
+  const audienceResearchFromFile = loadAudienceResearchFile()
 
   const cohort = {
     appName: override.appName || defaultCohort.appName,
+    audienceResearch: override.audienceResearch || override.research || audienceResearchFromFile || null,
+    researchSources: normalizeList(override.researchSources || override.sources || audienceResearchFromFile?.researchSources || audienceResearchFromFile?.sources, []),
+    audienceSegments: normalizeList(override.audienceSegments || override.segments || audienceResearchFromFile?.audienceSegments || audienceResearchFromFile?.segments, []),
+    confidenceRules: override.confidenceRules || null,
     names: normalizeList(override.names, defaultCohort.names),
     baselines: normalizeList(override.baselines, defaultCohort.baselines),
     discoveries: normalizeList(override.discoveries, defaultCohort.discoveries),
@@ -394,6 +412,16 @@ function publicConfig() {
   }
 }
 
+function validateRunConfig() {
+  const validProviders = new Set(['codex', 'openrouter'])
+  if (!validProviders.has(config.llmProvider)) {
+    throw new Error(`Thoughtful betabots require an LLM mind layer. Set BETABOT_LLM_PROVIDER to "codex" or "openrouter"; "${config.llmProvider}" is not allowed.`)
+  }
+  if (config.requestedTimeScale < 1) {
+    console.warn(`BETABOT_TIME_SCALE=${config.requestedTimeScale} was requested, but thoughtful mode is human-paced. Using BETABOT_TIME_SCALE=1.`)
+  }
+}
+
 const llmStats = {
   provider: config.llmProvider,
   model: config.llmModel || null,
@@ -520,8 +548,7 @@ async function callOpenRouter(prompt) {
 
 async function llmJson(task, payload, fallback) {
   if (config.llmProvider === 'none') {
-    llmStats.fallbacks += 1
-    return fallback
+    throw new Error('Thoughtful betabots require an LLM provider; BETABOT_LLM_PROVIDER=none is not allowed.')
   }
   if (llmStats.calls >= config.llmMaxCalls) {
     llmStats.fallbacks += 1
@@ -1975,11 +2002,24 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
     }
   }
   const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
+  const confidenceRows = topIdeas.slice(0, 15).map(([idea, count]) => {
+    const share = results.length ? count / results.length : 0
+    const tier = count >= Math.max(5, Math.ceil(results.length * 0.25))
+      ? 'high'
+      : count >= Math.max(3, Math.ceil(results.length * 0.1))
+        ? 'medium'
+        : 'low'
+    return { idea, count, share, tier }
+  })
   const summary = {
     config: publicConfig(),
     cohort: {
       appName: cohort.appName,
       source: cohort.source,
+      audienceResearchFile: config.audienceResearchFile || '',
+      researchSources: cohort.researchSources,
+      audienceSegments: cohort.audienceSegments,
+      confidenceRules: cohort.confidenceRules,
       roleCount: cohort.roles.length,
       routeCount: cohort.routes.length,
       screenSizeDistribution: cohort.screenSizeDistribution,
@@ -2006,6 +2046,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
     median,
     errorBots,
     topIdeas,
+    confidenceRows,
     results,
   }
   fs.writeFileSync(path.join(config.runDir, 'summary.json'), JSON.stringify(summary, null, 2))
@@ -2014,6 +2055,9 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 ## Run Configuration
 - App name: ${cohort.appName}
 - Cohort source: ${cohort.source}
+- Audience research file: ${config.audienceResearchFile || 'not provided'}
+- Research sources: ${cohort.researchSources.length ? cohort.researchSources.join(', ') : 'not provided'}
+- Audience segments: ${cohort.audienceSegments.length ? cohort.audienceSegments.map((segment) => `${segment.name || segment.segment || segment.role || 'segment'}${segment.weight ? ` (${segment.weight})` : ''}`).join(', ') : 'not provided'}
 - Role definitions: ${cohort.roles.length}
 - Route definitions: ${cohort.routes.length}
 - Screen-size distribution: ${cohort.screenSizeDistribution.map((entry) => `${entry.category} ${entry.weight}`).join(', ')}
@@ -2033,6 +2077,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Minimum minutes per bot: ${config.minMinutes}
 - Maximum minutes per bot: ${config.maxMinutes}
 - Time scale: ${config.timeScale}
+- Requested time scale: ${config.requestedTimeScale}
 - Headless: ${config.headless}
 - Concurrency: ${config.concurrency}
 - Elapsed wall time: ${elapsedSeconds}s
@@ -2064,6 +2109,14 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 ## Top Bot Ideas
 ${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} mentions: ${idea}`).join('\n') : '- None'}
 
+## Confidence Tiers
+${confidenceRows.length ? confidenceRows.map((row) => `- ${row.tier.toUpperCase()} (${row.count}/${results.length} bots): ${row.idea}`).join('\n') : '- None'}
+
+## Audience Research Grounding
+- Cohorts should be seeded from real audience evidence when available: analytics segments, search intent, support/sales notes, reviews, social comments, competitor audiences, and public market/category research.
+- Use generic personas only for smoke tests. For product-quality runs, each major persona should trace back to a research source or observed segment.
+- Weight screen-size distribution and role count according to the researched traffic mix when known.
+
 ## Betabook
 ${betabookState?.enabled
     ? [
@@ -2094,7 +2147,7 @@ ${destinyState?.enabled
 
 ## Interpretation
 - Thoughtful mode launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
-- Betabot reflections, social text, Betabook comments, and Destiny planning use the configured LLM provider unless the provider is disabled, exhausted, or unavailable.
+- Betabot reflections, social text, Betabook comments, and Destiny planning require an LLM provider. Deterministic fallback text is not a product-quality mind layer.
 - This mode evaluates comprehension and emotional product quality, not backend scale.
 
 ## Error Bots
@@ -2104,6 +2157,7 @@ ${errorBots.length ? errorBots.map((bot) => `- ${bot.id}: ${bot.errors.join('; '
 
 async function main() {
   const startedAt = Date.now()
+  validateRunConfig()
   mkdirs()
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
   const betabookState = createBetabookState(bots)
@@ -2114,6 +2168,11 @@ async function main() {
     cohort: {
       appName: cohort.appName,
       source: cohort.source,
+      audienceResearchFile: config.audienceResearchFile || '',
+      audienceResearch: cohort.audienceResearch,
+      researchSources: cohort.researchSources,
+      audienceSegments: cohort.audienceSegments,
+      confidenceRules: cohort.confidenceRules,
       roles: cohort.roles,
       routes: cohort.routes.map((route) => ({
         labels: route.labels.map((label) => label.toString()),

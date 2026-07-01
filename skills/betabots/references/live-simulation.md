@@ -43,7 +43,7 @@ node skills/betabots/scripts/multi_session_betabots.cjs
 
 Supported knobs:
 
-- `BETABOT_LLM_PROVIDER=codex|openrouter|none`
+- `BETABOT_LLM_PROVIDER=codex|openrouter`
 - `BETABOT_LLM_MODEL`
 - `BETABOT_LLM_BATCH_SIZE`
 - `BETABOT_LLM_TIMEOUT_MS`
@@ -51,7 +51,7 @@ Supported knobs:
 - `BETABOT_CODEX_COMMAND`
 - `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`
 
-Use `BETABOT_LLM_PROVIDER=none` only to debug the runner itself. It is not a valid product-quality betabot run.
+The bundled runner rejects `BETABOT_LLM_PROVIDER=none`. Fast mode gets speed from batching LLM calls, not from fixed deterministic users.
 
 ## Recommended Scale
 

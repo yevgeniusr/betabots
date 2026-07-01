@@ -27,6 +27,13 @@ const config = {
   openrouterAppName: process.env.BETABOT_OPENROUTER_APP_NAME || 'Betabots',
 }
 
+function validateRunConfig() {
+  const validProviders = new Set(['codex', 'openrouter'])
+  if (!validProviders.has(config.llmProvider)) {
+    throw new Error(`Betabots require an LLM mind layer. Set BETABOT_LLM_PROVIDER to "codex" or "openrouter"; "${config.llmProvider}" is not allowed.`)
+  }
+}
+
 const races = ['Human', 'Elf', 'Dwarf', 'Halfling', 'Tiefling', 'Dragonborn', 'Half-Elf', 'Gnome']
 const classes = ['Bard', 'Rogue', 'Wizard', 'Fighter', 'Cleric', 'Ranger', 'Warlock', 'Paladin']
 const alignments = ['Chaotic Good', 'Neutral Good', 'True Neutral', 'Lawful Neutral', 'Chaotic Neutral']
@@ -237,8 +244,7 @@ async function callOpenRouter(prompt) {
 
 async function llmJson(task, payload, fallback) {
   if (config.llmProvider === 'none') {
-    llmStats.fallbacks += 1
-    return fallback
+    throw new Error('Betabots require an LLM provider; BETABOT_LLM_PROVIDER=none is not allowed.')
   }
   if (llmStats.calls >= config.llmMaxCalls) {
     llmStats.fallbacks += 1
@@ -1032,6 +1038,7 @@ async function phase(label, events, fn) {
 
 async function main() {
   const startedAt = Date.now()
+  validateRunConfig()
   fs.mkdirSync(path.join(config.runDir, 'raw'), { recursive: true })
   const bots = Array.from({ length: config.count }, (_, index) => botAt(index))
   const relationships = createRelationships(bots)

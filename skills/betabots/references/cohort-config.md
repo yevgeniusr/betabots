@@ -1,12 +1,25 @@
 # Cohort Configuration
 
-Betabot personas are defined by a cohort JSON file. The same thoughtful browser runner can test any application when the cohort file describes the product domain, user roles, routes, value signals, trust signals, and idea rules.
+Betabot personas are defined by a cohort JSON file. The same thoughtful browser runner can test any application when the cohort file describes the product domain, audience research, user roles, routes, value signals, trust signals, and idea rules.
+
+For product-quality runs, create audience research first. Read `audience-research.md`, then encode its segment weights, vocabulary, traffic mix, and assumptions in the cohort file.
 
 ## Minimal Example
 
 ```json
 {
   "appName": "Acme CRM",
+  "researchSources": [
+    "analytics: 30-day route and device export",
+    "sales notes: repeated objections about follow-up adoption"
+  ],
+  "audienceSegments": [
+    {
+      "name": "Sales manager evaluating team adoption",
+      "weight": 45,
+      "evidence": "Most demo requests mention inconsistent follow-up and team reporting."
+    }
+  ],
   "roles": [
     {
       "role": "sales manager evaluating team adoption",
@@ -69,6 +82,10 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ## Fields
 
 - `appName`: Human-readable product name used in thoughts and analysis.
+- `audienceResearch`: Optional object or text summary of source evidence, segment assumptions, traffic mix, vocabulary, and objections.
+- `researchSources`: Optional array of evidence sources used to design the cohort. Use source labels, not secrets.
+- `audienceSegments`: Optional array of weighted audience segments. Each segment can include `name`, `weight`, `evidence`, `jobs`, `objections`, `deviceBias`, `vocabulary`, and `assumptions`.
+- `confidenceRules`: Optional thresholds or notes for mapping repeated findings to high/medium/low confidence.
 - `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, and `attentionSpanMinutes`.
 - `screenSizeDistribution`: Optional weighted screen-size buckets. Each bucket has `category`, `weight`, and `devices`; each device has `name`, `width`, `height`, optional `deviceScaleFactor`, `isMobile`, `hasTouch`, and `userAgent`. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Override per run with `BETABOT_SCREEN_SIZE_DISTRIBUTION` or legacy alias `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `names`: Optional reusable first names for generated personas.
@@ -84,7 +101,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 ## Persona Design
 
-A strong cohort covers jobs-to-be-done, not demographics only:
+A strong cohort covers researched jobs-to-be-done, not demographics only:
 
 - first-time user who lacks category language;
 - skeptical buyer comparing alternatives;
@@ -96,6 +113,22 @@ A strong cohort covers jobs-to-be-done, not demographics only:
 - supplier, creator, or marketplace-side user when the app is multi-sided.
 
 For a domain-specific app, put domain roles in the JSON file. Do not bake them into the runner.
+
+For replacement-grade research, every major role should trace back to `audienceSegments` or `researchSources`. If a role is speculative, label that in the role's `traits` or `past`.
+
+## Weighting
+
+Use research to set:
+
+- number of personas per segment;
+- screen-size distribution;
+- discovery circumstances;
+- attention span;
+- trust objections;
+- route order;
+- vocabulary in `keywords`.
+
+If analytics says 70% of visitors are mobile, do not use the generic 50/20/30 mobile/tablet/desktop default. If most traffic arrives from search, include search-intent discovery paths. If sales notes show procurement risk, include buyer personas with proof and risk goals.
 
 ## Route Design
 

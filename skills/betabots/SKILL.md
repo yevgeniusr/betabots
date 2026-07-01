@@ -16,29 +16,44 @@ Betabots may open the UI, click buttons, send messages, wait for other users, re
 Use one of two explicit modes:
 
 1. **Fast mode**: API-level synthetic-live simulation with actual LLM-generated bot minds. Use this to populate products with dozens or hundreds of users, test social graphs, stress backend contracts, and discover systemic failures quickly. Fast bots can create users, profiles, reactions, matches, messages, bookings, and return sessions through real product APIs, but they do not judge visual UI quality.
-2. **Thoughtful mode**: real-browser human-speed sessions with an actual LLM mind layer by default. Use this when the question is comprehension, trust, emotion, taste, copy, interaction quality, onboarding, and whether the product feels usable to an actual person. Thoughtful bots open the UI in real browsers, pause, read, think, click, type, hesitate, take screenshots, and save first-person raw thoughts.
+2. **Thoughtful mode**: real-browser human-speed sessions with a mandatory LLM mind layer. Use this when the question is comprehension, trust, emotion, taste, copy, interaction quality, onboarding, and whether the product feels usable to an actual person. Thoughtful bots open the UI in real browsers, pause, read, think, click, type, hesitate, take screenshots, and save first-person raw thoughts.
 
 Default rule:
 
 - Run **fast** first when the product needs population or backend confidence.
 - Run **thoughtful** after fast mode is clean, because thoughtful sessions are slower and should not waste human-like time on basic API crashes.
 - Do not replace thoughtful mode with fast metrics. A happy API bot is not proof that a human understood the product.
-- Do not implement either mode as fixed script text. Fast mode may batch LLM calls for speed, but bot motivations, messages, and lifecycle choices must be LLM-generated unless `BETABOT_LLM_PROVIDER=none` is explicitly used for runner debugging.
+- Do not implement either mode as fixed script text. Fast mode may batch LLM calls for speed, but bot motivations, messages, and lifecycle choices must be LLM-generated. `BETABOT_LLM_PROVIDER=none` is not valid for product-quality runs and is rejected by the bundled runners.
+
+## Research-First Replacement Protocol
+
+To make betabots replace as much early user research as possible, build every serious cohort from audience evidence before running browsers:
+
+1. Collect audience evidence: analytics segments, search intent, customer/support/sales notes, reviews, social comments, competitor audiences, public market research, referral sources, device mix, geography, and user vocabulary.
+2. Save it as `audience-research.md` or structured JSON, then pass it with `BETABOT_AUDIENCE_RESEARCH_FILE`.
+3. Convert the research into weighted jobs-to-be-done segments, not generic demographics.
+4. Weight `screenSizeDistribution`, persona counts, discovery circumstances, goals, objections, and attention spans according to the evidence.
+5. Mark any synthetic assumption that is not grounded in research.
+6. Report confidence tiers: high only when repeated across many bots and backed by screenshots/raw logs; medium when repeated but not yet triangulated; low when isolated or taste-based.
+7. Do not claim replacement-level confidence from generic personas, accelerated sessions, disabled LLM minds, or unweighted cohorts.
 
 ## Workflow
 
 1. Define boundaries: local or staging URL, allowed accounts, fake-payment rule, data cleanup rule, and external-web allowance.
-2. Generate a cohort with varied roles, pasts, discovery circumstances, goals, technical comfort, emotional baseline, and attention span.
-3. Run multiple sessions per bot. Separate sessions with waits or phases so bots can react to each other.
-4. Save raw first-person storylines before synthesis.
-5. Analyze happiness, return likelihood, trust, value understood, abandonment reasons, social graph health, and product defects.
-6. Patch only repeated or high-severity issues.
-7. Rerun a fresh cohort until critical flows complete and unhappy endings are explainable product choices, not defects.
+2. Research the real or likely audience and save the evidence before cohort generation.
+3. Generate a research-weighted cohort with varied roles, pasts, discovery circumstances, goals, technical comfort, emotional baseline, and attention span.
+4. Run multiple human-paced sessions per bot. Separate sessions with waits or phases so bots can react to each other.
+5. Save raw first-person storylines before synthesis.
+6. Analyze happiness, return likelihood, trust, value understood, abandonment reasons, social graph health, product defects, and confidence tiers.
+7. Patch only repeated or high-severity issues.
+8. Rerun a fresh cohort until critical flows complete and unhappy endings are explainable product choices, not defects.
 
 ## Session Rules
 
 - Stay in character as a normal user, not an evaluator.
 - Capture first-person raw notes: what I saw, thought, clicked, typed, felt, misunderstood, waited for, and why I left or returned.
+- Use actual LLM-generated thoughts and actions. Do not disable the mind layer for a product-quality run.
+- Run thoughtful sessions at human pace. Do not accelerate timing except for local runner development, and never present accelerated output as replacement-level research.
 - Allow real human endings: bored and left, got lost, got angry, felt unsafe, found enough value, completed a session and will return later.
 - Use synthetic identities only. Never submit real personal data, real payments, or spam real users.
 - Keep live simulations isolated to local/dev/staging unless explicitly approved for production synthetic traffic.
@@ -49,6 +64,7 @@ Default rule:
 Create `.betabots/runs/YYYYMMDD-HHMMSS/` or `.metabot/runs/YYYYMMDD-HHMMSS/` with:
 
 - `cohort.json`: personas and configuration.
+- `audience-research.md` or `audience-research.json`: sources, segment weights, traffic assumptions, vocabulary, intent, objections, and device mix.
 - `raw/<bot-id>.md`: first-person multi-session storylines.
 - `summary.json`: machine-readable metrics.
 - `analysis.md`: evidence-backed product synthesis.
@@ -64,7 +80,7 @@ Use these bundled scripts from the plugin root:
 - `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level coordinated social lifecycle simulation with batched LLM mind generation against an app with bearer-token auth.
 - `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with LLM-backed thoughts, screenshots, first-person raw logs, optional Betabook social board via `BETABOT_BETABOOK=true`, and optional Destiny master-plan orchestration via `BETABOT_DESTINY=true`.
 
-Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.
+Read `references/audience-research.md` before creating a product-quality cohort. Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.
 
 ## Happiness Standard
 
@@ -77,3 +93,13 @@ Useful thresholds:
 - `< 50`: unhappy; likely bored, blocked, unsafe, or confused.
 
 Report both aggregate happiness and representative raw stories. Never hide unhappy bots; they are the point of the exercise.
+
+## Confidence Standard
+
+Treat findings as:
+
+- **High confidence**: repeated across at least 25% of the cohort or 5+ bots, backed by screenshots/raw logs, and consistent with the researched audience.
+- **Medium confidence**: repeated across at least 10% of the cohort or 3+ bots, plausible for a researched segment, but not yet triangulated.
+- **Low confidence**: isolated, taste-based, generated from weak personas, or contradicted by the research.
+
+Only high-confidence or high-severity findings should drive immediate product changes. Medium-confidence findings should become experiments or rerun prompts. Low-confidence findings should be kept as weak signals, not roadmap facts.
