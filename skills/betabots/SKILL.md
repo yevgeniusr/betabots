@@ -77,6 +77,7 @@ Use these bundled scripts from the plugin root:
 
 - `skills/betabots/scripts/generate_cohort.py`: create reusable persona cohorts.
 - `skills/betabots/scripts/analyze_sessions.py`: aggregate raw Markdown sessions.
+- `skills/betabots/scripts/post_run_questions.cjs`: ask completed bots follow-up questions from their own saved raw session memory and write `post-run-questions.json/md`.
 - `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level coordinated social lifecycle simulation with batched LLM mind generation against an app with bearer-token auth.
 - `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with LLM-backed thoughts, screenshots, first-person raw logs, optional Betabook social board via `BETABOT_BETABOOK=true`, and optional Destiny master-plan orchestration via `BETABOT_DESTINY=true`.
 
