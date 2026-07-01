@@ -1232,7 +1232,7 @@ function appendJsonl(file, event) {
 
 function ideaThemeFor(idea) {
   const text = String(idea || '').toLowerCase()
-  if (/(proof|diligence|outcome|metric|traction|role|status|date|timeline|source|evidence|venture|exit|portfolio|funding|link)/.test(text)) {
+  if (/(proof|diligence|outcome|result|case stud|client|working together|metric|traction|role|status|date|timeline|source|evidence|venture|exit|portfolio|funding|link|speaking reel|event logo|talk topic)/.test(text)) {
     return 'Proof and diligence layer'
   }
   if (/(start here|starter|best essay|recommended|reading path|first-time|newsletter|subscribe|privacy|email frequency|cadence)/.test(text)) {
