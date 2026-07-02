@@ -1,12 +1,44 @@
 # Betabots
 
-Betabots is a plugin and skill bundle for filling a product with synthetic beta users: human-like personas with defined pasts, discovery circumstances, attention spans, emotions, and multi-session behavior.
+<p align="center">
+  <img src="assets/betabots-github-banner-variation-1.png" alt="Betabots robotic synthetic beta testers inspecting a website" width="100%">
+</p>
+
+Betabots is a plugin and skill bundle for filling a product with truthful synthetic beta users: human-like personas with defined pasts, life goals, attention spans, emotions, and real preferences that do not default to fake politeness.
 
 It is inspired by the multi-harness plugin layout of [Superpowers](https://github.com/obra/superpowers): one repository ships skills, references, scripts, and manifests for multiple coding-agent runtimes.
+
+## Status
+
+Betabots is free and open-source software under the [GNU Affero General Public License v3.0 or later](LICENSE).
+
+AGPLv3 allows personal and commercial use, copying, modification, and redistribution. If someone distributes a modified version or runs a modified version as a network service for others, they must provide the corresponding source code under the same license.
+
+## Quick Start
+
+```bash
+git clone https://github.com/yevgeniusr/betabots.git
+cd betabots
+tests/smoke.sh
+scripts/install-local.sh all
+```
+
+Then start a new agent thread and ask it to use Betabots against a local or staging app.
+
+## Documentation
+
+- [Contributing](CONTRIBUTING.md): development workflow, contribution rules, and review expectations.
+- [Security](SECURITY.md): how to report vulnerabilities or unsafe automation behavior.
+- [Code of Conduct](CODE_OF_CONDUCT.md): community behavior expectations.
+- [License guide](docs/license.md): plain-English summary of the AGPLv3 terms.
+- [Usage guide](docs/usage.md): practical setup and run flow for fast and thoughtful modes.
+- [Truthful personalities](docs/truthful-personalities.md): the core Betabots model for non-performative synthetic users.
 
 ## What Betabots Do
 
 A betabot is not QA. It does not know code and does not know it is testing. It is a simulated person who discovers your product, tries to understand it, uses it, waits, returns, interacts with other simulated people, and may leave for normal human reasons.
+
+The main advantage of Betabots is truthful personality pressure. A useful betabot should say what it actually thinks from its assigned life context, even when that means boredom, distrust, dislike, uncertainty, social rejection, or “this is not worth my time.” It should not behave like a generic agreeable AI assistant trying to be nice to the builder.
 
 Betabots can help you answer:
 
@@ -15,6 +47,7 @@ Betabots can help you answer:
 - Do social, dating, marketplace, chat, or booking flows work across multiple sessions?
 - Where do users get bored, scared, confused, or convinced?
 - Which changes make users happier enough to return?
+- Which users would honestly reject the product, and why?
 
 ## Official Modes
 
@@ -127,6 +160,19 @@ The runner aggregates first-person thoughts and ideas into `analysis.md` and `su
 Thoughtful sessions keep thinking tied to product use: each observation can produce a thought, first reaction, similarity/comparison, or idea, but the runner should not spend most of a session in reflection-only mode.
 By default, thoughtful mode uses a generic cross-product cohort. For domain-specific testing, pass `BETABOT_COHORT_FILE` with roles, pasts, discovery circumstances, routes, value keywords, trust keywords, and idea rules. See `skills/betabots/references/cohort-config.md`.
 
+Opt into mortal-truth mode when you want bots to treat honesty, attention, and money as scarce survival constraints:
+
+```bash
+BETABOT_MORTAL_TRUTH=true \
+BETABOT_MORTAL_TRUTH_YEARS=100 \
+BETABOT_APP_URL=http://localhost:5173 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+In this mode each bot gets a seeded life goal, recorded website actions cost life, committed dollars cost life, and the LLM prompt requires direct private judgments instead of flattering or socially convenient answers. The runner records the life ledger and truth assessments in raw session files, `summary.json`, and `analysis.md`.
+
+Mortal-truth mode is an honesty pressure mechanism, not a magic oracle. The current implementation verifies that bots produce direct private assessments and life-cost justifications; benchmark runs should still inspect whether those assessments are concrete, role-grounded, and willing to be negative.
+
 Run the DnDate cohort explicitly:
 
 ```bash
@@ -141,6 +187,8 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 .codex-plugin/plugin.json      Codex plugin manifest
 .claude-plugin/plugin.json     Claude Code plugin manifest
 .cursor-plugin/plugin.json     Cursor plugin manifest
+assets/                        Banner and icon assets
+docs/                          Usage and license documentation
 skills/betabots/SKILL.md       Main Betabots skill
 skills/betabots/scripts/       Cohort, analysis, and live simulation scripts
 skills/betabots/examples/      Reusable cohort files for generic and domain-specific apps
@@ -261,6 +309,10 @@ Optional auth isolation:
 - `BETABOT_DESTINY_INTERVAL_MS`: interval for Destiny to inspect the cohort and apply interventions.
 - `BETABOT_BACKEND_URL`: API base URL Destiny uses when it needs product-level likes, matches, or messages.
 - `BETABOT_STRICT_SCORING=true`: default; discounts repeated screens, penalizes pass-heavy behavior, and requires meaningful social actions before declaring high happiness.
+- `BETABOT_MORTAL_TRUTH=false`: opt-in mortality/truth mode for thoughtful browser runs.
+- `BETABOT_MORTAL_TRUTH_YEARS=100`: starting life-years per bot.
+- `BETABOT_MORTAL_TRUTH_ACTION_MONTHS=1`: life-months charged per meaningful website action.
+- `BETABOT_MORTAL_TRUTH_DOLLAR_YEARS=1`: life-years charged per committed dollar.
 - `BETABOT_LOOP_REPEAT_THRESHOLD=4`: repeated-screen threshold that makes a stuck bot ask Betabook for help.
 - `BETABOT_CURIOSITY_CHANCE=0.18`: chance per move that a bot tries a safe curiosity action instead of the planned route.
 - `BETABOT_MAX_CURIOSITY_ACTIONS=8`: cap on curiosity clicks/config changes per bot session.
@@ -276,6 +328,7 @@ Persona and role definition:
 
 - The runner accepts `roles` or `personas` as strings or objects.
 - Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, and `attentionSpanMinutes`.
+- Role objects can also define `lifeGoal` for mortal-truth mode. If omitted, the runner derives one from the role.
 - Cohort files can define `screenSizeDistribution`; the bundled DnDate cohort uses 50% different mobile phones, 20% tablets, and 30% PCs.
 - Product-specific routes and words belong in cohort JSON, not in runner code.
 - Use `skills/betabots/examples/dndate.cohort.json` as a domain-specific pattern and `skills/betabots/examples/generic-saas.cohort.json` as a portable baseline.
@@ -297,4 +350,6 @@ python3 /Users/mac/.codex/skills/.system/plugin-creator/scripts/validate_plugin.
 
 ## License
 
-MIT
+[GNU Affero General Public License v3.0 or later](LICENSE).
+
+You may use, copy, fork, modify, and share Betabots, including commercially, under the AGPLv3 terms. Modified versions that are distributed or made available over a network must provide corresponding source code under the same license.

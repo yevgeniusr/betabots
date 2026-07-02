@@ -8,7 +8,7 @@
   },
   "homepage": "https://github.com/yevgeniusr/betabots",
   "repository": "https://github.com/yevgeniusr/betabots",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "keywords": ["skills", "beta-testing", "synthetic-users", "usability", "product-research"],
   "skills": "./skills/"
 }

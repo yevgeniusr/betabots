@@ -9,6 +9,7 @@
 - Past:
 - Discovery circumstance:
 - Goal today:
+- Life goal:
 - Emotional baseline:
 - Technical comfort:
 - Attention span:
@@ -36,6 +37,11 @@
 - Return likelihood:
 - Trust level:
 - Value understood:
+- Mortal truth mode:
+- Life years remaining:
+- Life years spent on actions:
+- Life years spent on money:
+- Truth assessments recorded:
 
 ## Notable Moments
 - Confusion:

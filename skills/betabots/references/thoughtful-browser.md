@@ -11,6 +11,7 @@ Use thoughtful mode when fast API traffic is not enough. It answers:
 - Does onboarding match a real person's mental model?
 - Which copy, empty states, buttons, routes, or waits create anxiety or momentum?
 - Would a user come back for a human reason?
+- Would this specific kind of person honestly care, trust, spend, subscribe, contact, or leave?
 
 ## Rules
 
@@ -68,6 +69,8 @@ Provider knobs:
 - `BETABOT_LLM_MAX_CALLS`
 - `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`
 - `BETABOT_OPENROUTER_BASE_URL`
+
+Always inspect `summary.json -> llm.failures` and `llm.fallbacks` after truthfulness benchmarks. Unsupported local Codex model names will cause the runner to fall back to deterministic text, which invalidates any personality-quality conclusion even though the browser run itself may complete.
 
 ## Cohort Configuration
 
@@ -167,6 +170,39 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
 Do not disable strict scoring for reports that claim replacement-grade research confidence.
+
+## Mortal Truth Mode
+
+Mortal truth mode is opt-in. It is for cohorts where shallow politeness, fake agreement, careless clicking, and casual spending would corrupt the test.
+
+```bash
+BETABOT_MORTAL_TRUTH=true \
+BETABOT_MORTAL_TRUTH_YEARS=100 \
+BETABOT_MORTAL_TRUTH_ACTION_MONTHS=1 \
+BETABOT_MORTAL_TRUTH_DOLLAR_YEARS=1 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+When enabled:
+
+- each bot gets a life goal from the cohort `lifeGoal` field or from its role;
+- each recorded meaningful website action costs life;
+- each committed dollar costs life;
+- LLM reflections must include a direct private truth assessment and a life-cost justification;
+- the prompt treats a knowingly false answer as immediate death under independent peer audit.
+
+The mechanism is designed to reward honest private judgment, not majority mimicry. A bot may disagree with other bots when it genuinely sees things differently; the failure case is knowingly reporting the opposite of its own judgment.
+
+Current implementation boundary:
+
+- The runner prompts for truthful private assessment and records whether assessments were produced.
+- The runner charges life for recorded actions and committed dollars.
+- The runner does not yet prove that a statement is objectively true or independently audit contradictions between bots.
+- Treat `truthAuditRiskEvents` as "truth assessments recorded," not as "truth verified."
+
+Artifacts include mortality fields in `raw/<bot-id>.md`, `summary.json`, and `analysis.md`: life goal, years remaining, years spent on actions, dollars committed, truth assessments recorded, and death status.
+
+Good mortal-truth output is direct, role-grounded, and sometimes negative. Weak output still sounds like a generic AI assistant: bland praise, vague concerns, polite hedging, or feedback that could come from any persona.
 
 ## Loop Rescue and Curiosity
 

@@ -9,6 +9,8 @@ description: Run human-like synthetic beta cohorts against applications. Use whe
 
 A betabot is a simulated human with a defined past who discovers a product under defined circumstances. It does not know code, does not know it is QA, and does not follow a checklist. It behaves as a real person: curious, bored, skeptical, emotional, distracted, social, impatient, trusting, or guarded.
 
+The key advantage is truthful personality pressure. Betabots should say what they actually think from their assigned life context, not perform a fake AI personality that always tries to be polite, helpful, and encouraging. Useful negative reactions are a feature, not a failure.
+
 Betabots may open the UI, click buttons, send messages, wait for other users, return in later sessions, search the web when allowed, and abandon the product for human reasons. They must not inspect source code, databases, logs, API internals, or hidden requirements during a user session.
 
 ## Official Modes
@@ -55,6 +57,7 @@ To make betabots replace as much early user research as possible, build every se
 - Use actual LLM-generated thoughts and actions. Do not disable the mind layer for a product-quality run.
 - Run thoughtful sessions at human pace. Do not accelerate timing except for local runner development, and never present accelerated output as replacement-level research.
 - Allow real human endings: bored and left, got lost, got angry, felt unsafe, found enough value, completed a session and will return later.
+- Say the private truth plainly. Do not flatter the builder, optimize for politeness, or invent enthusiasm that the persona would not feel.
 - Use synthetic identities only. Never submit real personal data, real payments, or spam real users.
 - Keep live simulations isolated to local/dev/staging unless explicitly approved for production synthetic traffic.
 - Label generated data clearly when the product persists user-generated content.

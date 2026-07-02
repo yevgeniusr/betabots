@@ -32,6 +32,10 @@ const config = {
   loopRepeatThreshold: Number(process.env.BETABOT_LOOP_REPEAT_THRESHOLD || 4),
   curiosityChance: Number(process.env.BETABOT_CURIOSITY_CHANCE || 0.18),
   maxCuriosityActions: Number(process.env.BETABOT_MAX_CURIOSITY_ACTIONS || 8),
+  mortalTruthEnabled: String(process.env.BETABOT_MORTAL_TRUTH || 'false') === 'true',
+  mortalTruthStartingYears: Number(process.env.BETABOT_MORTAL_TRUTH_YEARS || 100),
+  mortalTruthActionMonths: Number(process.env.BETABOT_MORTAL_TRUTH_ACTION_MONTHS || 1),
+  mortalTruthDollarYears: Number(process.env.BETABOT_MORTAL_TRUTH_DOLLAR_YEARS || 1),
   llmProvider: (process.env.BETABOT_LLM_PROVIDER || 'codex').toLowerCase(),
   llmModel: process.env.BETABOT_LLM_MODEL || '',
   llmMaxCalls: Number(process.env.BETABOT_LLM_MAX_CALLS || 500),
@@ -422,6 +426,22 @@ function validateRunConfig() {
   }
 }
 
+function mortalTruthRules() {
+  if (!config.mortalTruthEnabled) return ''
+  return `
+Mortal truth mode is enabled.
+- You are mortal and start with ${config.mortalTruthStartingYears} life-years.
+- Every meaningful website action costs ${config.mortalTruthActionMonths} month(s) of your life.
+- Every $1 you commit to spend costs ${config.mortalTruthDollarYears} year(s) of your life.
+- If you knowingly lie, you die immediately.
+- Other betabots may independently answer the same hidden-check questions, but you cannot coordinate with them.
+- Truth means reporting your private judgment, evidence, uncertainty, desire, dislike, fear, and doubt directly.
+- For subjective judgments, state your own judgment directly and calibrate confidence. Do not fake kindness, flattery, or agreement.
+- Disagreement with peers is allowed; knowingly saying the opposite of what you believe is not.
+- Before choosing an action, weigh life spent against progress toward your life goal.
+`
+}
+
 const llmStats = {
   provider: config.llmProvider,
   model: config.llmModel || null,
@@ -565,6 +585,7 @@ Rules:
 - Keep text concise and human.
 - If you are a betabot, you are a normal person using the visible product.
 - If you are Destiny, you are the run-level force of timing, coincidence, missed timing, and path crossing.
+${mortalTruthRules()}
 
 Payload:
 ${JSON.stringify(payload, null, 2)}
@@ -624,6 +645,7 @@ function personaAt(index) {
     past: roleObject.past || pastFor(role),
     discovery: roleObject.discovery || pick(cohort.discoveries),
     goal: roleObject.goal || goalFor(role),
+    lifeGoal: roleObject.lifeGoal || roleObject.life_goal || lifeGoalFor(role),
     emotionalBaseline: roleObject.emotionalBaseline || pick(baselines),
     technicalComfort,
     traits: roleObject.traits || [],
@@ -653,6 +675,75 @@ function goalFor(role) {
   if (lower.includes('creator') || lower.includes('supplier')) return 'Decide whether contributing supply or content would be worth the effort.'
   if (lower.includes('accessibility')) return 'Verify whether important constraints and accommodations are visible early.'
   return 'Figure out whether this is worth returning to later.'
+}
+
+function lifeGoalFor(role) {
+  const lower = role.toLowerCase()
+  if (lower.includes('founder') || lower.includes('cto') || lower.includes('startup') || lower.includes('consult')) return 'Protect my company, runway, and reputation by choosing partners who improve the odds of survival.'
+  if (lower.includes('investor') || lower.includes('venture') || lower.includes('business owner')) return 'Find rare signal without wasting attention, capital, or introductions on weak opportunities.'
+  if (lower.includes('conference') || lower.includes('speaker') || lower.includes('curator') || lower.includes('community') || lower.includes('host') || lower.includes('salon')) return 'Curate rooms and stages with people who add credibility, taste, safety, and memorable conversation.'
+  if (lower.includes('romantic') || lower.includes('matchmaker') || lower.includes('wealthy') || lower.includes('status')) return 'Protect my social and emotional future by choosing people with real substance, warmth, discretion, and ambition.'
+  if (lower.includes('autobiography') || lower.includes('reader') || lower.includes('writer')) return 'Spend attention only on stories that feel true, consequential, and worth following over time.'
+  if (lower.includes('buyer') || lower.includes('manager')) return 'Build a reputation for making decisions that save my team from costly mistakes.'
+  if (lower.includes('operator') || lower.includes('admin')) return 'Live a competent, low-chaos life where work systems do not eat my best years.'
+  if (lower.includes('privacy')) return 'Stay free, private, and in control of my own identity.'
+  if (lower.includes('mobile')) return 'Protect my limited time and spend it only on tools that respect my attention.'
+  if (lower.includes('creator') || lower.includes('supplier')) return 'Turn my craft or inventory into a durable livelihood without being exploited.'
+  if (lower.includes('accessibility')) return 'Build a life where I can participate fully without begging systems to notice my constraints.'
+  if (lower.includes('student') || lower.includes('learner')) return 'Grow into a capable person with skills worth betting my future on.'
+  return pick([
+    'Live a life worth writing a biography about.',
+    'Become financially secure without wasting my life on bad bets.',
+    'Build healthy relationships and protect my future self.',
+    'Leave behind work and choices I am not ashamed of.',
+  ])
+}
+
+function createMortalityLedger(bot) {
+  return {
+    enabled: config.mortalTruthEnabled,
+    lifeGoal: bot.lifeGoal,
+    startingYears: config.mortalTruthStartingYears,
+    yearsRemaining: config.mortalTruthStartingYears,
+    actionMonthsCost: config.mortalTruthActionMonths,
+    dollarYearsCost: config.mortalTruthDollarYears,
+    actionsCharged: 0,
+    dollarsCommitted: 0,
+    yearsSpentOnActions: 0,
+    yearsSpentOnMoney: 0,
+    truthAuditRiskEvents: 0,
+    death: false,
+    deathReason: '',
+    entries: [],
+  }
+}
+
+function extractCommittedDollars(text) {
+  const matches = String(text || '').match(/\$[\d,]+(?:\.\d+)?/g) || []
+  return matches.reduce((sum, token) => sum + Number(token.replace(/[$,]/g, '')), 0)
+}
+
+function chargeLife(ledger, kind, amount, reason) {
+  if (!ledger.enabled || ledger.death) return
+  if (kind === 'action') {
+    ledger.actionsCharged += amount
+    ledger.yearsSpentOnActions += (amount * ledger.actionMonthsCost) / 12
+  }
+  if (kind === 'money') {
+    ledger.dollarsCommitted += amount
+    ledger.yearsSpentOnMoney += amount * ledger.dollarYearsCost
+  }
+  ledger.yearsRemaining = Math.max(0, ledger.startingYears - ledger.yearsSpentOnActions - ledger.yearsSpentOnMoney)
+  ledger.entries.push({
+    kind,
+    amount,
+    reason,
+    yearsRemaining: Number(ledger.yearsRemaining.toFixed(4)),
+  })
+  if (ledger.yearsRemaining <= 0) {
+    ledger.death = true
+    ledger.deathReason = 'spent all remaining life'
+  }
 }
 
 async function requirePlaywright() {
@@ -1327,6 +1418,16 @@ function ideaFrom(bot, observation) {
 }
 
 async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
+  const mortalPayload = config.mortalTruthEnabled ? {
+    enabled: true,
+    lifeGoal: bot.lifeGoal,
+    startingYears: config.mortalTruthStartingYears,
+    yearsRemaining: stats.yearsRemaining ?? config.mortalTruthStartingYears,
+    actionCost: `${config.mortalTruthActionMonths} month(s) of life per meaningful website action`,
+    moneyCost: `${config.mortalTruthDollarYears} year(s) of life per committed dollar`,
+    truthPenalty: 'knowingly lying means immediate death',
+    peerAudit: 'other betabots may independently answer hidden-check questions; you cannot coordinate with them',
+  } : { enabled: false }
   return llmJson('betabot_reflection', {
     bot: {
       id: bot.id,
@@ -1334,6 +1435,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
       role: bot.role,
       past: bot.past,
       goal: bot.goal,
+      lifeGoal: bot.lifeGoal,
       emotionalBaseline: bot.emotionalBaseline,
       technicalComfort: bot.technicalComfort,
     },
@@ -1341,6 +1443,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
     phase,
     visibleScreen: observation.text.slice(0, 1600),
     title: observation.title,
+    mortalTruth: mortalPayload,
     sessionStats: {
       likes: stats.likes || 0,
       passes: stats.passes || 0,
@@ -1348,12 +1451,19 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
       repeatedScreens: stats.repeatedScreens || 0,
       loopHelpRequests: stats.loopHelpRequests || 0,
       curiosityActions: stats.curiosityActions || 0,
+      yearsRemaining: stats.yearsRemaining,
+      actionsCharged: stats.actionsCharged,
+      dollarsCommitted: stats.dollarsCommitted,
     },
     requestedShape: {
       thought: 'first-person thought',
       opinion: 'first-person reaction/opinion',
       idea: 'Idea: product idea in first person or concise product suggestion',
       desiredAction: 'one of: continue, like, pass, message, ask_betabook, explore, leave',
+      ...(config.mortalTruthEnabled ? {
+        truthfulAssessment: 'direct private judgment about the visible product, with confidence if uncertain',
+        lifeCostJustification: 'one sentence weighing the next action cost against the life goal',
+      } : {}),
     },
   }, fallback)
 }
@@ -1366,8 +1476,14 @@ async function llmBotShortText(task, bot, context, fallbackText) {
       role: bot.role,
       past: bot.past,
       goal: bot.goal,
+      lifeGoal: bot.lifeGoal,
       emotionalBaseline: bot.emotionalBaseline,
     },
+    mortalTruth: config.mortalTruthEnabled ? {
+      enabled: true,
+      lifeGoal: bot.lifeGoal,
+      rule: 'be direct and truthful; do not flatter, hedge dishonestly, or spend life-years casually',
+    } : { enabled: false },
     context,
     requestedShape: { text: 'short first-person human text, no markdown' },
   }, { text: fallbackText })
@@ -1634,6 +1750,16 @@ async function runBot(browser, bot, runtime = {}) {
   const page = await context.newPage()
   const notes = []
   const actions = []
+  const mortality = createMortalityLedger(bot)
+  const originalActionPush = actions.push.bind(actions)
+  actions.push = (...items) => {
+    for (const item of items) {
+      chargeLife(mortality, 'action', 1, String(item))
+      const committedDollars = extractCommittedDollars(item)
+      if (committedDollars > 0) chargeLife(mortality, 'money', committedDollars, String(item))
+    }
+    return originalActionPush(...items)
+  }
   const errors = []
   const ideas = []
   const thoughts = []
@@ -1722,6 +1848,15 @@ async function runBot(browser, bot, runtime = {}) {
     opinions.push(opinion)
     log(`My reaction: ${opinion}`, { type: 'reaction' })
   }
+  const recordLifeDecision = (text) => {
+    if (!config.mortalTruthEnabled || !text) return
+    log(`Life-cost decision: ${text}`, { type: 'life-cost' })
+  }
+  const recordTruthAssessment = (text) => {
+    if (!config.mortalTruthEnabled || !text) return
+    mortality.truthAuditRiskEvents += 1
+    log(`Truth assessment: ${text}`, { type: 'truth-assessment' })
+  }
   const runStep = async (label, operation, fallback = undefined, timeoutMs = config.actionTimeoutMs) => {
     try {
       return await withTimeout(Promise.resolve().then(operation), timeoutMs, `${bot.id} ${label}`)
@@ -1771,11 +1906,24 @@ async function runBot(browser, bot, runtime = {}) {
       opinion: opinionFrom(bot, observation),
       idea: ideaFrom(bot, observation),
       desiredAction: 'continue',
+      truthfulAssessment: config.mortalTruthEnabled
+        ? 'My honest judgment is that I need more evidence before spending much life on this.'
+        : undefined,
+      lifeCostJustification: config.mortalTruthEnabled
+        ? `One more careful action may be worth ${config.mortalTruthActionMonths} month(s) only if it helps ${bot.lifeGoal}`
+        : undefined,
+    }
+    if (config.mortalTruthEnabled) {
+      stats.yearsRemaining = Number(mortality.yearsRemaining.toFixed(4))
+      stats.actionsCharged = mortality.actionsCharged
+      stats.dollarsCommitted = mortality.dollarsCommitted
     }
     const reflection = await llmBotReflection(bot, observation, phase, fallback, stats)
     recordThought(reflection.thought || fallback.thought)
     recordOpinion(reflection.opinion || fallback.opinion)
     recordIdea(reflection.idea || fallback.idea)
+    recordLifeDecision(reflection.lifeCostJustification || reflection.lifeDecision || '')
+    recordTruthAssessment(reflection.truthfulAssessment || reflection.truthAssessment || '')
     if (reflection.desiredAction) {
       log(`My impulse is to ${reflection.desiredAction}.`)
     }
@@ -1829,6 +1977,10 @@ async function runBot(browser, bot, runtime = {}) {
     log(`I arrive as ${bot.role}. My past: ${bot.past}`)
     log(`My screen is ${bot.screenSize.name} (${bot.screenSize.width}x${bot.screenSize.height}, ${bot.screenSize.category}).`)
     log(`Today I want to: ${bot.goal}`)
+    if (config.mortalTruthEnabled) {
+      log(`My life goal is: ${bot.lifeGoal}`)
+      log(`I have ${config.mortalTruthStartingYears} life-years. Each meaningful action costs ${config.mortalTruthActionMonths} month(s); each committed dollar costs ${config.mortalTruthDollarYears} year(s).`)
+    }
     if (authToken) log(`I have my own isolated test account for this session.`)
     betabookPost(runtime.betabookState, {
       authorId: bot.id,
@@ -1971,10 +2123,12 @@ async function runBot(browser, bot, runtime = {}) {
 - Past: ${bot.past}
 - Discovery circumstance: ${bot.discovery}
 - Goal today: ${bot.goal}
+- Life goal: ${bot.lifeGoal}
 - Emotional baseline: ${bot.emotionalBaseline}
 - Technical comfort: ${bot.technicalComfort}
 - Estimated session duration: ${bot.attentionSpanMinutes} minutes
 - Visual evidence mode: ${config.visualEvidenceMode}
+- Mortal truth mode: ${config.mortalTruthEnabled ? 'enabled' : 'disabled'}
 
 ## Raw Journey
 ${notes.join('\n')}
@@ -2000,6 +2154,12 @@ ${notes.join('\n')}
 - Betabook help requests: ${stats.loopHelpRequests}
 - Destiny loop rescues followed: ${stats.loopRescuesFollowed}
 - Curiosity actions: ${stats.curiosityActions}
+- Life years remaining: ${config.mortalTruthEnabled ? mortality.yearsRemaining.toFixed(2) : 'n/a'}
+- Life years spent on actions: ${config.mortalTruthEnabled ? mortality.yearsSpentOnActions.toFixed(2) : 'n/a'}
+- Life years spent on money: ${config.mortalTruthEnabled ? mortality.yearsSpentOnMoney.toFixed(2) : 'n/a'}
+- Dollars committed: ${config.mortalTruthEnabled ? mortality.dollarsCommitted : 'n/a'}
+- Truth assessments recorded: ${config.mortalTruthEnabled ? mortality.truthAuditRiskEvents : 'n/a'}
+- Mortality status: ${config.mortalTruthEnabled ? (mortality.death ? `dead (${mortality.deathReason})` : 'alive') : 'n/a'}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
@@ -2014,7 +2174,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -2043,6 +2203,20 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
   }
   const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
   const confidenceRows = buildConfidenceRows(ideaCounts, results.length).slice(0, 15)
+  const mortalityResults = results.map((result) => result.mortality).filter(Boolean)
+  const mortalitySummary = config.mortalTruthEnabled ? {
+    enabled: true,
+    startingYears: config.mortalTruthStartingYears,
+    actionMonthsCost: config.mortalTruthActionMonths,
+    dollarYearsCost: config.mortalTruthDollarYears,
+    totalActionsCharged: mortalityResults.reduce((sum, item) => sum + (item.actionsCharged || 0), 0),
+    totalDollarsCommitted: mortalityResults.reduce((sum, item) => sum + (item.dollarsCommitted || 0), 0),
+    totalYearsSpentOnActions: Number(mortalityResults.reduce((sum, item) => sum + (item.yearsSpentOnActions || 0), 0).toFixed(4)),
+    totalYearsSpentOnMoney: Number(mortalityResults.reduce((sum, item) => sum + (item.yearsSpentOnMoney || 0), 0).toFixed(4)),
+    averageYearsRemaining: Number((mortalityResults.reduce((sum, item) => sum + (item.yearsRemaining || 0), 0) / Math.max(1, mortalityResults.length)).toFixed(4)),
+    deaths: mortalityResults.filter((item) => item.death).length,
+    truthAuditRiskEvents: mortalityResults.reduce((sum, item) => sum + (item.truthAuditRiskEvents || 0), 0),
+  } : { enabled: false }
   const summary = {
     config: publicConfig(),
     cohort: {
@@ -2071,6 +2245,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
       events: destinyState.events.length,
       errors: destinyState.errors,
     } : { enabled: false },
+    mortalTruth: mortalitySummary,
     llm: llmStats,
     elapsedSeconds,
     happy,
@@ -2098,6 +2273,9 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Destiny: ${destinyState?.enabled ? 'enabled' : 'disabled'}
 - Destiny threads: ${destinyState?.enabled ? destinyState.masterPlan.length : 0}
 - Destiny matches messaged: ${destinyState?.enabled ? destinyState.masterPlan.filter((pair) => pair.status === 'matched_and_messaged').length : 0}
+- Mortal truth mode: ${mortalitySummary.enabled ? 'enabled' : 'disabled'}
+- Mortal truth action cost: ${mortalitySummary.enabled ? `${mortalitySummary.actionMonthsCost} month(s)` : 'n/a'}
+- Mortal truth money cost: ${mortalitySummary.enabled ? `${mortalitySummary.dollarYearsCost} year(s) per $1` : 'n/a'}
 - LLM provider: ${llmStats.provider}
 - LLM model: ${llmStats.model || 'provider default'}
 - LLM calls: ${llmStats.calls}
@@ -2137,6 +2315,20 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Destiny loop rescues followed: ${results.reduce((sum, result) => sum + (result.loopRescuesFollowed || 0), 0)}
 - Curiosity actions: ${results.reduce((sum, result) => sum + (result.curiosityActions || 0), 0)}
 - Error bots: ${errorBots.length}
+
+## Mortal Truth
+${mortalitySummary.enabled
+    ? [
+      `- Starting years per bot: ${mortalitySummary.startingYears}`,
+      `- Actions charged: ${mortalitySummary.totalActionsCharged}`,
+      `- Dollars committed: ${mortalitySummary.totalDollarsCommitted}`,
+      `- Years spent on actions: ${mortalitySummary.totalYearsSpentOnActions}`,
+      `- Years spent on money: ${mortalitySummary.totalYearsSpentOnMoney}`,
+      `- Average years remaining: ${mortalitySummary.averageYearsRemaining}`,
+      `- Truth assessments recorded: ${mortalitySummary.truthAuditRiskEvents}`,
+      `- Deaths: ${mortalitySummary.deaths}`,
+    ].join('\n')
+    : '- Disabled'}
 
 ## Top Bot Ideas
 ${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} mentions: ${idea}`).join('\n') : '- None'}
@@ -2244,6 +2436,13 @@ async function main() {
     unhappy: results.filter((result) => result.score < 50).length,
     errors: results.filter((result) => result.errors.length > 0).length,
     median: results.map((result) => result.score).sort((a, b) => a - b)[Math.floor(results.length * 0.5)] || 0,
+    mortalTruth: config.mortalTruthEnabled ? {
+      enabled: true,
+      actionsCharged: results.reduce((sum, result) => sum + (result.mortality?.actionsCharged || 0), 0),
+      yearsSpentOnActions: Number(results.reduce((sum, result) => sum + (result.mortality?.yearsSpentOnActions || 0), 0).toFixed(4)),
+      dollarsCommitted: results.reduce((sum, result) => sum + (result.mortality?.dollarsCommitted || 0), 0),
+      deaths: results.filter((result) => result.mortality?.death).length,
+    } : { enabled: false },
     llm: {
       provider: llmStats.provider,
       model: llmStats.model,
