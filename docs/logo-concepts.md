@@ -7,5 +7,8 @@ Primary assets:
 - `assets/betabots.svg` - square plugin/app mark.
 - `assets/betabots-mark.svg` - square standalone mark.
 - `assets/betabots-logo.svg` - horizontal lockup for README/docs surfaces.
+- `assets/betabots-github-banner-variation-1.png` - wide README/social preview banner.
 
 ![Betabots logo](../assets/betabots-logo.svg)
+
+![Betabots banner](../assets/betabots-github-banner-variation-1.png)

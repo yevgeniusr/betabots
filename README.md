@@ -6,6 +6,10 @@
 
 Betabots is a plugin and skill bundle for filling a product with truthful synthetic beta users: human-like personas with defined pasts, life goals, attention spans, emotions, and real preferences that do not default to fake politeness.
 
+<p align="center">
+  <img src="assets/betabots-github-banner-variation-1.png" alt="Betabots synthetic beta users inspecting a product dashboard" width="100%">
+</p>
+
 It is inspired by the multi-harness plugin layout of [Superpowers](https://github.com/obra/superpowers): one repository ships skills, references, scripts, and manifests for multiple coding-agent runtimes.
 
 ## Status
