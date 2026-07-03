@@ -4,7 +4,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python3 "$ROOT/skills/betabots/scripts/generate_cohort.py" --count 3 --seed 42 --product "Smoke app" >/tmp/betabots-cohort.json
 python3 -m json.tool /tmp/betabots-cohort.json >/dev/null
 python3 -m json.tool "$ROOT/skills/betabots/examples/generic-saas.cohort.json" >/dev/null
-python3 -m json.tool "$ROOT/skills/betabots/examples/dndate.cohort.json" >/dev/null
 mkdir -p /tmp/betabots-raw
 cat >/tmp/betabots-raw/bot.md <<'MD'
 # bot — Raw Storyline
@@ -17,12 +16,12 @@ cat >/tmp/betabots-raw/bot.md <<'MD'
 MD
 python3 "$ROOT/skills/betabots/scripts/analyze_sessions.py" /tmp/betabots-raw >/tmp/betabots-analysis.md
 grep -q "Sessions analyzed: 1" /tmp/betabots-analysis.md
-node --check "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs" >/dev/null
-grep -q "BETABOT_LLM_PROVIDER" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
-grep -q "initializeFastMinds" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
-grep -q "callCodex" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
-grep -q "callOpenRouter" "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
+node --check "$ROOT/web/server.cjs" >/dev/null
+test ! -e "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
+test ! -e "$ROOT/skills/betabots/references/live-simulation.md"
+test ! -e "$ROOT/skills/betabots/examples/dndate.cohort.json"
+! grep -R -E 'BETABOT_PRODUCT_ADAPTER_FILE|BETABOT_BACKEND_URL|multi_session_betabots|live-simulation|Fast mode|fast mode|DnDate|/characters|/reactions|/matches|/likes-you|/tables|charactersByBotId|table-talk|Create your first character|character required|discover characters|browse tables|productAdapter|backendUrl' "$ROOT/README.md" "$ROOT/docs" "$ROOT/skills/betabots" "$ROOT/web" >/dev/null
 grep -q "BETABOT_BETABOOK" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_DESTINY" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_LLM_PROVIDER" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
@@ -34,6 +33,8 @@ grep -q "lifeCostJustification" "$ROOT/skills/betabots/scripts/thoughtful_browse
 grep -q "Screenshot evidence" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "betabook.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "destiny.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "Betabots Dashboard" "$ROOT/web/static/index.html"
+grep -q "/api/runs" "$ROOT/web/server.cjs"
 BETABOT_COHORT_FILE="$ROOT/skills/betabots/examples/generic-saas.cohort.json" \
 BETABOT_THOUGHTFUL_COUNT=1 \
 BETABOT_RUN_DIR=/tmp/betabots-loader-check \

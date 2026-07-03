@@ -1,10 +1,10 @@
-# Thoughtful Browser Mode
+# Browser Betabots
 
-Thoughtful mode is the slow, real-browser mode for betabots.
+Browser Betabots is the real-browser mode for simulated users.
 
 ## Purpose
 
-Use thoughtful mode when fast API traffic is not enough. It answers:
+Use Betabots when you need to know how simulated people experience the product surface. It answers:
 
 - Does the UI explain itself?
 - Does the product feel trustworthy?
@@ -104,7 +104,7 @@ When the target app supports local E2E auth, use per-bot browser storage so one 
 Example:
 
 ```bash
-BETABOT_AUTH_LOCAL_STORAGE_KEY=dndate.e2eAuthToken \
+BETABOT_AUTH_LOCAL_STORAGE_KEY=myapp.e2eAuthToken \
 BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
@@ -116,11 +116,11 @@ Betabook is a simple Reddit-like board scoped only to the current simulation. It
 Use Betabook when a cohort needs social context without forcing every social action through the product UI:
 
 - introductions;
-- looking-for-party posts;
+- help requests;
 - comments and replies;
 - invites;
 - missed connections;
-- venue or organizer requests.
+- product notes.
 
 ```bash
 BETABOT_BETABOOK=true \
@@ -140,18 +140,14 @@ Destiny watches the cohort in real time and applies a master plan:
 - create near-misses;
 - manipulate Betabook by surfacing posts and invites;
 - nudge individual bots with believable hunches or actions;
-- use product APIs when needed to make likes, matches, and messages happen through normal product contracts.
 
 ```bash
 BETABOT_BETABOOK=true \
 BETABOT_DESTINY=true \
-BETABOT_BACKEND_URL=http://localhost:3001/api \
-BETABOT_AUTH_LOCAL_STORAGE_KEY=dndate.e2eAuthToken \
-BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-The runner writes `destiny.json` with the master plan, ready users, interventions, path-crossing states, nudges, API events, and errors. If Destiny repeatedly has to force crossings that should happen organically, treat that as product evidence: real users may also fail to find active people, receive likes, or continue a social journey.
+The runner writes `destiny.json` with the master plan, interventions, path-crossing states, nudges, and errors. If Destiny repeatedly has to force crossings that should happen organically, treat that as product evidence: real users may also fail to find relevant people, content, inventory, or next steps.
 
 ## Strict Scoring
 

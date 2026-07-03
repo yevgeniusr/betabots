@@ -13,19 +13,18 @@ The key advantage is truthful personality pressure. Betabots should say what the
 
 Betabots may open the UI, click buttons, send messages, wait for other users, return in later sessions, search the web when allowed, and abandon the product for human reasons. They must not inspect source code, databases, logs, API internals, or hidden requirements during a user session.
 
-## Official Modes
+## Official Mode
 
-Use one of two explicit modes:
+Betabots has one official execution model: real-browser, human-speed sessions with a mandatory LLM mind layer.
 
-1. **Fast mode**: API-level synthetic-live simulation with actual LLM-generated bot minds. Use this to populate products with dozens or hundreds of users, test social graphs, stress backend contracts, and discover systemic failures quickly. Fast bots can create users, profiles, reactions, matches, messages, bookings, and return sessions through real product APIs, but they do not judge visual UI quality.
-2. **Thoughtful mode**: real-browser human-speed sessions with a mandatory LLM mind layer. Use this when the question is comprehension, trust, emotion, taste, copy, interaction quality, onboarding, and whether the product feels usable to an actual person. Thoughtful bots open the UI in real browsers, pause, read, think, click, type, hesitate, take screenshots, and save first-person raw thoughts.
+Use it when the question is comprehension, trust, emotion, taste, copy, interaction quality, onboarding, and whether the product feels usable to an actual person. Betabots open the UI in real browsers, pause, read, think, click, type, hesitate, take screenshots, and save first-person raw thoughts.
 
 Default rule:
 
-- Run **fast** first when the product needs population or backend confidence.
-- Run **thoughtful** after fast mode is clean, because thoughtful sessions are slower and should not waste human-like time on basic API crashes.
-- Do not replace thoughtful mode with fast metrics. A happy API bot is not proof that a human understood the product.
-- Do not implement either mode as fixed script text. Fast mode may batch LLM calls for speed, but bot motivations, messages, and lifecycle choices must be LLM-generated. `BETABOT_LLM_PROVIDER=none` is not valid for product-quality runs and is rejected by the bundled runners.
+- Betabots must interact through the product surface a person can see.
+- They must not call product APIs, inspect server internals, use hidden implementation maps, or rely on project-specific runner code.
+- Do not replace browser evidence with server-side metrics. A successful API call is not proof that a human understood the product.
+- `BETABOT_LLM_PROVIDER=none` is not valid for product-quality runs and is rejected by the bundled runner.
 
 ## Research-First Replacement Protocol
 
@@ -81,10 +80,9 @@ Use these bundled scripts from the plugin root:
 - `skills/betabots/scripts/generate_cohort.py`: create reusable persona cohorts.
 - `skills/betabots/scripts/analyze_sessions.py`: aggregate raw Markdown sessions.
 - `skills/betabots/scripts/post_run_questions.cjs`: ask completed bots follow-up questions from their own saved raw session memory and write `post-run-questions.json/md`.
-- `skills/betabots/scripts/multi_session_betabots.cjs`: run **fast mode**, a configurable API-level coordinated social lifecycle simulation with batched LLM mind generation against an app with bearer-token auth.
-- `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run **thoughtful mode**, real-browser human-speed sessions with LLM-backed thoughts, screenshots, first-person raw logs, optional Betabook social board via `BETABOT_BETABOOK=true`, and optional Destiny master-plan orchestration via `BETABOT_DESTINY=true`.
+- `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run real-browser human-speed sessions with LLM-backed thoughts, screenshots, first-person raw logs, optional Betabook social board via `BETABOT_BETABOOK=true`, and optional Destiny master-plan orchestration via `BETABOT_DESTINY=true`.
 
-Read `references/audience-research.md` before creating a product-quality cohort. Read `references/live-simulation.md` before using fast mode. Read `references/thoughtful-browser.md` before using thoughtful mode. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.
+Read `references/audience-research.md` before creating a product-quality cohort. Read `references/thoughtful-browser.md` before running browsers. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.
 
 ## Happiness Standard
 

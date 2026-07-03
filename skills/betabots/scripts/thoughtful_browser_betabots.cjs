@@ -24,7 +24,6 @@ const config = {
   cohortFile: process.env.BETABOT_COHORT_FILE || '',
   audienceResearchFile: process.env.BETABOT_AUDIENCE_RESEARCH_FILE || '',
   cohortOnly: String(process.env.BETABOT_COHORT_ONLY || 'false') === 'true',
-  backendUrl: (process.env.BETABOT_BACKEND_URL || 'http://localhost:3001/api').replace(/\/$/, ''),
   betabookEnabled: betabookRequested,
   destinyEnabled: destinyRequested,
   destinyIntervalMs: Number(process.env.BETABOT_DESTINY_INTERVAL_MS || process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
@@ -275,6 +274,11 @@ const roles = cohort.roles
 const names = cohort.names
 const baselines = cohort.baselines
 const endings = cohort.endings
+
+function genericNudgeRoutes() {
+  const cohortRoutes = cohort.routes.map((route) => route.fallback).filter(Boolean)
+  return [...new Set([...cohortRoutes, '/'])]
+}
 
 function mulberry32(seed) {
   return function random() {
@@ -609,22 +613,22 @@ ${JSON.stringify(fallback, null, 2)}
 }
 
 const betabookOpeners = [
-  'Your character hook made me stop scrolling. Want to test the table chemistry with a one-shot?',
-  'I like your vibe. I am looking for clear expectations, low drama, and a table that actually shows up.',
-  'Your character sounds like someone my party would either trust immediately or regret trusting in the best way.',
+  'Your situation sounds close to mine. Want to compare what we are trying to get from this product?',
+  'I like how you framed the problem. I am looking for clear expectations and a next step that feels worth it.',
+  'Your goal made me pause. Maybe we should check whether the product gives both of us enough signal.',
 ]
 
 const betabookReplies = [
-  'One-shot first sounds safe. I care about consent tools and no weird pressure.',
-  'That sounds fun. I would rather start with a table than endless small talk.',
-  'I am interested. If the vibe works, maybe this becomes a recurring party.',
+  'That sounds reasonable. I care about clarity, trust, and not wasting time.',
+  'I am interested, but I want one concrete next step instead of vague browsing.',
+  'If this keeps feeling useful, I could see myself coming back later.',
 ]
 
 const destinyThoughts = [
-  'I have a hunch that checking the social side now will matter.',
-  'Something about this profile makes me want to take one more step instead of leaving.',
+  'I have a hunch that checking another part of the product now will matter.',
+  'Something about this moment makes me want to take one more step instead of leaving.',
   'I suddenly feel like waiting a little longer could pay off.',
-  'I feel pulled toward organizing something concrete rather than browsing forever.',
+  'I feel pulled toward doing something concrete rather than browsing forever.',
 ]
 
 function personaAt(index) {
@@ -791,37 +795,6 @@ function authTokenFor(bot) {
     .replaceAll('{role}', safeTokenPart(bot.role.toLowerCase()))
 }
 
-async function api(bot, endpoint, options = {}) {
-  const token = authTokenFor(bot)
-  if (!token) throw new Error('Destiny API actions require BETABOT_AUTH_TOKEN_TEMPLATE')
-  const response = await fetch(`${config.backendUrl}${endpoint}`, {
-    method: options.method || 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-  })
-  const text = await response.text()
-  let body = null
-  try {
-    body = text ? JSON.parse(text) : null
-  } catch {
-    body = text
-  }
-  if (!response.ok) throw new Error(`${options.method || 'GET'} ${endpoint} failed ${response.status}: ${text}`)
-  return body
-}
-
-async function optionalDestiny(state, label, fn) {
-  try {
-    return await fn()
-  } catch (error) {
-    state.errors.push(`${label}: ${error.message}`)
-    return null
-  }
-}
-
 function nowIso() {
   return new Date().toISOString()
 }
@@ -830,7 +803,7 @@ function createBetabookState(bots) {
   return {
     enabled: config.betabookEnabled,
     scope: config.runDir,
-    channels: ['introductions', 'looking-for-party', 'help', 'invites', 'missed-connections', 'venue-requests', 'table-talk'],
+    channels: ['introductions', 'coordination', 'help', 'invites', 'missed-connections', 'product-notes'],
     participants: bots.map((bot) => ({ id: bot.id, name: bot.name, role: bot.role })),
     posts: [],
     comments: [],
@@ -850,7 +823,7 @@ function betabookPost(state, input) {
   const post = {
     id: `post-${String(state.posts.length + 1).padStart(4, '0')}`,
     at: nowIso(),
-    channel: input.channel || 'table-talk',
+    channel: input.channel || 'product-notes',
     authorId: input.authorId || 'destiny',
     title: input.title || 'Untitled',
     body: input.body || '',
@@ -927,16 +900,14 @@ function createDestinyState(bots) {
       reactionId: null,
       matchId: null,
       postId: null,
-      status: 'waiting_for_characters',
+      status: 'waiting_for_paths',
       messagesSeeded: 0,
     })
   }
   return {
     enabled: config.destinyEnabled,
-    backendUrl: config.backendUrl,
     intervalMs: config.destinyIntervalMs,
     masterPlan: plans,
-    charactersByBotId: {},
     nudgesByBotId: Object.fromEntries(bots.map((bot) => [bot.id, []])),
     rescuedHelpPostIds: [],
     events: [],
@@ -960,8 +931,8 @@ async function initializeDestinyMasterPlan(bots, state, betabookState) {
   if (plan.summary) {
     betabookPost(betabookState, {
       authorId: 'destiny',
-      channel: 'table-talk',
-      title: 'Destiny sets the table',
+      channel: 'product-notes',
+      title: 'Destiny sets the plan',
       body: plan.summary,
       tags: ['destiny', 'master-plan', 'llm'],
     })
@@ -994,19 +965,19 @@ function runDestinyLoopRescue(bots, state, betabookState) {
     const nudge = {
       kind: 'loop_rescue',
       thought: 'I am stuck in a loop, so I should stop doing the same thing and try a different path.',
-      route: pick(['/likes-you', '/matches', '/tables', '/profile', '/discover']),
+      route: pick(genericNudgeRoutes()),
     }
     addDestinyNudge(state, bot.id, nudge)
     betabookComment(betabookState, {
       postId: post.id,
       authorId: 'destiny',
-      body: `Destiny notices ${bot.name} looping and quietly shifts the timing: try a different surface, then ask a person or table for a concrete next step.`,
+      body: `Destiny notices ${bot.name} looping and quietly shifts the timing: try a different surface, then look for one concrete next step.`,
     })
     betabookInvite(betabookState, {
       fromBotId: 'destiny',
       toBotId: bot.id,
       kind: 'loop_rescue',
-      message: 'You seem stuck. Try a different part of the product, then make one concrete social move.',
+      message: 'You seem stuck. Try a different part of the product, then make one concrete next move.',
       postId: post.id,
     })
     rescued.add(post.id)
@@ -1034,20 +1005,11 @@ async function runDestinyPass(bots, state, betabookState) {
   if (advice.betabookComment) {
     betabookPost(betabookState, {
       authorId: 'destiny',
-      channel: 'table-talk',
+      channel: 'product-notes',
       title: 'A strange coincidence',
       body: advice.betabookComment,
       tags: ['destiny', 'llm'],
     })
-  }
-
-  for (const bot of bots) {
-    if (state.charactersByBotId[bot.id]) continue
-    const characters = await optionalDestiny(state, `characters ${bot.id}`, () => api(bot, '/characters'))
-    if (characters?.[0]) {
-      state.charactersByBotId[bot.id] = characters[0]
-      state.events.push({ type: 'character_ready', botId: bot.id, characterId: characters[0].id, at: nowIso() })
-    }
   }
 
   for (const pair of state.masterPlan) {
@@ -1055,16 +1017,14 @@ async function runDestinyPass(bots, state, betabookState) {
     if (pair.status === 'paths_kept_apart') continue
     const botA = botsById.get(pair.a)
     const botB = botsById.get(pair.b)
-    const charA = state.charactersByBotId[pair.a]
-    const charB = state.charactersByBotId[pair.b]
-    if (!botA || !botB || !charA || !charB) continue
+    if (!botA || !botB) continue
 
     if (pair.intent === 'near_miss') {
       const post = betabookPost(betabookState, {
         authorId: 'destiny',
         channel: 'missed-connections',
         title: `${botA.name} and ${botB.name} almost cross paths`,
-        body: 'Two compatible people are active, but Destiny keeps them in adjacent rooms to test whether the product creates enough organic momentum without intervention.',
+        body: 'Two compatible people are active, but Destiny keeps them in adjacent moments to test whether the product creates enough organic momentum without intervention.',
         tags: ['near-miss', 'destiny'],
       })
       pair.postId = post?.id || null
@@ -1076,79 +1036,26 @@ async function runDestinyPass(bots, state, betabookState) {
     }
 
     if (!pair.postId) {
+      const routeA = pick(genericNudgeRoutes())
+      const routeB = pick(genericNudgeRoutes())
       const post = betabookPost(betabookState, {
         authorId: pair.a,
-        channel: 'looking-for-party',
-        title: `${botA.name} is looking for a table`,
-        body: `${botA.name} wants a low-pressure table and seems compatible with ${botB.name}.`,
-        tags: ['looking-for-party', 'destiny-surface'],
+        channel: 'coordination',
+        title: `${botA.name} is looking for a useful next step`,
+        body: `${botA.name} wants a low-pressure way to keep exploring and seems compatible with ${botB.name}'s goal.`,
+        tags: ['coordination', 'destiny-surface'],
       })
       pair.postId = post?.id || null
       betabookInvite(betabookState, {
         fromBotId: pair.a,
         toBotId: pair.b,
         kind: 'cross_paths',
-        message: `${botA.name} looks compatible. Maybe check their character before leaving.`,
+        message: `${botA.name} looks compatible. Maybe compare notes before leaving.`,
         postId: pair.postId,
       })
-      addDestinyNudge(state, pair.a, { kind: 'think', thought: pick(destinyThoughts), route: '/discover' })
-      addDestinyNudge(state, pair.b, { kind: 'think', thought: pick(destinyThoughts), route: '/likes-you' })
+      addDestinyNudge(state, pair.a, { kind: 'think', thought: pick(destinyThoughts), route: routeA })
+      addDestinyNudge(state, pair.b, { kind: 'think', thought: pick(destinyThoughts), route: routeB })
       state.events.push({ type: 'paths_set_to_cross', pairId: pair.id, postId: pair.postId, at: nowIso() })
-    }
-
-    if (!pair.reactionId) {
-      const reaction = await optionalDestiny(state, `reaction ${pair.a}->${pair.b}`, () => api(botA, '/reactions', {
-        method: 'POST',
-        body: {
-          fromCharacterId: charA.id,
-          toCharacterId: charB.id,
-          target: { type: 'card', field: 'hook' },
-          comment: pick(betabookOpeners),
-        },
-      }))
-      if (reaction?.id) {
-        pair.reactionId = reaction.id
-        pair.status = 'reaction_sent'
-        state.events.push({ type: 'reaction_sent', pairId: pair.id, from: pair.a, to: pair.b, reactionId: reaction.id, at: nowIso() })
-      }
-    }
-
-    const incoming = await optionalDestiny(state, `incoming ${pair.b}`, () => api(botB, `/reactions/incoming?characterId=${encodeURIComponent(charB.id)}`))
-    const incomingReaction = incoming?.find((item) => item.fromCharacter?.id === charA.id || item.fromCharacterId === charA.id) || incoming?.find((item) => item.id === pair.reactionId)
-    if (incomingReaction?.id && !pair.matchId) {
-      await optionalDestiny(state, `accept ${pair.b}`, () => api(botB, `/reactions/${incomingReaction.id}/accept`, { method: 'POST' }))
-      pair.status = 'accepted'
-      state.events.push({ type: 'reaction_accepted', pairId: pair.id, by: pair.b, reactionId: incomingReaction.id, at: nowIso() })
-    }
-
-    const matches = await optionalDestiny(state, `matches ${pair.a}`, () => api(botA, `/matches?characterId=${encodeURIComponent(charA.id)}`))
-    const match = matches?.find((item) => {
-      const ids = [item.characterAId, item.characterBId]
-      return ids.includes(charA.id) && ids.includes(charB.id)
-    })
-    if (match?.id) {
-      pair.matchId = match.id
-      pair.status = 'matched'
-      betabookComment(betabookState, {
-        postId: pair.postId,
-        authorId: pair.b,
-        body: pick(betabookReplies),
-      })
-      state.events.push({ type: 'match_found', pairId: pair.id, matchId: match.id, at: nowIso() })
-    }
-
-    if (pair.matchId && pair.messagesSeeded === 0) {
-      await optionalDestiny(state, `message ${pair.a}`, () => api(botA, `/matches/${pair.matchId}/messages`, {
-        method: 'POST',
-        body: { fromCharacterId: charA.id, body: pick(betabookOpeners) },
-      }))
-      await optionalDestiny(state, `message ${pair.b}`, () => api(botB, `/matches/${pair.matchId}/messages`, {
-        method: 'POST',
-        body: { fromCharacterId: charB.id, body: pick(betabookReplies) },
-      }))
-      pair.messagesSeeded = 2
-      pair.status = 'matched_and_messaged'
-      state.events.push({ type: 'messages_seeded', pairId: pair.id, matchId: pair.matchId, count: 2, at: nowIso() })
     }
   }
 }
@@ -1229,76 +1136,6 @@ async function selectByIndex(locator, index) {
   return true
 }
 
-async function tryCreateCharacter(page, bot, log, actions, captureEvidence = null) {
-  const before = await observe(page)
-  const lower = before.text.toLowerCase()
-  if (!lower.includes('character')) return false
-
-  if (!lower.includes('basic information')) {
-    const clicked = await clickFirst(page, ['Create your first character', /^create$/i, /create character/i])
-    if (!clicked) return false
-
-    actions.push(`clicked ${clicked}`)
-    log(`I start creating a character because the app keeps telling me that is the way in.`)
-    await wait(1500 + random() * 2500)
-    if (captureEvidence) await captureEvidence('character-form-open', await observe(page))
-  } else {
-    log(`The character form is already open, so I stop wandering and fill it in.`)
-    if (captureEvidence) await captureEvidence('character-form-already-open', await observe(page))
-  }
-
-  const modalText = (await observe(page)).text.toLowerCase()
-  if (!modalText.includes('basic information')) {
-    log(`I expected a character form, but I am not sure it opened.`)
-    return false
-  }
-
-  const firstName = bot.name.split(' ')[0]
-  const characterName = `${firstName} ${pick(['Emberleaf', 'Moonbrook', 'Ironquill', 'Duskwalker', 'Starling'])}`
-  const hook = `${characterName} is looking for a table where character choices matter and strangers become a party slowly.`
-
-  await page.locator('input[type="text"]').first().fill(characterName, { timeout: 5000 })
-  await selectByIndex(page.locator('select').nth(0), 1 + Math.floor(random() * 4))
-  await selectByIndex(page.locator('select').nth(1), 1 + Math.floor(random() * 6))
-  await selectByIndex(page.locator('select').nth(2), 1 + Math.floor(random() * 6))
-  actions.push(`filled character basics for ${characterName}`)
-  log(`I name my character ${characterName}; this makes the product feel personal instead of abstract.`)
-  if (captureEvidence) await captureEvidence('character-basics-filled', await observe(page))
-
-  await clickFirst(page, [/next step/i])
-  await wait(1000 + random() * 2000)
-  await clickFirst(page, [/next step/i])
-  await wait(1000 + random() * 2000)
-  if (captureEvidence) await captureEvidence('character-hook-step', await observe(page))
-
-  await page.locator('textarea').first().fill(hook, { timeout: 5000 })
-  await selectByIndex(page.locator('select').first(), 1 + Math.floor(random() * 4))
-  actions.push('filled character hook and vibe')
-  log(`I write a hook instead of optimizing it; I am trying to sound like myself.`)
-  if (captureEvidence) await captureEvidence('character-hook-filled', await observe(page))
-
-  await clickFirst(page, [/next step/i])
-  await wait(1000 + random() * 2000)
-  const sliders = page.locator('input[type="range"]')
-  const sliderCount = await sliders.count().catch(() => 0)
-  for (let index = 0; index < Math.min(sliderCount, 4); index += 1) {
-    await sliders.nth(index).fill(String(35 + Math.floor(random() * 40))).catch(() => {})
-  }
-  if (captureEvidence) await captureEvidence('character-sliders-adjusted', await observe(page))
-  await clickFirst(page, [/finalize character/i])
-  await wait(2500 + random() * 3500)
-
-  const after = await observe(page)
-  if (after.text.toLowerCase().includes(characterName.toLowerCase()) || !after.text.toLowerCase().includes('basic information')) {
-    actions.push(`created character ${characterName}`)
-    log(`The character seems saved, so now I expect the rest of the app to make more sense.`)
-    return true
-  }
-
-  log(`I tried to finish the character, but I cannot tell whether it saved.`)
-  return false
-}
-
 function slugifyLabel(label) {
   return String(label || 'screen')
     .toLowerCase()
@@ -1309,8 +1146,8 @@ function slugifyLabel(label) {
 
 function textHash(text) {
   let hash = 5381
-  for (const character of String(text || '')) {
-    hash = ((hash << 5) + hash) + character.charCodeAt(0)
+  for (const char of String(text || '')) {
+    hash = ((hash << 5) + hash) + char.charCodeAt(0)
     hash &= 0xffffffff
   }
   return (hash >>> 0).toString(16)
@@ -1525,9 +1362,9 @@ async function llmDestinyMasterPlan(bots, state) {
 
 async function llmDestinyLiveAdvice(bots, state, betabookState) {
   const fallback = { nudges: [], betabookComment: '' }
+  const routeExamples = genericNudgeRoutes().slice(0, 8)
   return llmJson('destiny_live_advice', {
     appName: cohort.appName,
-    readyBotIds: Object.keys(state.charactersByBotId || {}),
     threads: state.masterPlan.map((thread) => ({
       id: thread.id,
       a: thread.a,
@@ -1545,7 +1382,7 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
       tags: post.tags,
     })),
     requestedShape: {
-      nudges: [{ botId: 'bot id', kind: 'think or loop_rescue', thought: 'believable hunch', route: '/discover or /likes-you or /matches or /tables or /profile' }],
+      nudges: [{ botId: 'bot id', kind: 'think or loop_rescue', thought: 'believable hunch', route: routeExamples.join(' or ') || '/' }],
       betabookComment: 'optional Destiny comment for the run, empty string if none',
     },
   }, fallback)
@@ -1560,129 +1397,15 @@ function screenFingerprint(observation) {
     .slice(0, 260)
 }
 
-function isDiscoverScreen(text) {
-  return text.includes('discover view as') && !text.includes('start with a character') && !text.includes('character required')
-}
-
-function isMatchesScreen(text) {
-  return text.includes('matches') && (text.includes('start the conversation') || text.includes('message ') || text.includes('select a match'))
-}
-
-async function tryDiscoverReaction(page, bot, log, actions, stats, captureEvidence = null) {
-  const observation = await observe(page)
-  const text = observation.text.toLowerCase()
-  if (!isDiscoverScreen(text)) return false
-
-  const shouldLike = stats.likes < 2 || (stats.likes <= stats.passes && random() < 0.55)
-  if (shouldLike) {
-    const liked = await clickFirst(page, [/like profile/i, /like this/i, /^like$/i])
-    if (!liked) return false
-    actions.push(`clicked ${liked}`)
-    log(`I choose to like this profile because browsing without signaling interest would not help me meet anyone.`)
-    await wait(800 + random() * 1600)
-    if (captureEvidence) await captureEvidence('like-dialog-open', await observe(page))
-
-    const fallbackComment = pick([
-      'Your hook feels like it could turn into a real table conversation.',
-      'I like the vibe here. Want to see if our playstyles actually work together?',
-      'This sounds like the kind of party chemistry I am looking for.',
-    ])
-    const comment = await llmBotShortText('betabot_like_comment', bot, {
-      visibleScreen: observation.text.slice(0, 1400),
-      action: 'send a like with a short comment',
-    }, fallbackComment)
-    const textarea = page.locator('textarea').last()
-    if (await textarea.isVisible({ timeout: 1500 }).catch(() => false)) {
-      await textarea.fill(comment).catch(() => {})
-      log(`I add a short note instead of sending a silent like: "${comment}"`)
-      if (captureEvidence) await captureEvidence('like-note-filled', await observe(page))
-    }
-    const sent = await clickFirst(page, [/send like/i, /^send$/i])
-    if (sent) {
-      actions.push(`clicked ${sent}`)
-      stats.likes += 1
-      stats.meaningfulSocialActions += 1
-      await wait(1200 + random() * 2400)
-      if (captureEvidence) await captureEvidence('like-sent', await observe(page))
-      return true
-    }
-  }
-
-  const passed = await clickFirst(page, [/^pass$/i])
-  if (passed) {
-    actions.push(`clicked ${passed}`)
-    stats.passes += 1
-    log(`I pass because this profile does not feel like the right fit right now.`)
-    await wait(900 + random() * 1800)
-    return true
-  }
-  return false
-}
-
-async function trySendMatchMessage(page, bot, log, actions, stats, captureEvidence = null) {
-  let observation = await observe(page)
-  let text = observation.text.toLowerCase()
-  if (!isMatchesScreen(text)) return false
-
-  const threadButton = page.getByRole('button').filter({ hasText: /↔|start the conversation|jun|jul|me /i }).first()
-  if (await threadButton.isVisible({ timeout: 1000 }).catch(() => false)) {
-    await threadButton.click({ timeout: 3000 }).catch(() => {})
-    actions.push('opened a match thread')
-    log(`I open a match because the point of matching is to see whether there is a real conversation.`)
-    await wait(1000 + random() * 1800)
-    if (captureEvidence) await captureEvidence('match-thread-opened', await observe(page))
-  }
-
-  const textarea = page.locator('textarea[placeholder^="Message"]').last()
-  if (!(await textarea.isVisible({ timeout: 1500 }).catch(() => false))) return false
-
-  const fallbackBody = pick([
-    'Your character hook caught me. Want to try a low-pressure one-shot first?',
-    'I am curious whether our table vibes work. What kind of first session would feel safe?',
-    'This match seems promising. Would you rather start with chat or pick an open table?',
-  ])
-  const body = await llmBotShortText('betabot_match_message', bot, {
-    visibleScreen: observation.text.slice(0, 1400),
-    action: 'send a first match message',
-  }, fallbackBody)
-  const filled = await textarea.fill(body, { timeout: 5000 }).then(() => true).catch(() => false)
-  if (!filled) {
-    log(`I tried to message this match, but the message box disappeared before I could type.`)
-    return false
-  }
-  if (captureEvidence) await captureEvidence('match-message-composed', await observe(page))
-  await page.keyboard.press('Enter').catch(async () => {
-    await page.locator('form button[type="submit"]').last().click({ timeout: 2000 }).catch(() => {})
-  })
-  actions.push('sent match message')
-  stats.messages += 1
-  stats.meaningfulSocialActions += 1
-  log(`I send a message because a match without a next step would feel unfinished: "${body}"`)
-  await wait(1200 + random() * 2400)
-  if (captureEvidence) await captureEvidence('match-message-sent', await observe(page))
-  return true
-}
-
 async function tryCuriosityAction(page, bot, log, actions, stats, force = false, captureEvidence = null) {
   if (!force && random() > config.curiosityChance) return false
   if (stats.curiosityActions >= config.maxCuriosityActions) return false
 
   const observation = await observe(page)
   const lower = observation.text.toLowerCase()
-  const safeLabels = [
-    /filters/i,
-    /read/i,
-    /browse tables/i,
-    /discover characters/i,
-    /find characters/i,
-    /check likes/i,
-    /improve my character/i,
-    /invite friends/i,
-    /reset/i,
-    /apply filters/i,
-    /organizer console/i,
-  ]
-  const dangerous = /delete|remove|revoke|sign out|logout|pay|purchase|submit|publish|create invite|create venue|create table|publish session/i
+  const routeLabels = cohort.routes.flatMap((route) => route.labels || [])
+  const safeLabels = [...new Set([...routeLabels, /filters/i, /read/i, /learn more/i, /details/i, /apply filters/i])]
+  const dangerous = /delete|remove|revoke|sign out|logout|pay|purchase|submit|publish/i
 
   for (const label of safeLabels.sort(() => random() - 0.5)) {
     const locator = locatorForRole(page, label)
@@ -1692,7 +1415,7 @@ async function tryCuriosityAction(page, bot, log, actions, stats, force = false,
       await locator.click({ timeout: 2500 }).catch(() => {})
       actions.push(`curiosity clicked ${label}`)
       stats.curiosityActions += 1
-      stats.meaningfulSocialActions += lower.includes('match') || lower.includes('discover') || lower.includes('table') ? 1 : 0
+      stats.meaningfulSocialActions += hasAny(lower, cohort.keywords.value) ? 1 : 0
       log(`Curiosity gets me to try "${text || label}" instead of repeating the same path.`)
       await wait(900 + random() * 2200)
       if (captureEvidence) await captureEvidence('curiosity-click', await observe(page))
@@ -1782,8 +1505,6 @@ async function runBot(browser, bot, runtime = {}) {
   let step = 1
   let value = 0
   let trust = 45
-  let emptyCharacterViews = 0
-  let createdCharacter = false
   let lastScreenshot = ''
   let lastObservation = null
 
@@ -2038,41 +1759,15 @@ async function runBot(browser, bot, runtime = {}) {
       if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.risk)) trust -= 20
-      if (lower.includes('start with a character') || lower.includes('character required')) emptyCharacterViews += 1
-
-      if (!createdCharacter && emptyCharacterViews > 0) {
-        createdCharacter = await runStep('create character', () => tryCreateCharacter(page, bot, log, actions, captureScreenshot), false, Math.max(config.actionTimeoutMs, 90000))
-        if (createdCharacter) {
-          betabookPost(runtime.betabookState, {
-            authorId: bot.id,
-            channel: 'looking-for-party',
-            title: `${bot.name} has a character now`,
-            body: 'I finished enough setup that I can plausibly meet, match, chat, or join a table.',
-            tags: ['ready', 'character-created'],
-          })
-          value += 18
-          trust += 8
-          observation = await observe(page)
-          recordScreenQuality(observation)
-          await captureScreenshot('character-created', observation)
-          log(`After creating a character, I see: ${observation.text}`)
-          await runStep('reflect after character creation', () => recordReflection(observation, 'character-created'))
-        } else if (emptyCharacterViews >= 2) {
-          trust -= 8
-          log(`I am looping on the character requirement and starting to lose patience.`)
-        }
-      }
-
-      const actedSocially = await runStep('send match message', () => trySendMatchMessage(page, bot, log, actions, stats, captureScreenshot), false)
-        || await runStep('react to discover profile', () => tryDiscoverReaction(page, bot, log, actions, stats, captureScreenshot), false)
-        || await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
+      const actedSocially = await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
       if (actedSocially) {
         observation = await observe(page)
         recordScreenQuality(observation)
         await captureScreenshot('post-social-action', observation)
         log(`After the social action, I see: ${observation.text}`)
       } else {
-        const reserveClicked = await runStep('try fallback action', () => clickFirst(page, [/^reserve$/i, /^save$/i, /invite to table/i, /^message$/i]), null, 15000)
+        const fallbackLabels = [/^save$/i, /^message$/i, /contact/i]
+        const reserveClicked = await runStep('try fallback action', () => clickFirst(page, fallbackLabels), null, 15000)
         if (reserveClicked) {
           actions.push(`clicked ${reserveClicked}`)
           stats.meaningfulSocialActions += 1
@@ -2102,13 +1797,8 @@ async function runBot(browser, bot, runtime = {}) {
     if (runtime.betabookState?.enabled && betabookMoments.length === 0) score -= 8
     score = clamp(score, 0, 100)
   }
-  if (emptyCharacterViews >= 3 && !createdCharacter) {
-    score = Math.min(score, 62)
-  }
   const endReason = errors.length
     ? 'hit a bug or dead end'
-    : emptyCharacterViews >= 3 && !createdCharacter
-      ? 'got stuck before creating a character and left'
     : score >= 75
       ? 'completed session and will come back later'
       : score >= 55
@@ -2139,8 +1829,6 @@ ${notes.join('\n')}
 - Return likelihood: ${score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low'}
 - Trust level: ${trust >= 70 ? 'high' : trust >= 45 ? 'medium' : 'low'}
 - Value understood: ${value >= 35 ? 'yes' : value >= 15 ? 'partial' : 'unclear'}
-- Created required character: ${createdCharacter ? 'yes' : 'no'}
-- Character gate loops: ${emptyCharacterViews}
 - Ideas expressed: ${ideas.length}
 - Thoughts expressed: ${thoughts.length}
 - Opinions expressed: ${opinions.length}
@@ -2240,7 +1928,6 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
     } : { enabled: false },
     destiny: destinyState?.enabled ? {
       enabled: true,
-      backendUrl: destinyState.backendUrl,
       masterPlan: destinyState.masterPlan,
       events: destinyState.events.length,
       errors: destinyState.errors,
@@ -2272,7 +1959,6 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Betabook posts: ${betabookState?.enabled ? betabookState.posts.length : 0}
 - Destiny: ${destinyState?.enabled ? 'enabled' : 'disabled'}
 - Destiny threads: ${destinyState?.enabled ? destinyState.masterPlan.length : 0}
-- Destiny matches messaged: ${destinyState?.enabled ? destinyState.masterPlan.filter((pair) => pair.status === 'matched_and_messaged').length : 0}
 - Mortal truth mode: ${mortalitySummary.enabled ? 'enabled' : 'disabled'}
 - Mortal truth action cost: ${mortalitySummary.enabled ? `${mortalitySummary.actionMonthsCost} month(s)` : 'n/a'}
 - Mortal truth money cost: ${mortalitySummary.enabled ? `${mortalitySummary.dollarYearsCost} year(s) per $1` : 'n/a'}
@@ -2355,8 +2041,6 @@ ${betabookState?.enabled
 ## Destiny
 ${destinyState?.enabled
     ? [
-      `- Backend URL: ${destinyState.backendUrl}`,
-      `- Ready characters: ${Object.keys(destinyState.charactersByBotId).length}`,
       `- Master plan states: ${destinyState.masterPlan.map((pair) => `${pair.id}=${pair.intent}:${pair.status}`).join(', ')}`,
       `- Destiny events: ${destinyState.events.length}`,
       `- Destiny errors: ${destinyState.errors.length ? destinyState.errors.slice(0, 20).join('; ') : 'none'}`,
@@ -2370,9 +2054,9 @@ ${destinyState?.enabled
 - Recent errors: ${llmStats.errors.length ? llmStats.errors.slice(-10).join('; ') : 'none'}
 
 ## Interpretation
-- Thoughtful mode launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
+- Browser Betabots launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
 - Betabot reflections, social text, Betabook comments, and Destiny planning require an LLM provider. Deterministic fallback text is not a product-quality mind layer.
-- This mode evaluates comprehension and emotional product quality, not backend scale.
+- This mode evaluates comprehension and emotional product quality, not server scale.
 
 ## Error Bots
 ${errorBots.length ? errorBots.map((bot) => `- ${bot.id}: ${bot.errors.join('; ')}`).join('\n') : '- None'}
