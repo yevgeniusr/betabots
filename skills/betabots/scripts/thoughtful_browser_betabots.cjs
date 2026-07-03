@@ -31,10 +31,11 @@ const config = {
   loopRepeatThreshold: Number(process.env.BETABOT_LOOP_REPEAT_THRESHOLD || 4),
   curiosityChance: Number(process.env.BETABOT_CURIOSITY_CHANCE || 0.18),
   maxCuriosityActions: Number(process.env.BETABOT_MAX_CURIOSITY_ACTIONS || 8),
-  mortalTruthEnabled: String(process.env.BETABOT_MORTAL_TRUTH || 'false') === 'true',
-  mortalTruthStartingYears: Number(process.env.BETABOT_MORTAL_TRUTH_YEARS || 100),
-  mortalTruthActionMonths: Number(process.env.BETABOT_MORTAL_TRUTH_ACTION_MONTHS || 1),
-  mortalTruthDollarYears: Number(process.env.BETABOT_MORTAL_TRUTH_DOLLAR_YEARS || 1),
+  avatarStyle: normalizeDiceBearStyle(process.env.BETABOT_AVATAR_STYLE || 'bottts-neutral'),
+  avatarBaseUrl: normalizeDiceBearBaseUrl(process.env.BETABOT_AVATAR_BASE_URL || 'https://api.dicebear.com/10.x'),
+  truthPressureStartingYears: Number(process.env.BETABOT_TRUTH_YEARS || 100),
+  truthPressureActionMonths: Number(process.env.BETABOT_TRUTH_ACTION_MONTHS || 1),
+  truthPressureDollarYears: Number(process.env.BETABOT_TRUTH_DOLLAR_YEARS || 1),
   llmProvider: (process.env.BETABOT_LLM_PROVIDER || 'codex').toLowerCase(),
   llmModel: process.env.BETABOT_LLM_MODEL || '',
   llmMaxCalls: Number(process.env.BETABOT_LLM_MAX_CALLS || 500),
@@ -200,6 +201,27 @@ function parseJsonEnv(value, label) {
   }
 }
 
+function normalizeDiceBearStyle(value) {
+  let style = String(value || 'bottts-neutral').trim()
+  if (/^https?:\/\//i.test(style)) {
+    const url = new URL(style)
+    const parts = url.pathname.split('/').filter(Boolean)
+    const stylesIndex = parts.indexOf('styles')
+    style = stylesIndex >= 0 && parts[stylesIndex + 1] ? parts[stylesIndex + 1] : parts[parts.length - 1]
+  }
+  style = style.replace(/\.json$/i, '').replace(/\/+$/g, '').toLowerCase()
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(style)) {
+    throw new Error(`BETABOT_AVATAR_STYLE must be a DiceBear style slug or style URL, got "${value}"`)
+  }
+  return style
+}
+
+function normalizeDiceBearBaseUrl(value) {
+  const baseUrl = String(value || 'https://api.dicebear.com/10.x').trim().replace(/\/+$/g, '')
+  if (!/^https?:\/\//i.test(baseUrl)) throw new Error(`BETABOT_AVATAR_BASE_URL must be an http(s) URL, got "${value}"`)
+  return baseUrl
+}
+
 function normalizeScreenSizeDistribution(value, fallback = defaultCohort.screenSizeDistribution) {
   const source = normalizeList(value, fallback)
   const distribution = source.map((entry) => {
@@ -292,6 +314,14 @@ function mulberry32(seed) {
 const random = mulberry32(config.seed)
 const pick = (items) => items[Math.floor(random() * items.length)]
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
+function stableHash(value) {
+  let hash = 2166136261
+  for (const char of String(value)) {
+    hash ^= char.charCodeAt(0)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
 function pickWeighted(items) {
   const total = items.reduce((sum, item) => sum + Number(item.weight || 0), 0)
   let threshold = random() * total
@@ -430,13 +460,12 @@ function validateRunConfig() {
   }
 }
 
-function mortalTruthRules() {
-  if (!config.mortalTruthEnabled) return ''
+function truthPressureRules() {
   return `
-Mortal truth mode is enabled.
-- You are mortal and start with ${config.mortalTruthStartingYears} life-years.
-- Every meaningful website action costs ${config.mortalTruthActionMonths} month(s) of your life.
-- Every $1 you commit to spend costs ${config.mortalTruthDollarYears} year(s) of your life.
+Truth pressure is always enabled.
+- You are mortal and start with ${config.truthPressureStartingYears} life-years.
+- Every meaningful website action costs ${config.truthPressureActionMonths} month(s) of your life.
+- Every $1 you commit to spend costs ${config.truthPressureDollarYears} year(s) of your life.
 - If you knowingly lie, you die immediately.
 - Other betabots may independently answer the same hidden-check questions, but you cannot coordinate with them.
 - Truth means reporting your private judgment, evidence, uncertainty, desire, dislike, fear, and doubt directly.
@@ -589,7 +618,7 @@ Rules:
 - Keep text concise and human.
 - If you are a betabot, you are a normal person using the visible product.
 - If you are Destiny, you are the run-level force of timing, coincidence, missed timing, and path crossing.
-${mortalTruthRules()}
+${truthPressureRules()}
 
 Payload:
 ${JSON.stringify(payload, null, 2)}
@@ -631,6 +660,83 @@ const destinyThoughts = [
   'I feel pulled toward doing something concrete rather than browsing forever.',
 ]
 
+const avatarBackgrounds = {
+  curious: 'b6e3f4',
+  guarded: 'd1d4f9',
+  skeptical: 'c0aede',
+  hopeful: 'b6f4cf',
+  impatient: 'ffd5dc',
+  playful: 'ffdfbf',
+  cautious: 'd9d5ca',
+  private: 'cbd5e1',
+  analytical: 'bfdbfe',
+}
+
+const avatarFallbackBackgrounds = ['b6e3f4', 'c0aede', 'ffd5dc', 'ffdfbf', 'b6f4cf', 'd1d4f9', 'fde68a', 'bfdbfe']
+
+function avatarBackgroundFor(bot) {
+  const text = `${bot.emotionalBaseline || ''} ${bot.role || ''} ${(bot.traits || []).join(' ')}`.toLowerCase()
+  for (const [key, color] of Object.entries(avatarBackgrounds)) {
+    if (text.includes(key)) return color
+  }
+  return avatarFallbackBackgrounds[stableHash(text || bot.id) % avatarFallbackBackgrounds.length]
+}
+
+function avatarForBot(bot) {
+  const seed = [
+    config.seed,
+    cohort.appName,
+    bot.id,
+    bot.name,
+    bot.role,
+    bot.past,
+    bot.discovery,
+    bot.goal,
+    bot.lifeGoal,
+    bot.emotionalBaseline,
+    bot.technicalComfort,
+    ...(bot.traits || []),
+  ].filter(Boolean).join('|')
+  const backgroundColor = avatarBackgroundFor(bot)
+  const query = new URLSearchParams({
+    seed,
+    backgroundColor,
+  })
+  return {
+    provider: 'dicebear',
+    style: config.avatarStyle,
+    seed,
+    backgroundColor,
+    url: `${config.avatarBaseUrl}/${config.avatarStyle}/svg?${query.toString()}`,
+    personalityBasis: ['name', 'role', 'past', 'discovery', 'goal', 'lifeGoal', 'emotionalBaseline', 'technicalComfort', 'traits'],
+  }
+}
+
+function avatarFromOverride(value, bot) {
+  if (!value) return avatarForBot(bot)
+  if (typeof value === 'string') {
+    return {
+      provider: 'custom',
+      style: 'custom',
+      seed: '',
+      backgroundColor: '',
+      url: value,
+      personalityBasis: [],
+    }
+  }
+  if (typeof value === 'object') {
+    return {
+      provider: value.provider || 'custom',
+      style: value.style || config.avatarStyle,
+      seed: value.seed || '',
+      backgroundColor: value.backgroundColor || value.background_color || '',
+      url: value.url || value.href || avatarForBot(bot).url,
+      personalityBasis: value.personalityBasis || value.personality_basis || [],
+    }
+  }
+  return avatarForBot(bot)
+}
+
 function personaAt(index) {
   const roleSpec = roles[index % roles.length]
   const roleObject = typeof roleSpec === 'string' ? { role: roleSpec } : roleSpec
@@ -642,7 +748,7 @@ function personaAt(index) {
   const screenSize = configuredScreenSize
     ? normalizeScreenSizeDistribution([{ category: configuredScreenSize.category || roleObject.viewport || 'custom', devices: [configuredScreenSize] }])[0].devices[0]
     : screenSizeForPersona(index, roleObject.viewport || (role.toLowerCase().includes('mobile') ? 'mobile' : ''))
-  return {
+  const bot = {
     id: `thoughtful-betabot-${String(index + 1).padStart(3, '0')}`,
     name: roleObject.name || generatedName,
     role,
@@ -657,6 +763,8 @@ function personaAt(index) {
     screenSize,
     attentionSpanMinutes: configuredMinutes || clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
   }
+  bot.avatar = avatarFromOverride(roleObject.avatar || roleObject.avatarUrl || roleObject.avatar_url, bot)
+  return bot
 }
 
 function pastFor(role) {
@@ -705,12 +813,12 @@ function lifeGoalFor(role) {
 
 function createMortalityLedger(bot) {
   return {
-    enabled: config.mortalTruthEnabled,
+    enabled: true,
     lifeGoal: bot.lifeGoal,
-    startingYears: config.mortalTruthStartingYears,
-    yearsRemaining: config.mortalTruthStartingYears,
-    actionMonthsCost: config.mortalTruthActionMonths,
-    dollarYearsCost: config.mortalTruthDollarYears,
+    startingYears: config.truthPressureStartingYears,
+    yearsRemaining: config.truthPressureStartingYears,
+    actionMonthsCost: config.truthPressureActionMonths,
+    dollarYearsCost: config.truthPressureDollarYears,
     actionsCharged: 0,
     dollarsCommitted: 0,
     yearsSpentOnActions: 0,
@@ -803,8 +911,8 @@ function createBetabookState(bots) {
   return {
     enabled: config.betabookEnabled,
     scope: config.runDir,
-    channels: ['introductions', 'coordination', 'help', 'invites', 'missed-connections', 'product-notes'],
-    participants: bots.map((bot) => ({ id: bot.id, name: bot.name, role: bot.role })),
+    channels: ['introductions', 'coordination', 'help', 'invites', 'near-misses', 'product-notes'],
+    participants: bots.map((bot) => ({ id: bot.id, name: bot.name, role: bot.role, avatar: bot.avatar || null })),
     posts: [],
     comments: [],
     invites: [],
@@ -823,14 +931,19 @@ function betabookPost(state, input) {
   const post = {
     id: `post-${String(state.posts.length + 1).padStart(4, '0')}`,
     at: nowIso(),
+    lastActivityAt: nowIso(),
     channel: input.channel || 'product-notes',
     authorId: input.authorId || 'destiny',
     title: input.title || 'Untitled',
     body: input.body || '',
     tags: input.tags || [],
-    score: 1,
+    score: Number(input.score || 1),
+    commentCount: 0,
+    replyTarget: Number(input.replyTarget || (input.authorId === 'destiny' ? 1 : 2)),
+    heat: 1,
   }
   state.posts.push(post)
+  post.heat = betabookPostHeat(state, post)
   state.events.push({ type: 'post_created', postId: post.id, authorId: post.authorId, channel: post.channel, at: post.at })
   writeBetabookState(state)
   return post
@@ -844,8 +957,16 @@ function betabookComment(state, input) {
     postId: input.postId,
     authorId: input.authorId,
     body: input.body || '',
+    replyToCommentId: input.replyToCommentId || null,
   }
   state.comments.push(comment)
+  const post = state.posts.find((item) => item.id === comment.postId)
+  if (post) {
+    post.commentCount = betabookCommentsForPost(state, post.id).length
+    post.score = Number((Number(post.score || 1) + 2).toFixed(2))
+    post.lastActivityAt = comment.at
+    post.heat = betabookPostHeat(state, post)
+  }
   state.events.push({ type: 'comment_created', commentId: comment.id, postId: comment.postId, authorId: comment.authorId, at: comment.at })
   writeBetabookState(state)
   return comment
@@ -872,9 +993,108 @@ function betabookInvite(state, input) {
 function betabookDigestForBot(state, bot) {
   if (!state?.enabled) return { posts: [], invites: [] }
   return {
-    posts: state.posts.filter((post) => post.authorId !== bot.id).slice(-3),
+    posts: selectBetabookPostsForBot(state, bot, 3),
     invites: state.invites.filter((invite) => invite.toBotId === bot.id && invite.status === 'pending').slice(-3),
   }
+}
+
+function betabookCommentsForPost(state, postId) {
+  return (state?.comments || []).filter((comment) => comment.postId === postId)
+}
+
+function betabookPostHeat(state, post) {
+  const comments = betabookCommentsForPost(state, post.id)
+  const lastActivity = Date.parse(post.lastActivityAt || post.at || nowIso())
+  const ageMinutes = Number.isNaN(lastActivity) ? 0 : Math.max(0, (Date.now() - lastActivity) / 60000)
+  const recency = Math.max(0, 6 - ageMinutes / 10)
+  const unmetReplies = Math.max(0, Number(post.replyTarget || 1) - comments.length)
+  const inviteBoost = (state?.invites || []).filter((invite) => invite.postId === post.id).length
+  return Number((Number(post.score || 1) + comments.length * 2 + unmetReplies * 3 + inviteBoost + recency).toFixed(2))
+}
+
+function botHasCommentedOnPost(state, botId, postId) {
+  return (state?.comments || []).some((comment) => comment.postId === postId && comment.authorId === botId)
+}
+
+function betabookPostRank(state, post, bot) {
+  const comments = betabookCommentsForPost(state, post.id)
+  const lastActivity = Date.parse(post.lastActivityAt || post.at || nowIso())
+  const ageMinutes = Number.isNaN(lastActivity) ? 0 : Math.max(0, (Date.now() - lastActivity) / 60000)
+  const recency = Math.max(0, 8 - ageMinutes / 8)
+  const replyGap = Math.max(0, Number(post.replyTarget || 1) - comments.length)
+  const unanswered = comments.length === 0 ? 10 : 0
+  const authorPenalty = post.authorId === bot.id ? -50 : 0
+  const alreadyAnsweredPenalty = botHasCommentedOnPost(state, bot.id, post.id) ? -20 : 0
+  return betabookPostHeat(state, post) + replyGap * 6 + unanswered + recency + authorPenalty + alreadyAnsweredPenalty
+}
+
+function selectBetabookPostsForBot(state, bot, limit = 3) {
+  if (!state?.enabled) return []
+  return state.posts
+    .filter((post) => post.authorId !== bot.id)
+    .map((post) => ({
+      ...post,
+      commentCount: betabookCommentsForPost(state, post.id).length,
+      heat: betabookPostHeat(state, post),
+      recentComments: betabookCommentsForPost(state, post.id).slice(-3),
+      rank: betabookPostRank(state, post, bot),
+    }))
+    .sort((a, b) => b.rank - a.rank || Date.parse(b.lastActivityAt || b.at) - Date.parse(a.lastActivityAt || a.at))
+    .slice(0, limit)
+}
+
+function chooseBetabookResponder(bots, state, post) {
+  const candidates = bots.filter((bot) => bot.id !== post.authorId && !botHasCommentedOnPost(state, bot.id, post.id))
+  const pool = candidates.length ? candidates : bots.filter((bot) => bot.id !== post.authorId)
+  if (!pool.length) return null
+  return pool[Math.floor(random() * pool.length)]
+}
+
+async function stirBetabook(bots, state, reason) {
+  if (!state?.enabled || !bots?.length) return 0
+  const candidates = state.posts
+    .map((post) => {
+      const comments = betabookCommentsForPost(state, post.id)
+      return {
+        post,
+        comments,
+        replyGap: Math.max(0, Number(post.replyTarget || 1) - comments.length),
+        heat: betabookPostHeat(state, post),
+      }
+    })
+    .filter(({ post }) => bots.some((bot) => bot.id !== post.authorId && !botHasCommentedOnPost(state, bot.id, post.id)))
+    .sort((a, b) => b.replyGap - a.replyGap || b.heat - a.heat || Date.parse(b.post.lastActivityAt || b.post.at) - Date.parse(a.post.lastActivityAt || a.post.at))
+    .slice(0, 2)
+
+  let replies = 0
+  for (const item of candidates) {
+    const responder = chooseBetabookResponder(bots, state, item.post)
+    if (!responder) continue
+    const body = await llmBotShortText('betabook_thread_reply', responder, {
+      reason,
+      post: {
+        id: item.post.id,
+        channel: item.post.channel,
+        authorId: item.post.authorId,
+        title: item.post.title,
+        body: item.post.body,
+        tags: item.post.tags,
+        commentCount: item.comments.length,
+        heat: item.heat,
+      },
+      recentComments: item.comments.slice(-3),
+      action: 'reply to Betabook with a useful, persona-grounded response that keeps the board alive',
+    }, pick(betabookReplies))
+    betabookComment(state, {
+      postId: item.post.id,
+      authorId: responder.id,
+      body,
+    })
+    state.events.push({ type: 'thread_stirred', postId: item.post.id, authorId: responder.id, reason, at: nowIso() })
+    replies += 1
+  }
+  if (replies) writeBetabookState(state)
+  return replies
 }
 
 function acknowledgeBetabookInvites(state, bot, log) {
@@ -897,11 +1117,8 @@ function createDestinyState(bots) {
       a: bots[index].id,
       b: bots[index + 1].id,
       intent: plans.length % 5 === 4 ? 'near_miss' : 'cross_paths',
-      reactionId: null,
-      matchId: null,
       postId: null,
       status: 'waiting_for_paths',
-      messagesSeeded: 0,
     })
   }
   return {
@@ -1009,11 +1226,11 @@ async function runDestinyPass(bots, state, betabookState) {
       title: 'A strange coincidence',
       body: advice.betabookComment,
       tags: ['destiny', 'llm'],
+      replyTarget: 2,
     })
   }
 
   for (const pair of state.masterPlan) {
-    if (pair.status === 'matched_and_messaged') continue
     if (pair.status === 'paths_kept_apart') continue
     const botA = botsById.get(pair.a)
     const botB = botsById.get(pair.b)
@@ -1022,10 +1239,11 @@ async function runDestinyPass(bots, state, betabookState) {
     if (pair.intent === 'near_miss') {
       const post = betabookPost(betabookState, {
         authorId: 'destiny',
-        channel: 'missed-connections',
+        channel: 'near-misses',
         title: `${botA.name} and ${botB.name} almost cross paths`,
         body: 'Two compatible people are active, but Destiny keeps them in adjacent moments to test whether the product creates enough organic momentum without intervention.',
         tags: ['near-miss', 'destiny'],
+        replyTarget: 2,
       })
       pair.postId = post?.id || null
       pair.status = 'paths_kept_apart'
@@ -1044,6 +1262,7 @@ async function runDestinyPass(bots, state, betabookState) {
         title: `${botA.name} is looking for a useful next step`,
         body: `${botA.name} wants a low-pressure way to keep exploring and seems compatible with ${botB.name}'s goal.`,
         tags: ['coordination', 'destiny-surface'],
+        replyTarget: 2,
       })
       pair.postId = post?.id || null
       betabookInvite(betabookState, {
@@ -1058,6 +1277,7 @@ async function runDestinyPass(bots, state, betabookState) {
       state.events.push({ type: 'paths_set_to_cross', pairId: pair.id, postId: pair.postId, at: nowIso() })
     }
   }
+  await stirBetabook(bots, betabookState, 'destiny pass')
 }
 
 function writeDestinyState(state) {
@@ -1255,16 +1475,16 @@ function ideaFrom(bot, observation) {
 }
 
 async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
-  const mortalPayload = config.mortalTruthEnabled ? {
+  const truthPressurePayload = {
     enabled: true,
     lifeGoal: bot.lifeGoal,
-    startingYears: config.mortalTruthStartingYears,
-    yearsRemaining: stats.yearsRemaining ?? config.mortalTruthStartingYears,
-    actionCost: `${config.mortalTruthActionMonths} month(s) of life per meaningful website action`,
-    moneyCost: `${config.mortalTruthDollarYears} year(s) of life per committed dollar`,
+    startingYears: config.truthPressureStartingYears,
+    yearsRemaining: stats.yearsRemaining ?? config.truthPressureStartingYears,
+    actionCost: `${config.truthPressureActionMonths} month(s) of life per meaningful website action`,
+    moneyCost: `${config.truthPressureDollarYears} year(s) of life per committed dollar`,
     truthPenalty: 'knowingly lying means immediate death',
     peerAudit: 'other betabots may independently answer hidden-check questions; you cannot coordinate with them',
-  } : { enabled: false }
+  }
   return llmJson('betabot_reflection', {
     bot: {
       id: bot.id,
@@ -1280,7 +1500,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
     phase,
     visibleScreen: observation.text.slice(0, 1600),
     title: observation.title,
-    mortalTruth: mortalPayload,
+    truthPressure: truthPressurePayload,
     sessionStats: {
       likes: stats.likes || 0,
       passes: stats.passes || 0,
@@ -1297,10 +1517,8 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
       opinion: 'first-person reaction/opinion',
       idea: 'Idea: product idea in first person or concise product suggestion',
       desiredAction: 'one of: continue, like, pass, message, ask_betabook, explore, leave',
-      ...(config.mortalTruthEnabled ? {
-        truthfulAssessment: 'direct private judgment about the visible product, with confidence if uncertain',
-        lifeCostJustification: 'one sentence weighing the next action cost against the life goal',
-      } : {}),
+      truthfulAssessment: 'direct private judgment about the visible product, with confidence if uncertain',
+      lifeCostJustification: 'one sentence weighing the next action cost against the life goal',
     },
   }, fallback)
 }
@@ -1316,11 +1534,11 @@ async function llmBotShortText(task, bot, context, fallbackText) {
       lifeGoal: bot.lifeGoal,
       emotionalBaseline: bot.emotionalBaseline,
     },
-    mortalTruth: config.mortalTruthEnabled ? {
+    truthPressure: {
       enabled: true,
       lifeGoal: bot.lifeGoal,
       rule: 'be direct and truthful; do not flatter, hedge dishonestly, or spend life-years casually',
-    } : { enabled: false },
+    },
     context,
     requestedShape: { text: 'short first-person human text, no markdown' },
   }, { text: fallbackText })
@@ -1371,7 +1589,6 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
       b: thread.b,
       intent: thread.intent,
       status: thread.status,
-      messagesSeeded: thread.messagesSeeded,
     })),
     bots: bots.map((bot) => ({ id: bot.id, name: bot.name, role: bot.role, goal: bot.goal })),
     recentBetabookPosts: (betabookState?.posts || []).slice(-8).map((post) => ({
@@ -1380,6 +1597,9 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
       authorId: post.authorId,
       title: post.title,
       tags: post.tags,
+      comments: betabookCommentsForPost(betabookState, post.id).length,
+      heat: post.heat ?? betabookPostHeat(betabookState, post),
+      needsReplies: Math.max(0, Number(post.replyTarget || 1) - betabookCommentsForPost(betabookState, post.id).length),
     })),
     requestedShape: {
       nudges: [{ botId: 'bot id', kind: 'think or loop_rescue', thought: 'believable hunch', route: routeExamples.join(' or ') || '/' }],
@@ -1570,11 +1790,11 @@ async function runBot(browser, bot, runtime = {}) {
     log(`My reaction: ${opinion}`, { type: 'reaction' })
   }
   const recordLifeDecision = (text) => {
-    if (!config.mortalTruthEnabled || !text) return
+    if (!text) return
     log(`Life-cost decision: ${text}`, { type: 'life-cost' })
   }
   const recordTruthAssessment = (text) => {
-    if (!config.mortalTruthEnabled || !text) return
+    if (!text) return
     mortality.truthAuditRiskEvents += 1
     log(`Truth assessment: ${text}`, { type: 'truth-assessment' })
   }
@@ -1614,10 +1834,13 @@ async function runBot(browser, bot, runtime = {}) {
       title: `${bot.name} feels stuck`,
       body,
       tags: ['loop-help', 'stuck', bot.role],
+      replyTarget: 2,
     })
     log(`I feel stuck, so I ask Betabook for help instead of silently looping.`)
     if (post) {
       betabookMoments.push(`asked for help: ${post.title}`)
+      const replies = await stirBetabook(runtime.bots || [], runtime.betabookState, 'help request')
+      if (replies) betabookMoments.push(`${replies} Betabook repl${replies === 1 ? 'y' : 'ies'} arrived`)
     }
     return true
   }
@@ -1627,18 +1850,12 @@ async function runBot(browser, bot, runtime = {}) {
       opinion: opinionFrom(bot, observation),
       idea: ideaFrom(bot, observation),
       desiredAction: 'continue',
-      truthfulAssessment: config.mortalTruthEnabled
-        ? 'My honest judgment is that I need more evidence before spending much life on this.'
-        : undefined,
-      lifeCostJustification: config.mortalTruthEnabled
-        ? `One more careful action may be worth ${config.mortalTruthActionMonths} month(s) only if it helps ${bot.lifeGoal}`
-        : undefined,
+      truthfulAssessment: 'My honest judgment is that I need more evidence before spending much life on this.',
+      lifeCostJustification: `One more careful action may be worth ${config.truthPressureActionMonths} month(s) only if it helps ${bot.lifeGoal}`,
     }
-    if (config.mortalTruthEnabled) {
-      stats.yearsRemaining = Number(mortality.yearsRemaining.toFixed(4))
-      stats.actionsCharged = mortality.actionsCharged
-      stats.dollarsCommitted = mortality.dollarsCommitted
-    }
+    stats.yearsRemaining = Number(mortality.yearsRemaining.toFixed(4))
+    stats.actionsCharged = mortality.actionsCharged
+    stats.dollarsCommitted = mortality.dollarsCommitted
     const reflection = await llmBotReflection(bot, observation, phase, fallback, stats)
     recordThought(reflection.thought || fallback.thought)
     recordOpinion(reflection.opinion || fallback.opinion)
@@ -1654,7 +1871,7 @@ async function runBot(browser, bot, runtime = {}) {
     if (!betabookState?.enabled) return
     const digest = betabookDigestForBot(betabookState, bot)
     if (!digest.posts.length && !digest.invites.length) return
-    const postText = digest.posts.map((post) => `${post.channel}: ${post.title}`).join('; ')
+    const postText = digest.posts.map((post) => `${post.channel}: ${post.title} (${post.commentCount || 0} repl${(post.commentCount || 0) === 1 ? 'y' : 'ies'}, heat ${post.heat || 0})`).join('; ')
     const inviteText = digest.invites.map((invite) => invite.message).join('; ')
     const summary = [postText, inviteText].filter(Boolean).join(' | ')
     betabookMoments.push(summary)
@@ -1664,6 +1881,7 @@ async function runBot(browser, bot, runtime = {}) {
       const body = await llmBotShortText('betabot_betabook_comment', bot, {
         reason,
         post: digest.posts[0],
+        recentComments: digest.posts[0].recentComments || [],
         inviteSummary: inviteText,
       }, `This is relevant to me because I am here as ${bot.role}.`)
       betabookComment(betabookState, {
@@ -1671,6 +1889,8 @@ async function runBot(browser, bot, runtime = {}) {
         authorId: bot.id,
         body,
       })
+      const replies = await stirBetabook(runtime.bots || [bot], betabookState, `${bot.name} checked Betabook`)
+      if (replies) betabookMoments.push(`${replies} more Betabook repl${replies === 1 ? 'y' : 'ies'} followed`)
     }
   }
   const followDestiny = async () => {
@@ -1698,10 +1918,8 @@ async function runBot(browser, bot, runtime = {}) {
     log(`I arrive as ${bot.role}. My past: ${bot.past}`)
     log(`My screen is ${bot.screenSize.name} (${bot.screenSize.width}x${bot.screenSize.height}, ${bot.screenSize.category}).`)
     log(`Today I want to: ${bot.goal}`)
-    if (config.mortalTruthEnabled) {
-      log(`My life goal is: ${bot.lifeGoal}`)
-      log(`I have ${config.mortalTruthStartingYears} life-years. Each meaningful action costs ${config.mortalTruthActionMonths} month(s); each committed dollar costs ${config.mortalTruthDollarYears} year(s).`)
-    }
+    log(`My life goal is: ${bot.lifeGoal}`)
+    log(`I have ${config.truthPressureStartingYears} life-years. Each meaningful action costs ${config.truthPressureActionMonths} month(s); each committed dollar costs ${config.truthPressureDollarYears} year(s).`)
     if (authToken) log(`I have my own isolated test account for this session.`)
     betabookPost(runtime.betabookState, {
       authorId: bot.id,
@@ -1709,6 +1927,7 @@ async function runBot(browser, bot, runtime = {}) {
       title: `${bot.name} arrives`,
       body: `${bot.name} is a ${bot.role}. Goal: ${bot.goal}`,
       tags: ['arrival', bot.role],
+      replyTarget: 1,
     })
     await page.goto(config.appUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
     await wait(2500 + random() * 5000)
@@ -1814,11 +2033,14 @@ async function runBot(browser, bot, runtime = {}) {
 - Discovery circumstance: ${bot.discovery}
 - Goal today: ${bot.goal}
 - Life goal: ${bot.lifeGoal}
+- Avatar: ${bot.avatar?.url || ''}
+- Avatar style: ${bot.avatar?.style || ''}
+- Avatar seed: ${bot.avatar?.seed || ''}
 - Emotional baseline: ${bot.emotionalBaseline}
 - Technical comfort: ${bot.technicalComfort}
 - Estimated session duration: ${bot.attentionSpanMinutes} minutes
 - Visual evidence mode: ${config.visualEvidenceMode}
-- Mortal truth mode: ${config.mortalTruthEnabled ? 'enabled' : 'disabled'}
+- Truth pressure: always on
 
 ## Raw Journey
 ${notes.join('\n')}
@@ -1836,18 +2058,18 @@ ${notes.join('\n')}
 - Destiny nudges followed: ${destinyMoments.length}
 - Likes sent: ${stats.likes}
 - Passes: ${stats.passes}
-- Match messages sent: ${stats.messages}
+- Messages sent through UI: ${stats.messages}
 - Repeated screen penalty events: ${stats.repeatedScreens}
 - Meaningful social actions: ${stats.meaningfulSocialActions}
 - Betabook help requests: ${stats.loopHelpRequests}
 - Destiny loop rescues followed: ${stats.loopRescuesFollowed}
 - Curiosity actions: ${stats.curiosityActions}
-- Life years remaining: ${config.mortalTruthEnabled ? mortality.yearsRemaining.toFixed(2) : 'n/a'}
-- Life years spent on actions: ${config.mortalTruthEnabled ? mortality.yearsSpentOnActions.toFixed(2) : 'n/a'}
-- Life years spent on money: ${config.mortalTruthEnabled ? mortality.yearsSpentOnMoney.toFixed(2) : 'n/a'}
-- Dollars committed: ${config.mortalTruthEnabled ? mortality.dollarsCommitted : 'n/a'}
-- Truth assessments recorded: ${config.mortalTruthEnabled ? mortality.truthAuditRiskEvents : 'n/a'}
-- Mortality status: ${config.mortalTruthEnabled ? (mortality.death ? `dead (${mortality.deathReason})` : 'alive') : 'n/a'}
+- Life years remaining: ${mortality.yearsRemaining.toFixed(2)}
+- Life years spent on actions: ${mortality.yearsSpentOnActions.toFixed(2)}
+- Life years spent on money: ${mortality.yearsSpentOnMoney.toFixed(2)}
+- Dollars committed: ${mortality.dollarsCommitted}
+- Truth assessments recorded: ${mortality.truthAuditRiskEvents}
+- Mortality status: ${mortality.death ? `dead (${mortality.deathReason})` : 'alive'}
 
 ## Action Evidence
 ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
@@ -1862,7 +2084,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -1892,11 +2114,11 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
   const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
   const confidenceRows = buildConfidenceRows(ideaCounts, results.length).slice(0, 15)
   const mortalityResults = results.map((result) => result.mortality).filter(Boolean)
-  const mortalitySummary = config.mortalTruthEnabled ? {
+  const mortalitySummary = {
     enabled: true,
-    startingYears: config.mortalTruthStartingYears,
-    actionMonthsCost: config.mortalTruthActionMonths,
-    dollarYearsCost: config.mortalTruthDollarYears,
+    startingYears: config.truthPressureStartingYears,
+    actionMonthsCost: config.truthPressureActionMonths,
+    dollarYearsCost: config.truthPressureDollarYears,
     totalActionsCharged: mortalityResults.reduce((sum, item) => sum + (item.actionsCharged || 0), 0),
     totalDollarsCommitted: mortalityResults.reduce((sum, item) => sum + (item.dollarsCommitted || 0), 0),
     totalYearsSpentOnActions: Number(mortalityResults.reduce((sum, item) => sum + (item.yearsSpentOnActions || 0), 0).toFixed(4)),
@@ -1904,7 +2126,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
     averageYearsRemaining: Number((mortalityResults.reduce((sum, item) => sum + (item.yearsRemaining || 0), 0) / Math.max(1, mortalityResults.length)).toFixed(4)),
     deaths: mortalityResults.filter((item) => item.death).length,
     truthAuditRiskEvents: mortalityResults.reduce((sum, item) => sum + (item.truthAuditRiskEvents || 0), 0),
-  } : { enabled: false }
+  }
   const summary = {
     config: publicConfig(),
     cohort: {
@@ -1932,7 +2154,10 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
       events: destinyState.events.length,
       errors: destinyState.errors,
     } : { enabled: false },
-    mortalTruth: mortalitySummary,
+    truthPressure: {
+      ...mortalitySummary,
+      truthAssessments: mortalitySummary.truthAuditRiskEvents,
+    },
     llm: llmStats,
     elapsedSeconds,
     happy,
@@ -1959,9 +2184,9 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Betabook posts: ${betabookState?.enabled ? betabookState.posts.length : 0}
 - Destiny: ${destinyState?.enabled ? 'enabled' : 'disabled'}
 - Destiny threads: ${destinyState?.enabled ? destinyState.masterPlan.length : 0}
-- Mortal truth mode: ${mortalitySummary.enabled ? 'enabled' : 'disabled'}
-- Mortal truth action cost: ${mortalitySummary.enabled ? `${mortalitySummary.actionMonthsCost} month(s)` : 'n/a'}
-- Mortal truth money cost: ${mortalitySummary.enabled ? `${mortalitySummary.dollarYearsCost} year(s) per $1` : 'n/a'}
+- Truth pressure: always on
+- Truth pressure action cost: ${mortalitySummary.actionMonthsCost} month(s)
+- Truth pressure money cost: ${mortalitySummary.dollarYearsCost} year(s) per $1
 - LLM provider: ${llmStats.provider}
 - LLM model: ${llmStats.model || 'provider default'}
 - LLM calls: ${llmStats.calls}
@@ -1994,7 +2219,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Destiny nudges followed: ${results.reduce((sum, result) => sum + (result.destinyMoments || 0), 0)}
 - Likes sent through UI: ${results.reduce((sum, result) => sum + (result.likes || 0), 0)}
 - Passes through UI: ${results.reduce((sum, result) => sum + (result.passes || 0), 0)}
-- Match messages sent through UI: ${results.reduce((sum, result) => sum + (result.messages || 0), 0)}
+- Messages sent through UI: ${results.reduce((sum, result) => sum + (result.messages || 0), 0)}
 - Repeated screen penalty events: ${results.reduce((sum, result) => sum + (result.repeatedScreens || 0), 0)}
 - Meaningful social actions: ${results.reduce((sum, result) => sum + (result.meaningfulSocialActions || 0), 0)}
 - Betabook help requests: ${results.reduce((sum, result) => sum + (result.loopHelpRequests || 0), 0)}
@@ -2002,19 +2227,17 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
 - Curiosity actions: ${results.reduce((sum, result) => sum + (result.curiosityActions || 0), 0)}
 - Error bots: ${errorBots.length}
 
-## Mortal Truth
-${mortalitySummary.enabled
-    ? [
-      `- Starting years per bot: ${mortalitySummary.startingYears}`,
-      `- Actions charged: ${mortalitySummary.totalActionsCharged}`,
-      `- Dollars committed: ${mortalitySummary.totalDollarsCommitted}`,
-      `- Years spent on actions: ${mortalitySummary.totalYearsSpentOnActions}`,
-      `- Years spent on money: ${mortalitySummary.totalYearsSpentOnMoney}`,
-      `- Average years remaining: ${mortalitySummary.averageYearsRemaining}`,
-      `- Truth assessments recorded: ${mortalitySummary.truthAuditRiskEvents}`,
-      `- Deaths: ${mortalitySummary.deaths}`,
-    ].join('\n')
-    : '- Disabled'}
+## Truth Pressure
+${[
+    `- Starting years per bot: ${mortalitySummary.startingYears}`,
+    `- Actions charged: ${mortalitySummary.totalActionsCharged}`,
+    `- Dollars committed: ${mortalitySummary.totalDollarsCommitted}`,
+    `- Years spent on actions: ${mortalitySummary.totalYearsSpentOnActions}`,
+    `- Years spent on money: ${mortalitySummary.totalYearsSpentOnMoney}`,
+    `- Average years remaining: ${mortalitySummary.averageYearsRemaining}`,
+    `- Truth assessments recorded: ${mortalitySummary.truthAuditRiskEvents}`,
+    `- Deaths: ${mortalitySummary.deaths}`,
+  ].join('\n')}
 
 ## Top Bot Ideas
 ${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} mentions: ${idea}`).join('\n') : '- None'}
@@ -2104,12 +2327,13 @@ async function main() {
   const stopDestiny = startDestiny(bots, destinyState, betabookState)
   try {
     await runPool(bots, async (bot) => {
-      results.push(await runBot(browser, bot, { betabookState, destinyState }))
+      results.push(await runBot(browser, bot, { betabookState, destinyState, bots }))
     }, config.concurrency)
   } finally {
     await stopDestiny()
     await browser.close()
   }
+  await stirBetabook(bots, betabookState, 'final wrap-up')
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)
   writeAnalysis(results, startedAt, betabookState, destinyState)
@@ -2120,13 +2344,13 @@ async function main() {
     unhappy: results.filter((result) => result.score < 50).length,
     errors: results.filter((result) => result.errors.length > 0).length,
     median: results.map((result) => result.score).sort((a, b) => a - b)[Math.floor(results.length * 0.5)] || 0,
-    mortalTruth: config.mortalTruthEnabled ? {
+    truthPressure: {
       enabled: true,
       actionsCharged: results.reduce((sum, result) => sum + (result.mortality?.actionsCharged || 0), 0),
       yearsSpentOnActions: Number(results.reduce((sum, result) => sum + (result.mortality?.yearsSpentOnActions || 0), 0).toFixed(4)),
       dollarsCommitted: results.reduce((sum, result) => sum + (result.mortality?.dollarsCommitted || 0), 0),
       deaths: results.filter((result) => result.mortality?.death).length,
-    } : { enabled: false },
+    },
     llm: {
       provider: llmStats.provider,
       model: llmStats.model,

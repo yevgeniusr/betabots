@@ -1,7 +1,7 @@
 # Betabots
 
 <p align="center">
-  <img src="assets/betabots-github-banner-variation-1.png" alt="Betabots robotic synthetic beta testers inspecting a website" width="100%">
+  <img src="assets/betabots-logo.svg" alt="Betabots" width="420">
 </p>
 
 Betabots is a plugin and skill bundle for filling a product with truthful synthetic beta users: human-like personas with defined pasts, life goals, attention spans, emotions, and real preferences that do not default to fake politeness.
@@ -32,6 +32,7 @@ Then start a new agent thread and ask it to use Betabots against a local or stag
 - [Code of Conduct](CODE_OF_CONDUCT.md): community behavior expectations.
 - [Local dashboard](docs/dashboard.md): read-only web UI for `.betabots/runs` artifacts.
 - [License guide](docs/license.md): plain-English summary of the AGPLv3 terms.
+- [Logo](docs/logo-concepts.md): selected Betabots identity and asset paths.
 - [Usage guide](docs/usage.md): practical setup and run flow for browser Betabots.
 - [Truthful personalities](docs/truthful-personalities.md): the core Betabots model for non-performative synthetic users.
 
@@ -100,7 +101,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 For social products, enable **Betabook** and **Destiny** as separate layers.
 
-Betabook is a simple Reddit-like board scoped to the current simulation. Betabots can introduce themselves, post looking-for-party notes, comment, receive invites, and coordinate outside the product UI while still behaving like independent people.
+Betabook is a simple Reddit-like board scoped to the current simulation. Betabots can introduce themselves, post coordination or help notes, comment, receive invites, and coordinate outside the product UI while still behaving like independent people.
 
 Destiny is the orchestration layer. It watches the cohort in real time, follows a global master plan, and makes paths cross, almost cross, or intentionally not cross. Destiny can manipulate Betabook and can nudge individual betabots by giving them believable hunches, timing, and actions.
 
@@ -129,18 +130,18 @@ The runner aggregates first-person thoughts and ideas into `analysis.md` and `su
 Thoughtful sessions keep thinking tied to product use: each observation can produce a thought, first reaction, similarity/comparison, or idea, but the runner should not spend most of a session in reflection-only mode.
 By default, Betabots uses a generic cross-product cohort. For domain-specific testing, pass `BETABOT_COHORT_FILE` with roles, pasts, discovery circumstances, routes, value keywords, trust keywords, and idea rules. See `skills/betabots/references/cohort-config.md`.
 
-Opt into mortal-truth mode when you want bots to treat honesty, attention, and money as scarce survival constraints:
+Truth pressure is always on. Bots treat honesty, attention, and money as scarce survival constraints, and you can tune the ledger costs for a run:
 
 ```bash
-BETABOT_MORTAL_TRUTH=true \
-BETABOT_MORTAL_TRUTH_YEARS=100 \
+BETABOT_TRUTH_YEARS=100 \
+BETABOT_TRUTH_ACTION_MONTHS=1 \
 BETABOT_APP_URL=http://localhost:5173 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-In this mode each bot gets a seeded life goal, recorded website actions cost life, committed dollars cost life, and the LLM prompt requires direct private judgments instead of flattering or socially convenient answers. The runner records the life ledger and truth assessments in raw session files, `summary.json`, and `analysis.md`.
+Each bot gets a seeded life goal, recorded website actions cost life, committed dollars cost life, and the LLM prompt requires direct private judgments instead of flattering or socially convenient answers. The runner records the life ledger and truth assessments in raw session files, `summary.json`, and `analysis.md`.
 
-Mortal-truth mode is an honesty pressure mechanism, not a magic oracle. The current implementation verifies that bots produce direct private assessments and life-cost justifications; benchmark runs should still inspect whether those assessments are concrete, role-grounded, and willing to be negative.
+Truth pressure is an honesty mechanism, not a magic oracle. The current implementation verifies that bots produce direct private assessments and life-cost justifications; benchmark runs should still inspect whether those assessments are concrete, role-grounded, and willing to be negative.
 
 ## Repository Layout
 
@@ -259,15 +260,16 @@ Optional auth isolation:
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
 - `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, screen-size distribution, keywords, and idea rules.
 - `BETABOT_SCREEN_SIZE_DISTRIBUTION`: optional JSON array of weighted device buckets for thoughtful browser runs. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Legacy alias: `BETABOT_VIEWPORT_DISTRIBUTION`.
+- `BETABOT_AVATAR_STYLE=bottts-neutral`: DiceBear avatar style slug or style URL for generated bot avatars.
+- `BETABOT_AVATAR_BASE_URL=https://api.dicebear.com/10.x`: DiceBear HTTP API base URL; override for a self-hosted instance.
 - `BETABOT_COHORT_ONLY=true`: writes `cohort.json` and exits without launching browsers; useful for auditing persona and screen-size seeding.
 - `BETABOT_BETABOOK=true`: enables the run-scoped Reddit-like social board for bot-to-bot posts, comments, and invites.
 - `BETABOT_DESTINY=true`: enables the master-plan layer that makes paths cross, not cross, or almost cross.
 - `BETABOT_DESTINY_INTERVAL_MS`: interval for Destiny to inspect the cohort and apply interventions.
 - `BETABOT_STRICT_SCORING=true`: default; discounts repeated screens, penalizes pass-heavy behavior, and requires meaningful social actions before declaring high happiness.
-- `BETABOT_MORTAL_TRUTH=false`: opt-in mortality/truth mode for thoughtful browser runs.
-- `BETABOT_MORTAL_TRUTH_YEARS=100`: starting life-years per bot.
-- `BETABOT_MORTAL_TRUTH_ACTION_MONTHS=1`: life-months charged per meaningful website action.
-- `BETABOT_MORTAL_TRUTH_DOLLAR_YEARS=1`: life-years charged per committed dollar.
+- `BETABOT_TRUTH_YEARS=100`: starting life-years per bot for always-on truth pressure.
+- `BETABOT_TRUTH_ACTION_MONTHS=1`: life-months charged per meaningful website action.
+- `BETABOT_TRUTH_DOLLAR_YEARS=1`: life-years charged per committed dollar.
 - `BETABOT_LOOP_REPEAT_THRESHOLD=4`: repeated-screen threshold that makes a stuck bot ask Betabook for help.
 - `BETABOT_CURIOSITY_CHANCE=0.18`: chance per move that a bot tries a safe curiosity action instead of the planned route.
 - `BETABOT_MAX_CURIOSITY_ACTIONS=8`: cap on curiosity clicks/config changes per bot session.
@@ -282,9 +284,10 @@ Optional auth isolation:
 Persona and role definition:
 
 - The runner accepts `roles` or `personas` as strings or objects.
-- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, and `attentionSpanMinutes`.
-- Role objects can also define `lifeGoal` for mortal-truth mode. If omitted, the runner derives one from the role.
+- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`.
+- Role objects can also define `lifeGoal` for truth pressure. If omitted, the runner derives one from the role.
 - Cohort files can define `screenSizeDistribution`; the default distribution uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs.
+- Generated avatars use DiceBear with a seed derived from persona fields, so the avatar changes when the bot's name, role, past, goal, life goal, traits, emotional baseline, or technical comfort changes.
 - Product-specific routes and words belong in cohort JSON, not in runner code.
 - Use `skills/betabots/examples/generic-saas.cohort.json` as a portable baseline.
 

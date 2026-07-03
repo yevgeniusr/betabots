@@ -23,7 +23,9 @@ function fmt(value, fallback = 'n/a') {
 }
 
 function plural(count, word) {
-  return `${count} ${word}${count === 1 ? '' : 's'}`
+  if (count === 1) return `${count} ${word}`
+  if (/[^aeiou]y$/i.test(word)) return `${count} ${word.slice(0, -1)}ies`
+  return `${count} ${word}s`
 }
 
 function waitLabel(seconds) {
@@ -98,6 +100,73 @@ function renderActivityItems(items = [], type) {
   `
 }
 
+function initialsFor(value) {
+  return String(value || '?')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || '?'
+}
+
+function renderAvatar(bot, className = 'bot-avatar') {
+  const url = bot?.avatar?.url || bot?.avatarUrl || ''
+  const label = `${bot?.name || bot?.id || 'Betabot'} avatar`
+  if (url) {
+    return `<img class="${className}" src="${escapeHtml(url)}" alt="${escapeHtml(label)}" loading="lazy" referrerpolicy="no-referrer">`
+  }
+  return `<span class="${className} avatar-fallback" aria-label="${escapeHtml(label)}">${escapeHtml(initialsFor(bot?.name || bot?.id))}</span>`
+}
+
+function participantLabel(participants = [], id = '') {
+  if (id === 'destiny') return 'Destiny'
+  const participant = participants.find((item) => item.id === id)
+  return participant?.name || id || 'unknown'
+}
+
+function commentsForPost(raw, postId) {
+  return (raw?.comments || []).filter((comment) => comment.postId === postId)
+}
+
+function renderBetabookThreads(raw) {
+  const posts = [...(raw?.posts || [])].sort((a, b) => Date.parse(b.lastActivityAt || b.at || 0) - Date.parse(a.lastActivityAt || a.at || 0))
+  if (!posts.length) return '<p class="muted">No Betabook threads recorded.</p>'
+  return `
+    <div class="betabook-threads">
+      ${posts.map((post) => {
+        const comments = commentsForPost(raw, post.id)
+        return `
+          <article class="betabook-thread">
+            <div class="thread-head">
+              <span class="chip blue">${escapeHtml(post.channel || 'thread')}</span>
+              <span class="muted">${escapeHtml(participantLabel(raw.participants, post.authorId))}</span>
+              <span class="muted">${escapeHtml(plural(comments.length, 'reply'))}</span>
+              <span class="muted">heat ${escapeHtml(fmt(post.heat, '0'))}</span>
+              <span class="muted">target ${escapeHtml(fmt(post.replyTarget, '1'))}</span>
+              ${post.at ? `<code>${escapeHtml(post.at)}</code>` : ''}
+            </div>
+            <strong>${escapeHtml(post.title || post.id)}</strong>
+            ${post.body ? `<p>${escapeHtml(post.body)}</p>` : ''}
+            ${post.tags?.length ? `<p class="muted">${post.tags.map((tag) => `#${escapeHtml(tag)}`).join(' ')}</p>` : ''}
+            <div class="thread-comments">
+              ${comments.length ? comments.map((comment) => `
+                <div class="thread-comment">
+                  <div class="thread-head">
+                    <span class="chip">reply</span>
+                    <span class="muted">${escapeHtml(participantLabel(raw.participants, comment.authorId))}</span>
+                    ${comment.at ? `<code>${escapeHtml(comment.at)}</code>` : ''}
+                  </div>
+                  <p>${escapeHtml(comment.body || '')}</p>
+                </div>
+              `).join('') : '<p class="muted">No replies yet.</p>'}
+            </div>
+          </article>
+        `
+      }).join('')}
+    </div>
+  `
+}
+
 async function getJson(path) {
   const response = await fetch(path)
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
@@ -159,7 +228,7 @@ function renderBots(run) {
       <tbody>
         ${bots.map((bot) => `
           <tr>
-            <td><button class="bot-link" data-bot="${escapeHtml(bot.id)}" type="button">${escapeHtml(bot.name || bot.id)}</button></td>
+            <td><button class="bot-link" data-bot="${escapeHtml(bot.id)}" type="button">${renderAvatar(bot, 'bot-avatar bot-avatar-small')}<span>${escapeHtml(bot.name || bot.id)}</span></button></td>
             <td>${escapeHtml(bot.role)}</td>
             <td>${escapeHtml(fmt(bot.score))}</td>
             <td>${escapeHtml(bot.endReason || 'n/a')}</td>
@@ -303,7 +372,7 @@ function renderTruth(run) {
         </div>
       `).join('')}
     </div>
-  ` : '<p class="muted">No truth assessments recorded. This may be a non-mortal-truth run or an incomplete run.</p>'
+  ` : '<p class="muted">No explicit truth assessments recorded. This run may be incomplete or from an older runner.</p>'
 }
 
 function renderBetabook(run) {
@@ -324,12 +393,8 @@ function renderBetabook(run) {
     </div>
     ${raw ? `
       <section class="debug-section">
-        <div class="section-title"><span class="label">Posts</span></div>
-        ${renderActivityItems(raw.posts || [], 'post')}
-      </section>
-      <section class="debug-section">
-        <div class="section-title"><span class="label">Comments</span></div>
-        ${renderActivityItems(raw.comments || [], 'comment')}
+        <div class="section-title"><span class="label">Threads</span></div>
+        ${renderBetabookThreads(raw)}
       </section>
       <section class="debug-section">
         <div class="section-title"><span class="label">Invites</span></div>
@@ -402,7 +467,7 @@ function renderInspector(run, bot = null) {
     $('#inspector-body').innerHTML = `
       <div class="field"><span class="label">Run</span><strong>${escapeHtml(run.id)}</strong></div>
       <div class="field"><span class="label">App</span><p>${escapeHtml(run.appName)}</p></div>
-      <div class="field"><span class="label">Mortal Truth</span><p>${run.mortalTruth ? 'enabled' : 'disabled'}</p></div>
+      <div class="field"><span class="label">Truth Pressure</span><p>always on</p></div>
       <div class="field"><span class="label">LLM Calls</span><p>${escapeHtml(run.llmProvider || 'unknown')} · ${escapeHtml(fmt(run.llm?.calls, '0'))} call(s), ${escapeHtml(fmt(run.fallbacks, '0'))} fallback(s)</p><p class="muted">${escapeHtml(llmTasks)}</p></div>
       <div class="field"><span class="label">Debug Evidence</span><p>${escapeHtml(fmt(run.actions, '0'))} action(s), ${escapeHtml(fmt(run.loadingRisks, '0'))} loading flag(s)</p></div>
       <div class="field"><span class="label">Betabook</span><p>${run.betabook?.enabled ? 'enabled' : 'disabled'} · ${escapeHtml(fmt(run.betabook?.posts, '0'))} post(s), ${escapeHtml(fmt(run.betabook?.comments, '0'))} comment(s), ${escapeHtml(fmt(run.betabook?.invites, '0'))} invite(s)</p></div>
@@ -417,7 +482,11 @@ function renderInspector(run, bot = null) {
   const botBetabookCount = (bot.betabook?.posts?.length || 0) + (bot.betabook?.comments?.length || 0) + (bot.betabook?.invites?.length || 0) + (bot.betabook?.events?.length || 0)
   const botDestinyCount = (bot.destiny?.plans?.length || 0) + (bot.destiny?.nudges?.length || 0) + (bot.destiny?.events?.length || 0)
   $('#inspector-body').innerHTML = `
-    <div class="field"><span class="label">Persona</span><strong>${escapeHtml(bot.name || bot.id)}</strong><p>${escapeHtml(bot.role)}</p></div>
+    <div class="persona-head">
+      ${renderAvatar(bot, 'bot-avatar bot-avatar-large')}
+      <div class="field"><span class="label">Persona</span><strong>${escapeHtml(bot.name || bot.id)}</strong><p>${escapeHtml(bot.role)}</p></div>
+    </div>
+    <div class="field"><span class="label">Avatar</span><p>${escapeHtml(bot.avatar?.style || 'none')} ${bot.avatar?.provider ? `via ${escapeHtml(bot.avatar.provider)}` : ''}</p>${bot.avatar?.url ? `<a class="screen-link" href="${escapeHtml(bot.avatar.url)}" target="_blank" rel="noreferrer">Open avatar</a>` : ''}</div>
     <div class="field"><span class="label">Life Goal</span><p>${escapeHtml(bot.lifeGoal || 'n/a')}</p></div>
     <div class="inspector-kpis">
       <div><span class="label">Score</span><strong>${escapeHtml(fmt(bot.score))}</strong></div>

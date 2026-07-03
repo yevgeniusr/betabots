@@ -37,7 +37,7 @@
 - Return likelihood:
 - Trust level:
 - Value understood:
-- Mortal truth mode:
+- Truth pressure:
 - Life years remaining:
 - Life years spent on actions:
 - Life years spent on money:

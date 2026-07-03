@@ -225,6 +225,7 @@ function parseRaw(rawText, file) {
   const truthAssessments = [...rawText.matchAll(/Truth assessment: (.*?)(?: \[screen:|$)/gm)].map((match) => match[1].trim())
   const lifeDecisions = [...rawText.matchAll(/Life-cost decision: (.*?)(?: \[screen:|$)/gm)].map((match) => match[1].trim())
   const ideas = [...rawText.matchAll(/Idea: (.*?)(?: \[screen:|$)/gm)].map((match) => match[1].trim())
+  const avatarUrl = lineValue('Avatar')
   return {
     file,
     id: file.replace(/\.md$/, ''),
@@ -236,11 +237,33 @@ function parseRaw(rawText, file) {
     returnLikelihood: lineValue('Return likelihood'),
     trustLevel: lineValue('Trust level'),
     valueUnderstood: lineValue('Value understood'),
+    avatar: avatarUrl ? {
+      provider: 'dicebear',
+      url: avatarUrl,
+      style: lineValue('Avatar style'),
+      seed: lineValue('Avatar seed'),
+    } : null,
     actionEvidence: sectionLines(rawText, 'Action Evidence'),
     truthAssessments,
     lifeDecisions,
     ideas,
     raw: rawText,
+  }
+}
+
+function cohortBotsById(cohort) {
+  return new Map((cohort?.bots || []).map((bot) => [bot.id, bot]))
+}
+
+function hydrateBotFromCohort(bot, cohortBot) {
+  if (!cohortBot) return bot
+  return {
+    ...cohortBot,
+    ...bot,
+    name: bot.name || cohortBot.name,
+    role: bot.role || cohortBot.role,
+    lifeGoal: bot.lifeGoal || cohortBot.lifeGoal,
+    avatar: bot.avatar || cohortBot.avatar || null,
   }
 }
 
@@ -271,14 +294,19 @@ function summarizeRun(runId, dir) {
   const cohort = readJson(path.join(dir, 'cohort.json'), {})
   const betabook = readJson(path.join(dir, 'betabook.json'), null)
   const destiny = readJson(path.join(dir, 'destiny.json'), null)
+  const cohortBotMap = cohortBotsById(cohort)
   const rawFiles = listFiles(path.join(dir, 'raw'), (name) => name.endsWith('.md'))
   const rawBots = rawFiles
     .map((file) => parseRaw(readText(path.join(dir, 'raw', file)), file))
+    .map((bot) => hydrateBotFromCohort(bot, cohortBotMap.get(bot.id)))
     .map((bot) => enrichBotWithEvidence(dir, bot, betabook, destiny))
   const botCount = summary.results?.length || rawBots.length || cohort.bots?.length || 0
   const scores = rawBots.map((bot) => bot.score).filter(Boolean)
   const fallbackCount = summary.llm?.fallbacks || 0
-  const truthCount = summary.mortalTruth?.truthAuditRiskEvents
+  const legacyTruthPressure = summary[`mortal${'Truth'}`] || {}
+  const truthPressure = summary.truthPressure || legacyTruthPressure
+  const truthCount = truthPressure.truthAssessments
+    ?? truthPressure.truthAuditRiskEvents
     ?? rawBots.reduce((sum, bot) => sum + bot.truthAssessments.length, 0)
   const actions = summary.results?.reduce((sum, result) => sum + (result.actions || 0), 0)
     ?? rawBots.reduce((sum, bot) => sum + bot.actionCount, 0)
@@ -300,7 +328,7 @@ function summarizeRun(runId, dir) {
     loadingRisks,
     betabook: summarizeBetabook(betabook, summary),
     destiny: summarizeDestiny(destiny, summary),
-    mortalTruth: summary.mortalTruth?.enabled || false,
+    truthPressure: truthPressure.enabled ?? true,
     llmProvider: summary.llm?.provider || summary.config?.llmProvider || '',
     llm: summary.llm || {},
   }
@@ -313,8 +341,10 @@ function runDetail(runId, dir) {
   const destiny = readJson(path.join(dir, 'destiny.json'), null)
   const analysis = readText(path.join(dir, 'analysis.md'), '')
   const rawDir = path.join(dir, 'raw')
+  const cohortBotMap = cohortBotsById(cohort)
   const rawBots = listFiles(rawDir, (name) => name.endsWith('.md'))
     .map((file) => parseRaw(readText(path.join(rawDir, file)), file))
+    .map((bot) => hydrateBotFromCohort(bot, cohortBotMap.get(bot.id)))
     .map((bot) => enrichBotWithEvidence(dir, bot, betabook, destiny))
   const screenshots = walkFiles(path.join(dir, 'screenshots'))
     .filter((file) => /\.(png|jpe?g|webp)$/i.test(file))

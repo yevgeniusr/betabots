@@ -59,37 +59,16 @@ code { font-family: var(--mono); font-size: 12px; }
   font-size: 18px;
   line-height: 22px;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .brand p, .run-title p { margin: 0; }
 
 .botmark {
-  width: 34px;
-  height: 28px;
-  border: 2px solid var(--text);
-  background: #f7d96a;
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.botmark::before, .botmark::after {
-  content: "";
-  position: absolute;
-  top: -8px;
-  width: 1px;
-  height: 8px;
-  background: var(--text);
-}
-
-.botmark::before { left: 9px; }
-.botmark::after { right: 9px; }
-.botmark span {
-  width: 18px;
-  height: 8px;
-  background: var(--text);
-  border-radius: 10px;
-  box-shadow: inset 4px 0 0 var(--teal), inset -4px 0 0 var(--teal);
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .pathbay {
@@ -154,10 +133,12 @@ code { font-family: var(--mono); font-size: 12px; }
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .run-list {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px;
   display: grid;
   gap: 6px;
@@ -165,6 +146,7 @@ code { font-family: var(--mono); font-size: 12px; }
 
 .run-item {
   width: 100%;
+  min-width: 0;
   text-align: left;
   border: 1px solid var(--line);
   background: #fff;
@@ -182,8 +164,11 @@ code { font-family: var(--mono); font-size: 12px; }
   font-family: var(--mono);
   font-size: 12px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 16px;
+  max-height: 34px;
 }
 
 .run-meta {
@@ -320,6 +305,36 @@ code { font-family: var(--mono); font-size: 12px; }
   color: var(--blue);
   cursor: pointer;
   text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bot-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  object-fit: cover;
+  overflow: hidden;
+}
+
+.bot-avatar-small {
+  width: 28px;
+  height: 28px;
+}
+
+.bot-avatar-large {
+  width: 64px;
+  height: 64px;
+}
+
+.avatar-fallback {
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .debug-summary {
@@ -552,6 +567,45 @@ code { font-family: var(--mono); font-size: 12px; }
   margin: 4px 0 0;
 }
 
+.betabook-threads {
+  display: grid;
+  gap: 8px;
+}
+
+.betabook-thread {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 7px;
+}
+
+.thread-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.betabook-thread p,
+.thread-comment p {
+  margin: 0;
+  line-height: 18px;
+}
+
+.thread-comments {
+  display: grid;
+  gap: 6px;
+  border-left: 3px solid var(--line);
+  padding-left: 10px;
+}
+
+.thread-comment {
+  background: #fffefa;
+  border: 1px solid var(--line);
+  padding: 8px;
+}
+
 .file-list {
   columns: 2;
   column-gap: 20px;
@@ -578,6 +632,13 @@ code { font-family: var(--mono); font-size: 12px; }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
+}
+
+.persona-head {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
 }
 
 .inspector-kpis div {

@@ -34,7 +34,7 @@
     "websiteURL": "https://github.com/yevgeniusr/betabots",
     "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
     "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
-    "brandColor": "#7C3AED",
+    "brandColor": "#F2C94C",
     "composerIcon": "./assets/betabots.svg",
     "logo": "./assets/betabots.svg",
     "screenshots": []

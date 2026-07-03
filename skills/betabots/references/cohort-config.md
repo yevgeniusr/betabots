@@ -87,8 +87,9 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 - `researchSources`: Optional array of evidence sources used to design the cohort. Use source labels, not secrets.
 - `audienceSegments`: Optional array of weighted audience segments. Each segment can include `name`, `weight`, `evidence`, `jobs`, `objections`, `deviceBias`, `vocabulary`, and `assumptions`.
 - `confidenceRules`: Optional thresholds or notes for mapping repeated findings to high/medium/low confidence.
-- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `lifeGoal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, and `attentionSpanMinutes`. For mortal-truth runs, prefer explicit `lifeGoal` values for each important persona; generated defaults are useful but less precise than product-specific stakes.
+- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `lifeGoal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`. For truth-pressure runs, prefer explicit `lifeGoal` values for each important persona; generated defaults are useful but less precise than product-specific stakes.
 - `screenSizeDistribution`: Optional weighted screen-size buckets. Each bucket has `category`, `weight`, and `devices`; each device has `name`, `width`, `height`, optional `deviceScaleFactor`, `isMobile`, `hasTouch`, and `userAgent`. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Override per run with `BETABOT_SCREEN_SIZE_DISTRIBUTION` or legacy alias `BETABOT_VIEWPORT_DISTRIBUTION`.
+- `avatar`: Optional custom avatar object or URL for a persona. If omitted, the runner generates a DiceBear avatar from the persona seed.
 - `names`: Optional reusable first names for generated personas.
 - `discoveries`: Optional discovery circumstances used when a role omits `discovery`.
 - `baselines`: Optional emotional baselines such as `curious`, `skeptical`, or `impatient`.

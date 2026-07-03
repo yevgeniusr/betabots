@@ -16,7 +16,7 @@ Restart the agent runtime or open a new thread after installing.
 
 Use Betabots when you need browser-level feedback about comprehension, trust, emotion, copy, onboarding, layout, and whether a product feels worth returning to.
 
-Use mortal-truth mode when the key question is not “can an AI say something plausible?” but “would this kind of person honestly spend scarce attention, trust, money, or social capital here?”
+Truth pressure is always on because the key question is not “can an AI say something plausible?” but “would this kind of person honestly spend scarce attention, trust, money, or social capital here?”
 
 The usual order is:
 
@@ -30,6 +30,7 @@ The usual order is:
 
 ```bash
 BETABOT_COHORT_FILE=skills/betabots/examples/generic-saas.cohort.json \
+BETABOT_AVATAR_STYLE=bottts-neutral \
 BETABOT_APP_URL=http://localhost:5173 \
 BETABOT_THOUGHTFUL_COUNT=5 \
 BETABOT_THOUGHTFUL_MINUTES=8 \
@@ -39,13 +40,14 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 Browser sessions require Playwright in the target project or globally. Betabots interact through the visible product surface; they do not call product APIs or use hidden implementation maps.
 
-## 4. Run Mortal-Truth Mode
+Betabots assign each persona a DiceBear avatar. The default style is `bottts-neutral`; set `BETABOT_AVATAR_STYLE` to another DiceBear style slug or style URL to change the visual system.
+
+## 4. Tune Truth Pressure
 
 ```bash
-BETABOT_MORTAL_TRUTH=true \
-BETABOT_MORTAL_TRUTH_YEARS=100 \
-BETABOT_MORTAL_TRUTH_ACTION_MONTHS=1 \
-BETABOT_MORTAL_TRUTH_DOLLAR_YEARS=1 \
+BETABOT_TRUTH_YEARS=100 \
+BETABOT_TRUTH_ACTION_MONTHS=1 \
+BETABOT_TRUTH_DOLLAR_YEARS=1 \
 BETABOT_COHORT_FILE=skills/betabots/examples/generic-saas.cohort.json \
 BETABOT_APP_URL=http://localhost:5173 \
 BETABOT_THOUGHTFUL_COUNT=5 \
@@ -53,7 +55,7 @@ BETABOT_THOUGHTFUL_MINUTES=8 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-Mortal-truth mode gives each bot a life goal and asks it to judge the product against that life, not against the builder's feelings. Raw logs should include `Truth assessment:` and `Life-cost decision:` entries.
+Truth pressure gives each bot a life goal and asks it to judge the product against that life, not against the builder's feelings. Raw logs should include `Truth assessment:` and `Life-cost decision:` entries.
 
 ## 5. Review Artifacts
 
@@ -65,9 +67,9 @@ Look for:
 - `betabook.json`: social-board activity when Betabook is enabled.
 - `destiny.json`: orchestration events when Destiny is enabled.
 
-For mortal-truth runs, also inspect:
+For truth-pressure runs, also inspect:
 
-- `mortalTruth.truthAuditRiskEvents` in `summary.json`;
+- `truthPressure.truthAssessments` in `summary.json`;
 - per-bot life goals, years remaining, and truth assessments;
 - whether negative reactions are specific and role-grounded rather than generic criticism;
 - whether positive reactions include evidence and uncertainty instead of flattery.

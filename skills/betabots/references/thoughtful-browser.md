@@ -90,6 +90,8 @@ Screen-size seeding is part of random character generation. By default, thoughtf
 - `roles` define who the betabots are, what happened before they arrived, how they discovered the app, and what they want today.
 - `routes` define visible labels and fallback URLs the bots can realistically try.
 - `keywords` define what counts as value, trust, risk, and empty-state evidence for that product.
+
+Each bot also gets a DiceBear avatar. Set `BETABOT_AVATAR_STYLE` to a style slug such as `bottts-neutral` or a DiceBear style URL. The seed includes persona fields, so the image is stable for a bot and shifts when the persona changes.
 - `ideaRules` turn observed product text into first-person product ideas.
 
 The runner has generic defaults, but serious product testing must provide a cohort file and audience research for the target domain. Generic defaults are only for smoke tests.
@@ -119,7 +121,7 @@ Use Betabook when a cohort needs social context without forcing every social act
 - help requests;
 - comments and replies;
 - invites;
-- missed connections;
+- near-misses;
 - product notes.
 
 ```bash
@@ -156,7 +158,7 @@ Thoughtful mode defaults to `BETABOT_STRICT_SCORING=true`. Strict scoring preven
 - repeated screens stop adding full value/trust credit;
 - repeated pass-heavy discovery behavior lowers happiness;
 - high happiness requires at least one meaningful social action when the product is social;
-- reports include UI likes, passes, match messages, repeated-screen penalties, and meaningful social actions.
+- reports include UI likes, passes, messages, repeated-screen penalties, and meaningful social actions.
 
 Disable strict scoring only for low-level runner debugging:
 
@@ -167,19 +169,18 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 Do not disable strict scoring for reports that claim replacement-grade research confidence.
 
-## Mortal Truth Mode
+## Truth Pressure
 
-Mortal truth mode is opt-in. It is for cohorts where shallow politeness, fake agreement, careless clicking, and casual spending would corrupt the test.
+Truth pressure is always on. It is for cohorts where shallow politeness, fake agreement, careless clicking, and casual spending would corrupt the test.
 
 ```bash
-BETABOT_MORTAL_TRUTH=true \
-BETABOT_MORTAL_TRUTH_YEARS=100 \
-BETABOT_MORTAL_TRUTH_ACTION_MONTHS=1 \
-BETABOT_MORTAL_TRUTH_DOLLAR_YEARS=1 \
+BETABOT_TRUTH_YEARS=100 \
+BETABOT_TRUTH_ACTION_MONTHS=1 \
+BETABOT_TRUTH_DOLLAR_YEARS=1 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-When enabled:
+Truth pressure means:
 
 - each bot gets a life goal from the cohort `lifeGoal` field or from its role;
 - each recorded meaningful website action costs life;
@@ -198,7 +199,7 @@ Current implementation boundary:
 
 Artifacts include mortality fields in `raw/<bot-id>.md`, `summary.json`, and `analysis.md`: life goal, years remaining, years spent on actions, dollars committed, truth assessments recorded, and death status.
 
-Good mortal-truth output is direct, role-grounded, and sometimes negative. Weak output still sounds like a generic AI assistant: bland praise, vague concerns, polite hedging, or feedback that could come from any persona.
+Good truth-pressure output is direct, role-grounded, and sometimes negative. Weak output still sounds like a generic AI assistant: bland praise, vague concerns, polite hedging, or feedback that could come from any persona.
 
 ## Loop Rescue and Curiosity
 

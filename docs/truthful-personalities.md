@@ -23,9 +23,9 @@ It should not speak from:
 - pressure to find something positive;
 - hidden source code or implementation details.
 
-## Mortal-Truth Mode
+## Truth Pressure
 
-Mortal-truth mode adds pressure against fake agreement:
+Truth pressure is always on and adds pressure against fake agreement:
 
 - each bot receives a life goal;
 - recorded website actions cost life-years;
@@ -73,10 +73,7 @@ Weak output sounds like:
 
 ## Benchmarking
 
-Run paired benchmarks when changing truthful-personality behavior:
-
-1. Normal thoughtful mode.
-2. Mortal-truth mode with the same app, cohort, seed, count, time scale, and LLM provider.
+Run benchmark checks when changing truthful-personality behavior with the same app, cohort, seed, count, time scale, and LLM provider.
 
 Compare:
 
