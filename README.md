@@ -6,6 +6,12 @@
 
 Betabots is a plugin and skill bundle for filling a product with truthful synthetic beta users: human-like personas with defined pasts, life goals, attention spans, emotions, and real preferences that do not default to fake politeness.
 
+**Links**
+
+- [Landing page](https://betabots.rachkovan.com)
+- [Live dashboard demo](https://betabots-dashboard.rachkovan.com)
+- [Repository](https://github.com/yevgeniusr/betabots)
+
 <p align="center">
   <img src="assets/betabots-github-banner-variation-1.png" alt="Betabots synthetic beta users inspecting a product dashboard" width="100%">
 </p>
