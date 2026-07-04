@@ -1,0 +1,2271 @@
+{
+  "config": {
+    "appUrl": "https://betabots.rachkovan.com",
+    "count": 20,
+    "minutes": 1,
+    "minMinutes": 1,
+    "maxMinutes": 2,
+    "concurrency": 1,
+    "headless": true,
+    "requestedTimeScale": 1,
+    "timeScale": 1,
+    "seed": 20260630,
+    "authLocalStorageKey": "",
+    "cohortFile": "demo-cohorts/betabots-public-demo.json",
+    "audienceResearchFile": "",
+    "cohortOnly": false,
+    "betabookEnabled": true,
+    "destinyEnabled": true,
+    "destinyIntervalMs": 20000,
+    "strictScoring": true,
+    "loopRepeatThreshold": 2,
+    "curiosityChance": 0.25,
+    "maxCuriosityActions": 5,
+    "avatarStyle": "bottts-neutral",
+    "avatarBaseUrl": "https://api.dicebear.com/10.x",
+    "truthPressureStartingYears": 100,
+    "truthPressureActionMonths": 1,
+    "truthPressureDollarYears": 1,
+    "llmProvider": "codex",
+    "llmModel": "",
+    "llmMaxCalls": 500,
+    "llmTimeoutMs": 120000,
+    "actionTimeoutMs": 60000,
+    "codexCommand": "codex",
+    "openrouterBaseUrl": "https://openrouter.ai/api/v1",
+    "openrouterSiteUrl": "",
+    "openrouterAppName": "Betabots",
+    "visualEvidenceMode": "audit",
+    "screenSizeDistribution": "",
+    "runDir": ".betabots/runs/demo-public/20260704-betabots-landing-20",
+    "authTokenTemplate": "",
+    "openrouterApiKey": ""
+  },
+  "cohort": {
+    "appName": "Betabots Landing",
+    "source": "/Users/mac/Desktop/projects/personal/betabots-workspace/betabots/demo-cohorts/betabots-public-demo.json",
+    "audienceResearchFile": "",
+    "researchSources": [
+      "public: https://betabots.rachkovan.com/ live landing page on 2026-07-04",
+      "project: Betabots open-source repository and dashboard intent",
+      "assumption: primary visitors are founders, product/design leads, open-source contributors, and agency/consulting buyers"
+    ],
+    "audienceSegments": [
+      {
+        "name": "Founder or product owner",
+        "weight": 35,
+        "evidence": "Landing positions Betabots as a way to get product evidence before real users are available.",
+        "jobs": [
+          "understand value",
+          "see proof",
+          "request a review"
+        ],
+        "objections": [
+          "fake AI praise",
+          "unclear demo",
+          "unclear pricing"
+        ],
+        "deviceBias": "desktop"
+      },
+      {
+        "name": "Designer or UX researcher",
+        "weight": 25,
+        "evidence": "Landing emphasizes screenshots, action timelines, truthful synthetic users, and evidence packs.",
+        "jobs": [
+          "inspect method",
+          "trust evidence quality",
+          "compare to research workflow"
+        ],
+        "objections": [
+          "not real users",
+          "weak methodology",
+          "dashboard not inspectable"
+        ],
+        "deviceBias": "desktop"
+      },
+      {
+        "name": "Developer contributor",
+        "weight": 25,
+        "evidence": "Landing and repo include open-source install paths for Codex, Claude Code, Cursor, docs, GitHub, and AGPL.",
+        "jobs": [
+          "install locally",
+          "find docs",
+          "judge project seriousness"
+        ],
+        "objections": [
+          "install command unclear",
+          "license concerns",
+          "missing real example"
+        ],
+        "deviceBias": "desktop"
+      },
+      {
+        "name": "Mobile founder doing a quick check",
+        "weight": 15,
+        "evidence": "Landing has mobile layout and cloud request path; mobile visitors need a fast proof path.",
+        "jobs": [
+          "understand in one screen",
+          "view demo",
+          "request sample"
+        ],
+        "objections": [
+          "long page",
+          "tiny text",
+          "hidden CTA"
+        ],
+        "deviceBias": "mobile"
+      }
+    ],
+    "confidenceRules": null,
+    "roleCount": 4,
+    "routeCount": 4,
+    "screenSizeDistribution": [
+      {
+        "category": "desktop",
+        "weight": 65,
+        "devices": [
+          {
+            "name": "Laptop 15",
+            "category": "desktop",
+            "width": 1440,
+            "height": 900,
+            "deviceScaleFactor": 1,
+            "userAgent": ""
+          }
+        ]
+      },
+      {
+        "category": "mobile",
+        "weight": 25,
+        "devices": [
+          {
+            "name": "iPhone 13",
+            "category": "mobile",
+            "width": 390,
+            "height": 844,
+            "deviceScaleFactor": 3,
+            "isMobile": true,
+            "hasTouch": true,
+            "userAgent": ""
+          }
+        ]
+      },
+      {
+        "category": "tablet",
+        "weight": 10,
+        "devices": [
+          {
+            "name": "iPad Air",
+            "category": "tablet",
+            "width": 820,
+            "height": 1180,
+            "deviceScaleFactor": 2,
+            "hasTouch": true,
+            "userAgent": ""
+          }
+        ]
+      }
+    ]
+  },
+  "betabook": {
+    "enabled": true,
+    "posts": 59,
+    "comments": 65,
+    "invites": 13,
+    "events": 197,
+    "errors": []
+  },
+  "destiny": {
+    "enabled": true,
+    "masterPlan": [
+      {
+        "id": "destiny-thread-001",
+        "a": "thoughtful-betabot-001",
+        "b": "thoughtful-betabot-002",
+        "intent": "cross_paths",
+        "postId": "post-0004",
+        "status": "waiting_for_paths",
+        "reason": "A founder and researcher should meet where proof and skepticism sharpen each other."
+      },
+      {
+        "id": "destiny-thread-002",
+        "a": "thoughtful-betabot-003",
+        "b": "thoughtful-betabot-004",
+        "intent": "cross_paths",
+        "postId": "post-0005",
+        "status": "waiting_for_paths",
+        "reason": "A cautious installer and impatient founder can reveal whether practical clarity appears fast enough."
+      },
+      {
+        "id": "destiny-thread-003",
+        "a": "thoughtful-betabot-005",
+        "b": "thoughtful-betabot-006",
+        "intent": "cross_paths",
+        "postId": "post-0006",
+        "status": "waiting_for_paths",
+        "reason": "Curiosity and skepticism should collide around evidence before either settles."
+      },
+      {
+        "id": "destiny-thread-004",
+        "a": "thoughtful-betabot-007",
+        "b": "thoughtful-betabot-008",
+        "intent": "cross_paths",
+        "postId": "post-0007",
+        "status": "waiting_for_paths",
+        "reason": "Playful technical interest and quick founder need can test whether the offer feels both usable and urgent."
+      },
+      {
+        "id": "destiny-thread-005",
+        "a": "thoughtful-betabot-009",
+        "b": "thoughtful-betabot-010",
+        "intent": "near_miss",
+        "postId": "post-0008",
+        "status": "paths_kept_apart",
+        "reason": "Their almost-overlap will show whether proof still lands without social reinforcement."
+      },
+      {
+        "id": "destiny-thread-006",
+        "a": "thoughtful-betabot-011",
+        "b": "thoughtful-betabot-012",
+        "intent": "cross_paths",
+        "postId": "post-0009",
+        "status": "waiting_for_paths",
+        "reason": "A developer seeking setup clarity and a skeptical mobile founder can pressure the promise from both ends."
+      },
+      {
+        "id": "destiny-thread-007",
+        "a": "thoughtful-betabot-013",
+        "b": "thoughtful-betabot-014",
+        "intent": "cross_paths",
+        "postId": "post-0010",
+        "status": "waiting_for_paths",
+        "reason": "Guarded founder judgment should meet research skepticism before trust forms too easily."
+      },
+      {
+        "id": "destiny-thread-008",
+        "a": "thoughtful-betabot-015",
+        "b": "thoughtful-betabot-016",
+        "intent": "cross_paths",
+        "postId": "post-0011",
+        "status": "waiting_for_paths",
+        "reason": "A curious installer and curious founder can turn matching intent into a direct decision point."
+      },
+      {
+        "id": "destiny-thread-009",
+        "a": "thoughtful-betabot-017",
+        "b": "thoughtful-betabot-018",
+        "intent": "cross_paths",
+        "postId": "post-0012",
+        "status": "waiting_for_paths",
+        "reason": "Two guarded evaluators should cross so hesitation becomes explicit instead of hidden."
+      },
+      {
+        "id": "destiny-thread-010",
+        "a": "thoughtful-betabot-019",
+        "b": "thoughtful-betabot-020",
+        "intent": "near_miss",
+        "postId": "post-0013",
+        "status": "paths_kept_apart",
+        "reason": "Their missed timing will reveal whether the path still feels worth following alone."
+      }
+    ],
+    "events": 179,
+    "errors": []
+  },
+  "truthPressure": {
+    "enabled": true,
+    "startingYears": 100,
+    "actionMonthsCost": 1,
+    "dollarYearsCost": 1,
+    "totalActionsCharged": 27,
+    "totalDollarsCommitted": 0,
+    "totalYearsSpentOnActions": 2.25,
+    "totalYearsSpentOnMoney": 0,
+    "averageYearsRemaining": 99.8875,
+    "deaths": 0,
+    "truthAuditRiskEvents": 30,
+    "truthAssessments": 30
+  },
+  "llm": {
+    "provider": "codex",
+    "model": null,
+    "calls": 120,
+    "failures": 1,
+    "fallbacks": 1,
+    "tasks": {
+      "destiny_master_plan": 1,
+      "destiny_live_advice": 24,
+      "betabook_thread_reply": 60,
+      "betabot_reflection": 30,
+      "betabot_help_request": 5
+    },
+    "errors": [
+      "destiny_live_advice: codex timed out after 120000ms"
+    ]
+  },
+  "elapsedSeconds": 2576,
+  "happy": 0,
+  "unhappy": 18,
+  "median": 4,
+  "errorBots": [
+    {
+      "id": "thoughtful-betabot-018",
+      "score": 22,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "destiny navigation /: page.goto: net::ERR_CONNECTION_CLOSED at https://betabots.rachkovan.com/\nCall log:\n\u001b[2m  - navigating to \"https://betabots.rachkovan.com/\", waiting until \"commit\"\u001b[22m\n"
+      ],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Put the public demo artifact trail one click closer, with clear limits and examples of where bots were wrong.",
+        "Put a small real evidence sample directly on this page before asking people to open the demo."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-018|June 2|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|guarded|medium",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-018%7CJune+2%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cguarded%7Cmedium&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Betabook/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    }
+  ],
+  "topIdeas": [
+    [
+      "Put the strongest sample review artifact directly above the fold so I can judge depth faster.",
+      1
+    ],
+    [
+      "Lead with one concrete artifact trail from a past review so I can judge the method immediately.",
+      1
+    ],
+    [
+      "show install command, supported harnesses, documentation link, and license near the first screen.",
+      1
+    ],
+    [
+      "show a real sample beta-user result immediately on arrival.",
+      1
+    ],
+    [
+      "Show one sharp sample finding directly on this first screen, with the exact evidence behind it.",
+      1
+    ],
+    [
+      "Lead with one complete, inspectable run so I can judge the evidence trail before buying the claim.",
+      1
+    ],
+    [
+      "Put the install command, supported runners, docs link, and license badge directly in the first screen.",
+      1
+    ],
+    [
+      "Put one concrete beta run artifact above the fold so I can judge quality before choosing the demo.",
+      1
+    ],
+    [
+      "Show one concrete artifact preview above the fold so I can judge the quality before spending another click.",
+      1
+    ],
+    [
+      "Put a sample evidence trail directly on the landing page before asking me to open the dashboard.",
+      1
+    ],
+    [
+      "make the install command, supported harnesses, docs link, and license visible immediately on arrival.",
+      1
+    ],
+    [
+      "Put one strong sample review preview directly on this first screen so I can judge quality before clicking.",
+      1
+    ],
+    [
+      "Show one full sample run immediately, with the raw actions, doubts, and final review visible before asking me to request anything.",
+      1
+    ],
+    [
+      "Put one strong sample review directly on this page with screenshots, quotes, and the exact decisions it changed.",
+      1
+    ],
+    [
+      "Put one concrete artifact preview on the first screen so I can judge evidence quality before opening the demo.",
+      1
+    ],
+    [
+      "Let me open one sample review into a full evidence trail with exact sessions, uncertainty, and decision impact separated.",
+      1
+    ],
+    [
+      "Let me open one sample finding and see the exact trail from action to conclusion.",
+      1
+    ],
+    [
+      "Put the install command, license, supported harnesses, and repo link together in the first screen path.",
+      1
+    ],
+    [
+      "Put a clear open install panel near the dashboard with command, supported harnesses, docs link, and license summary.",
+      1
+    ],
+    [
+      "Put the install command, supported runners, and license summary directly beside the Run locally button.",
+      1
+    ],
+    [
+      "Put the public demo as the main first tap, with one clear sample outcome shown before any extra claims.",
+      1
+    ],
+    [
+      "Put the strongest sample finding directly on this screen before asking me to open the demo.",
+      1
+    ],
+    [
+      "Show one complete beta run immediately, with bot actions, doubts, evidence, and final recommendations in one inspectable flow.",
+      1
+    ],
+    [
+      "Let me open one full sample review with raw examples of what people noticed and what decision changed.",
+      1
+    ],
+    [
+      "Put the public demo artifact trail one click closer, with clear limits and examples of where bots were wrong.",
+      1
+    ],
+    [
+      "Put a small real evidence sample directly on this page before asking people to open the demo.",
+      1
+    ],
+    [
+      "Put the install command, supported harnesses, docs link, and license summary in one visible quickstart block.",
+      1
+    ],
+    [
+      "Put install command, supported harnesses, docs, and license status in one compact developer panel.",
+      1
+    ],
+    [
+      "Put one compact sample finding directly on this first screen so I can judge quality before tapping anything.",
+      1
+    ],
+    [
+      "Put a visible free sample request button next to the sample dashboard results.",
+      1
+    ]
+  ],
+  "confidenceRows": [
+    {
+      "theme": "Proof and diligence layer",
+      "count": 17,
+      "examples": [
+        "show install command, supported harnesses, documentation link, and license near the first screen.",
+        "show a real sample beta-user result immediately on arrival.",
+        "Show one sharp sample finding directly on this first screen, with the exact evidence behind it."
+      ],
+      "share": 0.85,
+      "tier": "high"
+    },
+    {
+      "theme": "Put the strongest sample review artifact directly above the fold so I can judge depth faster.",
+      "count": 1,
+      "examples": [
+        "Put the strongest sample review artifact directly above the fold so I can judge depth faster."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Lead with one concrete artifact trail from a past review so I can judge the method immediately.",
+      "count": 1,
+      "examples": [
+        "Lead with one concrete artifact trail from a past review so I can judge the method immediately."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put one concrete beta run artifact above the fold so I can judge quality before choosing the demo.",
+      "count": 1,
+      "examples": [
+        "Put one concrete beta run artifact above the fold so I can judge quality before choosing the demo."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show one concrete artifact preview above the fold so I can judge the quality before spending another click.",
+      "count": 1,
+      "examples": [
+        "Show one concrete artifact preview above the fold so I can judge the quality before spending another click."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put one strong sample review preview directly on this first screen so I can judge quality before clicking.",
+      "count": 1,
+      "examples": [
+        "Put one strong sample review preview directly on this first screen so I can judge quality before clicking."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show one full sample run immediately, with the raw actions, doubts, and final review visible before asking me to request",
+      "count": 1,
+      "examples": [
+        "Show one full sample run immediately, with the raw actions, doubts, and final review visible before asking me to request anything."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put one strong sample review directly on this page with screenshots, quotes, and the exact decisions it changed.",
+      "count": 1,
+      "examples": [
+        "Put one strong sample review directly on this page with screenshots, quotes, and the exact decisions it changed."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Let me open one sample finding and see the exact trail from action to conclusion.",
+      "count": 1,
+      "examples": [
+        "Let me open one sample finding and see the exact trail from action to conclusion."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put the install command, supported runners, and license summary directly beside the Run locally button.",
+      "count": 1,
+      "examples": [
+        "Put the install command, supported runners, and license summary directly beside the Run locally button."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put the strongest sample finding directly on this screen before asking me to open the demo.",
+      "count": 1,
+      "examples": [
+        "Put the strongest sample finding directly on this screen before asking me to open the demo."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Let me open one full sample review with raw examples of what people noticed and what decision changed.",
+      "count": 1,
+      "examples": [
+        "Let me open one full sample review with raw examples of what people noticed and what decision changed."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put the public demo artifact trail one click closer, with clear limits and examples of where bots were wrong.",
+      "count": 1,
+      "examples": [
+        "Put the public demo artifact trail one click closer, with clear limits and examples of where bots were wrong."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put one compact sample finding directly on this first screen so I can judge quality before tapping anything.",
+      "count": 1,
+      "examples": [
+        "Put one compact sample finding directly on this first screen so I can judge quality before tapping anything."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    }
+  ],
+  "results": [
+    {
+      "id": "thoughtful-betabot-001",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Put the strongest sample review artifact directly above the fold so I can judge depth faster."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-001|Mira 1|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-001%7CMira+1%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-002",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Lead with one concrete artifact trail from a past review so I can judge the method immediately."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-002|Sol 1|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-002%7CSol+1%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-003",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show install command, supported harnesses, documentation link, and license near the first screen."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-003|Niko 1|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-003%7CNiko+1%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-004",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a real sample beta-user result immediately on arrival."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-004|Tara 1|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|impatient|medium",
+        "backgroundColor": "ffd5dc",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-004%7CTara+1%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Cimpatient%7Cmedium&backgroundColor=ffd5dc",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-005",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show one sharp sample finding directly on this first screen, with the exact evidence behind it."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-005|Ren 1|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-005%7CRen+1%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-006",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Lead with one complete, inspectable run so I can judge the evidence trail before buying the claim."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-006|Ari 1|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-006%7CAri+1%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-007",
+      "score": 4,
+      "endReason": "found enough value for one session",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Put the install command, supported runners, docs link, and license badge directly in the first screen."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-007|Vale 1|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-007%7CVale+1%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-008",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Put one concrete beta run artifact above the fold so I can judge quality before choosing the demo."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-008|June 1|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-008%7CJune+1%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-009",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show one concrete artifact preview above the fold so I can judge the quality before spending another click."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-009|Rook 1|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-009%7CRook+1%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-010",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Put a sample evidence trail directly on the landing page before asking me to open the dashboard."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-010|Iris 1|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-010%7CIris+1%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-011",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "make the install command, supported harnesses, docs link, and license visible immediately on arrival."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-011|Mira 2|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-011%7CMira+2%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-012",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Put one strong sample review preview directly on this first screen so I can judge quality before clicking."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-012|Sol 2|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-012%7CSol+2%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-013",
+      "score": 42,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 4,
+      "screenshots": 6,
+      "ideas": [
+        "Show one full sample run immediately, with the raw actions, doubts, and final review visible before asking me to request anything.",
+        "Put one strong sample review directly on this page with screenshots, quotes, and the exact decisions it changed."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-013|Niko 2|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|guarded|high",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-013%7CNiko+2%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Cguarded%7Chigh&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 2,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /demo",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Run locally/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Open dashboard demo/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-014",
+      "score": 58,
+      "endReason": "understood value but needs more live people",
+      "errors": [],
+      "actions": 6,
+      "screenshots": 8,
+      "ideas": [
+        "Put one concrete artifact preview on the first screen so I can judge evidence quality before opening the demo.",
+        "Let me open one sample review into a full evidence trail with exact sessions, uncertainty, and decision impact separated.",
+        "Let me open one sample finding and see the exact trail from action to conclusion."
+      ],
+      "thoughts": 5,
+      "opinions": 3,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-014|Tara 2|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-014%7CTara+2%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 2,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 2,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 2,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+        "startingYears": 100,
+        "yearsRemaining": 99.5,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 6,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.49999999999999994,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 3,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /#how",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /View Beta/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /#how",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Open dashboard demo/i",
+            "yearsRemaining": 99.6667
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /GitHub/i",
+            "yearsRemaining": 99.5833
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /GitHub/i",
+            "yearsRemaining": 99.5
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-015",
+      "score": 51,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 5,
+      "screenshots": 6,
+      "ideas": [
+        "Put the install command, license, supported harnesses, and repo link together in the first screen path.",
+        "Put a clear open install panel near the dashboard with command, supported harnesses, docs link, and license summary.",
+        "Put the install command, supported runners, and license summary directly beside the Run locally button."
+      ],
+      "thoughts": 5,
+      "opinions": 3,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-015|Ren 2|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-015%7CRen+2%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 2,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 2,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+        "startingYears": 100,
+        "yearsRemaining": 99.58333333333333,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 5,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.41666666666666663,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 3,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /#cloud",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /View Beta/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Request Betabot review/i",
+            "yearsRemaining": 99.6667
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Destiny/i",
+            "yearsRemaining": 99.5833
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-016",
+      "score": 33,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 5,
+      "screenshots": 6,
+      "ideas": [
+        "Put the public demo as the main first tap, with one clear sample outcome shown before any extra claims.",
+        "Put the strongest sample finding directly on this screen before asking me to open the demo."
+      ],
+      "thoughts": 4,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-016|Ari 2|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-016%7CAri+2%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 2,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 1,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 99.58333333333333,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 5,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.41666666666666663,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /demo",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /GitHub/i",
+            "yearsRemaining": 99.6667
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.5833
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-017",
+      "score": 32,
+      "endReason": "found enough value for one session",
+      "errors": [],
+      "actions": 2,
+      "screenshots": 3,
+      "ideas": [
+        "Show one complete beta run immediately, with bot actions, doubts, evidence, and final recommendations in one inspectable flow.",
+        "Let me open one full sample review with raw examples of what people noticed and what decision changed."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-017|Vale 2|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|guarded|high",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-017%7CVale+2%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Cguarded%7Chigh&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+        "startingYears": 100,
+        "yearsRemaining": 99.83333333333333,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 2,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.16666666666666666,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /#cloud",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /View Beta/i",
+            "yearsRemaining": 99.8333
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-018",
+      "score": 22,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "destiny navigation /: page.goto: net::ERR_CONNECTION_CLOSED at https://betabots.rachkovan.com/\nCall log:\n\u001b[2m  - navigating to \"https://betabots.rachkovan.com/\", waiting until \"commit\"\u001b[22m\n"
+      ],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Put the public demo artifact trail one click closer, with clear limits and examples of where bots were wrong.",
+        "Put a small real evidence sample directly on this page before asking people to open the demo."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-018|June 2|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|guarded|medium",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-018%7CJune+2%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cguarded%7Cmedium&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Betabook/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-019",
+      "score": 32,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 1,
+      "screenshots": 2,
+      "ideas": [
+        "Put the install command, supported harnesses, docs link, and license summary in one visible quickstart block.",
+        "Put install command, supported harnesses, docs, and license status in one compact developer panel."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-019|Rook 2|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-019%7CRook+2%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+        "startingYears": 100,
+        "yearsRemaining": 99.91666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 1,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.08333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /View Beta/i",
+            "yearsRemaining": 99.9167
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-020",
+      "score": 32,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 1,
+      "screenshots": 2,
+      "ideas": [
+        "Put one compact sample finding directly on this first screen so I can judge quality before tapping anything.",
+        "Put a visible free sample request button next to the sample dashboard results."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-020|Iris 2|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|guarded|medium",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-020%7CIris+2%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Cguarded%7Cmedium&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 99.91666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 1,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.08333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /View Beta/i",
+            "yearsRemaining": 99.9167
+          }
+        ]
+      }
+    }
+  ]
+}

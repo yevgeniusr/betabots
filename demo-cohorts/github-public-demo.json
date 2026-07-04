@@ -1,0 +1,103 @@
+{
+  "appName": "GitHub",
+  "audienceResearch": "Public-page and category evidence only. GitHub is a developer platform for repositories, collaboration, CI, security, AI coding, documentation, enterprise governance, education, and community. Assumptions are marked in segment evidence.",
+  "researchSources": [
+    "public: github.com homepage/footer navigation visible on 2026-07-04",
+    "public: GitHub category knowledge as a code hosting and collaboration platform",
+    "assumption: sample cohort covers unauthenticated visitors because no real accounts are used"
+  ],
+  "audienceSegments": [
+    {
+      "name": "Open-source contributor",
+      "weight": 30,
+      "evidence": "Public platform vocabulary emphasizes repositories, docs, community, GitHub CLI/Desktop/Mobile, and developer ecosystem.",
+      "jobs": ["find repository credibility", "understand contribution path", "trust project activity"],
+      "objections": ["too much navigation", "unclear first contribution path", "account wall"],
+      "deviceBias": "desktop"
+    },
+    {
+      "name": "Engineering team evaluator",
+      "weight": 30,
+      "evidence": "Public navigation includes Enterprise, Security, Copilot, Pricing, Team, and Professional Services.",
+      "jobs": ["evaluate platform credibility", "compare team value", "understand security and governance"],
+      "objections": ["pricing uncertainty", "enterprise complexity", "AI trust concerns"],
+      "deviceBias": "desktop"
+    },
+    {
+      "name": "Learning developer",
+      "weight": 20,
+      "evidence": "Public navigation includes Education, Skills, Docs, Community Forum, and developer newsletter.",
+      "jobs": ["learn what GitHub is", "find beginner docs", "avoid feeling lost"],
+      "objections": ["jargon", "too many product branches", "unclear next step"],
+      "deviceBias": "mobile"
+    },
+    {
+      "name": "Mobile checker",
+      "weight": 20,
+      "evidence": "GitHub Mobile is a public product path; mobile visitors may inspect links and trust cues.",
+      "jobs": ["check a repo or docs quickly", "see if mobile browsing is usable"],
+      "objections": ["dense menus", "small touch targets", "sign-in interruptions"],
+      "deviceBias": "mobile"
+    }
+  ],
+  "roles": [
+    {
+      "role": "open-source contributor deciding whether a project is worth a first PR",
+      "past": "I have wasted weekends on inactive repositories and now look for maintainers, docs, issues, and contribution signals before investing time.",
+      "discovery": "A search result sent me to GitHub while I was comparing tools.",
+      "goal": "Find whether GitHub helps me judge repository credibility and contribution paths quickly.",
+      "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+      "technicalComfort": "high",
+      "viewport": "desktop"
+    },
+    {
+      "role": "engineering manager evaluating team collaboration and security",
+      "past": "My team already uses several tools, and every platform decision creates migration and compliance risk.",
+      "discovery": "A colleague said GitHub might consolidate code review, security, and AI assistance.",
+      "goal": "Decide whether GitHub feels credible enough for a team evaluation.",
+      "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+      "technicalComfort": "high",
+      "viewport": "desktop"
+    },
+    {
+      "role": "junior developer learning where to start",
+      "past": "I know Git basics but product menus and enterprise language can make me feel like I do not belong yet.",
+      "discovery": "I clicked GitHub from a tutorial that said to create an account.",
+      "goal": "Find a clear beginner path without drowning in product categories.",
+      "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+      "technicalComfort": "medium",
+      "viewport": "mobile"
+    },
+    {
+      "role": "startup CTO comparing code hosting and AI coding claims",
+      "past": "I need developer speed, but AI and security claims need proof before I stake my team on them.",
+      "discovery": "I opened GitHub after hearing about Copilot and enterprise security.",
+      "goal": "Understand whether the site gives enough proof to investigate further.",
+      "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+      "technicalComfort": "high",
+      "viewport": "desktop"
+    }
+  ],
+  "screenSizeDistribution": [
+    { "category": "desktop", "weight": 60, "devices": [{ "name": "Laptop 15", "width": 1440, "height": 900, "deviceScaleFactor": 1 }] },
+    { "category": "mobile", "weight": 30, "devices": [{ "name": "iPhone 13", "width": 390, "height": 844, "deviceScaleFactor": 3, "isMobile": true, "hasTouch": true }] },
+    { "category": "tablet", "weight": 10, "devices": [{ "name": "iPad Air", "width": 820, "height": 1180, "deviceScaleFactor": 2, "hasTouch": true }] }
+  ],
+  "routes": [
+    { "labels": ["Features", "Platform", "Enterprise", "Pricing", "Docs", "Community", "Copilot", "Security", "Sign up", "Start a free trial"], "fallback": "/" },
+    { "labels": ["Docs", "GitHub CLI", "GitHub Desktop", "GitHub Mobile", "Education", "Skills"], "fallback": "/features" },
+    { "labels": ["Pricing", "Team", "Enterprise", "Compare GitHub"], "fallback": "/pricing" },
+    { "labels": ["Security", "Resources", "Customer Stories", "Blog"], "fallback": "/enterprise" }
+  ],
+  "keywords": {
+    "value": ["repository", "code", "collaboration", "security", "copilot", "docs", "issues", "pull request", "community"],
+    "trust": ["security", "enterprise", "docs", "customer", "status", "support", "privacy", "terms"],
+    "risk": ["sign in", "can't perform", "error", "blocked", "pricing", "enterprise only"],
+    "empty": ["loading", "nothing", "not found", "you can't perform"]
+  },
+  "ideaRules": [
+    { "when": ["Pricing", "Enterprise"], "idea": "Show a clearer path for small teams before enterprise language takes over." },
+    { "when": ["Docs", "Skills"], "idea": "Connect beginner docs to a first visible repository action." },
+    { "when": ["Copilot", "AI"], "idea": "Pair AI claims with concrete safeguards and examples near the claim." }
+  ]
+}

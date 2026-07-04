@@ -1,0 +1,2627 @@
+{
+  "config": {
+    "appUrl": "https://self-degree.com",
+    "count": 20,
+    "minutes": 1,
+    "minMinutes": 1,
+    "maxMinutes": 2,
+    "concurrency": 1,
+    "headless": true,
+    "requestedTimeScale": 1,
+    "timeScale": 1,
+    "seed": 20260630,
+    "authLocalStorageKey": "",
+    "cohortFile": "demo-cohorts/self-degree-public-demo.json",
+    "audienceResearchFile": "",
+    "cohortOnly": false,
+    "betabookEnabled": true,
+    "destinyEnabled": true,
+    "destinyIntervalMs": 20000,
+    "strictScoring": true,
+    "loopRepeatThreshold": 2,
+    "curiosityChance": 0.25,
+    "maxCuriosityActions": 5,
+    "avatarStyle": "bottts-neutral",
+    "avatarBaseUrl": "https://api.dicebear.com/10.x",
+    "truthPressureStartingYears": 100,
+    "truthPressureActionMonths": 1,
+    "truthPressureDollarYears": 1,
+    "llmProvider": "codex",
+    "llmModel": "",
+    "llmMaxCalls": 500,
+    "llmTimeoutMs": 120000,
+    "actionTimeoutMs": 60000,
+    "codexCommand": "codex",
+    "openrouterBaseUrl": "https://openrouter.ai/api/v1",
+    "openrouterSiteUrl": "",
+    "openrouterAppName": "Betabots",
+    "visualEvidenceMode": "audit",
+    "screenSizeDistribution": "",
+    "runDir": ".betabots/runs/demo-public/20260704-self-degree-20",
+    "authTokenTemplate": "",
+    "openrouterApiKey": ""
+  },
+  "cohort": {
+    "appName": "Self Degree",
+    "source": "/Users/mac/Desktop/projects/personal/betabots-workspace/betabots/demo-cohorts/self-degree-public-demo.json",
+    "audienceResearchFile": "",
+    "researchSources": [
+      "public: https://self-degree.com/ live browser surface on 2026-07-04",
+      "assumption: product is education/self-directed learning based on name and URL",
+      "assumption: visitors include learners, career switchers, founders, and skeptical buyers"
+    ],
+    "audienceSegments": [
+      {
+        "name": "Career switcher",
+        "weight": 35,
+        "evidence": "Assumption from education/self-degree category; needs credible path and outcome proof.",
+        "jobs": [
+          "understand what skill path is offered",
+          "judge credibility",
+          "see time commitment"
+        ],
+        "objections": [
+          "vague curriculum",
+          "no outcomes",
+          "unclear cost"
+        ],
+        "deviceBias": "mobile"
+      },
+      {
+        "name": "Self-directed learner",
+        "weight": 30,
+        "evidence": "Assumption from product name; self-learners compare structure and momentum.",
+        "jobs": [
+          "find curriculum",
+          "see next step",
+          "check whether it fits current level"
+        ],
+        "objections": [
+          "generic motivation",
+          "too much friction",
+          "no sample lesson"
+        ],
+        "deviceBias": "desktop"
+      },
+      {
+        "name": "Parent or sponsor",
+        "weight": 20,
+        "evidence": "Education products often have buyers who are not the learner; this is marked as assumption.",
+        "jobs": [
+          "judge safety and seriousness",
+          "understand expected results",
+          "decide if it is worth paying for"
+        ],
+        "objections": [
+          "unproven claims",
+          "unclear support",
+          "weak trust signals"
+        ],
+        "deviceBias": "desktop"
+      },
+      {
+        "name": "Busy founder learning a practical skill",
+        "weight": 15,
+        "evidence": "Assumption: founders use self-guided learning when speed matters.",
+        "jobs": [
+          "find practical outcome",
+          "avoid long academic paths",
+          "see proof fast"
+        ],
+        "objections": [
+          "too theoretical",
+          "no timeline",
+          "unclear first action"
+        ],
+        "deviceBias": "mobile"
+      }
+    ],
+    "confidenceRules": null,
+    "roleCount": 4,
+    "routeCount": 4,
+    "screenSizeDistribution": [
+      {
+        "category": "mobile",
+        "weight": 45,
+        "devices": [
+          {
+            "name": "iPhone 13",
+            "category": "mobile",
+            "width": 390,
+            "height": 844,
+            "deviceScaleFactor": 3,
+            "isMobile": true,
+            "hasTouch": true,
+            "userAgent": ""
+          }
+        ]
+      },
+      {
+        "category": "desktop",
+        "weight": 45,
+        "devices": [
+          {
+            "name": "Laptop 15",
+            "category": "desktop",
+            "width": 1440,
+            "height": 900,
+            "deviceScaleFactor": 1,
+            "userAgent": ""
+          }
+        ]
+      },
+      {
+        "category": "tablet",
+        "weight": 10,
+        "devices": [
+          {
+            "name": "iPad Air",
+            "category": "tablet",
+            "width": 820,
+            "height": 1180,
+            "deviceScaleFactor": 2,
+            "hasTouch": true,
+            "userAgent": ""
+          }
+        ]
+      }
+    ]
+  },
+  "betabook": {
+    "enabled": true,
+    "posts": 66,
+    "comments": 81,
+    "invites": 17,
+    "events": 236,
+    "errors": []
+  },
+  "destiny": {
+    "enabled": true,
+    "masterPlan": [
+      {
+        "id": "destiny-thread-001",
+        "a": "thoughtful-betabot-001",
+        "b": "thoughtful-betabot-002",
+        "intent": "cross_paths",
+        "postId": "post-0004",
+        "status": "waiting_for_paths",
+        "reason": "Curiosity and skepticism should meet before either turns vague doubts into exit."
+      },
+      {
+        "id": "destiny-thread-002",
+        "a": "thoughtful-betabot-003",
+        "b": "thoughtful-betabot-004",
+        "intent": "cross_paths",
+        "postId": "post-0005",
+        "status": "waiting_for_paths",
+        "reason": "A serious parent and impatient founder can sharpen each other's sense of credibility."
+      },
+      {
+        "id": "destiny-thread-003",
+        "a": "thoughtful-betabot-005",
+        "b": "thoughtful-betabot-006",
+        "intent": "cross_paths",
+        "postId": "post-0006",
+        "status": "waiting_for_paths",
+        "reason": "A course-wary switcher needs structure pressure from someone who values examples."
+      },
+      {
+        "id": "destiny-thread-004",
+        "a": "thoughtful-betabot-007",
+        "b": "thoughtful-betabot-008",
+        "intent": "cross_paths",
+        "postId": "post-0007",
+        "status": "waiting_for_paths",
+        "reason": "Playful caution and founder curiosity may make the offer feel less abstract."
+      },
+      {
+        "id": "destiny-thread-005",
+        "a": "thoughtful-betabot-009",
+        "b": "thoughtful-betabot-010",
+        "intent": "near_miss",
+        "postId": "post-0008",
+        "status": "paths_kept_apart",
+        "reason": "Their almost-meeting should expose whether the path is clear without social rescue."
+      },
+      {
+        "id": "destiny-thread-006",
+        "a": "thoughtful-betabot-011",
+        "b": "thoughtful-betabot-012",
+        "intent": "cross_paths",
+        "postId": "post-0009",
+        "status": "waiting_for_paths",
+        "reason": "A playful parent and skeptical founder can quickly surface weak promises."
+      },
+      {
+        "id": "destiny-thread-007",
+        "a": "thoughtful-betabot-013",
+        "b": "thoughtful-betabot-014",
+        "intent": "cross_paths",
+        "postId": "post-0010",
+        "status": "waiting_for_paths",
+        "reason": "Guarded hope and curriculum skepticism should collide before commitment grows."
+      },
+      {
+        "id": "destiny-thread-008",
+        "a": "thoughtful-betabot-015",
+        "b": "thoughtful-betabot-016",
+        "intent": "cross_paths",
+        "postId": "post-0011",
+        "status": "waiting_for_paths",
+        "reason": "Curious seriousness and practical ambition can reveal whether the next step feels real."
+      },
+      {
+        "id": "destiny-thread-009",
+        "a": "thoughtful-betabot-017",
+        "b": "thoughtful-betabot-018",
+        "intent": "cross_paths",
+        "postId": "post-0012",
+        "status": "waiting_for_paths",
+        "reason": "A guarded switcher and impatient learner should force clarity on depth and pace."
+      },
+      {
+        "id": "destiny-thread-010",
+        "a": "thoughtful-betabot-019",
+        "b": "thoughtful-betabot-020",
+        "intent": "near_miss",
+        "postId": "post-0013",
+        "status": "paths_kept_apart",
+        "reason": "Their missed timing should show whether credibility survives without peer validation."
+      }
+    ],
+    "events": 205,
+    "errors": []
+  },
+  "truthPressure": {
+    "enabled": true,
+    "startingYears": 100,
+    "actionMonthsCost": 1,
+    "dollarYearsCost": 1,
+    "totalActionsCharged": 38,
+    "totalDollarsCommitted": 0,
+    "totalYearsSpentOnActions": 3.1667,
+    "totalYearsSpentOnMoney": 0,
+    "averageYearsRemaining": 99.8417,
+    "deaths": 0,
+    "truthAuditRiskEvents": 31,
+    "truthAssessments": 31
+  },
+  "llm": {
+    "provider": "codex",
+    "model": null,
+    "calls": 139,
+    "failures": 1,
+    "fallbacks": 1,
+    "tasks": {
+      "destiny_master_plan": 1,
+      "destiny_live_advice": 26,
+      "betabook_thread_reply": 72,
+      "betabot_reflection": 31,
+      "betabot_help_request": 9
+    },
+    "errors": [
+      "betabot_reflection: codex timed out after 120000ms"
+    ]
+  },
+  "elapsedSeconds": 2655,
+  "happy": 0,
+  "unhappy": 19,
+  "median": 4,
+  "errorBots": [
+    {
+      "id": "thoughtful-betabot-002",
+      "score": 0,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "follow destiny: thoughtful-betabot-002 follow destiny timed out after 60000ms",
+        "click next navigation: thoughtful-betabot-002 click next navigation timed out after 15000ms"
+      ],
+      "actions": 4,
+      "screenshots": 5,
+      "ideas": [
+        "show a concrete sample learning path immediately, with the first lesson visible before any signup.",
+        "Put a sample AI-generated curriculum and first lesson directly on the homepage."
+      ],
+      "thoughts": 5,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-002|Sol 1|self-directed learner comparing curriculum depth|I like teaching myself, but I need structure and examples or I drift.|Someone shared the site as an alternative to traditional degrees.|Find a sample curriculum, concrete outcome, or first lesson.|Become genuinely capable, not just collect another motivational bookmark.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-002%7CSol+1%7Cself-directed+learner+comparing+curriculum+depth%7CI+like+teaching+myself%2C+but+I+need+structure+and+examples+or+I+drift.%7CSomeone+shared+the+site+as+an+alternative+to+traditional+degrees.%7CFind+a+sample+curriculum%2C+concrete+outcome%2C+or+first+lesson.%7CBecome+genuinely+capable%2C+not+just+collect+another+motivational+bookmark.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 3,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 2,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-008",
+      "score": 19,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "ask Betabook for help: thoughtful-betabot-008 ask Betabook for help timed out after 60000ms"
+      ],
+      "actions": 3,
+      "screenshots": 5,
+      "ideas": [
+        "Show a founder-focused sample path with weekly outcomes and a finished project example.",
+        "show a short starter path with the exact skill, time required, and result I will produce first."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-008|June 1|busy founder looking for practical upskilling|I need fast practical learning and will leave if the offer sounds abstract.|I opened the link between meetings after seeing it mentioned online.|Check whether there is a clear first step and practical result.|Spend scarce attention only on learning that compounds into better decisions.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-008%7CJune+1%7Cbusy+founder+looking+for+practical+upskilling%7CI+need+fast+practical+learning+and+will+leave+if+the+offer+sounds+abstract.%7CI+opened+the+link+between+meetings+after+seeing+it+mentioned+online.%7CCheck+whether+there+is+a+clear+first+step+and+practical+result.%7CSpend+scarce+attention+only+on+learning+that+compounds+into+better+decisions.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 1,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /pricing",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /About/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-009",
+      "score": 0,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "reflect on arrival: thoughtful-betabot-009 reflect on arrival timed out after 60000ms"
+      ],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show a career-switcher path with duration, projects, outcomes, and proof before the main call to action."
+      ],
+      "thoughts": 0,
+      "opinions": 0,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-009|Rook 1|career switcher deciding whether this can replace another course|I have bought online courses before and often quit when the path became vague after the first week.|I found Self Degree while searching for a more independent way to learn.|Understand what I would learn, how long it takes, and whether there is proof it works.|Build a career that gives me independence without wasting money on empty promises.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-009%7CRook+1%7Ccareer+switcher+deciding+whether+this+can+replace+another+course%7CI+have+bought+online+courses+before+and+often+quit+when+the+path+became+vague+after+the+first+week.%7CI+found+Self+Degree+while+searching+for+a+more+independent+way+to+learn.%7CUnderstand+what+I+would+learn%2C+how+long+it+takes%2C+and+whether+there+is+proof+it+works.%7CBuild+a+career+that+gives+me+independence+without+wasting+money+on+empty+promises.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-015",
+      "score": 22,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "reflect on arrival: thoughtful-betabot-015 reflect on arrival timed out after 60000ms"
+      ],
+      "actions": 4,
+      "screenshots": 6,
+      "ideas": [
+        "Show a sample child profile, weekly plan, mentor support, and parent oversight before the main call to start.",
+        "Show a concrete sample learning path before asking for commitment."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-015|Ren 2|parent evaluating whether the offer is serious|I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.|My teenager sent me the link and asked what I thought.|Decide whether the product feels credible enough to discuss further.|Help my family make education decisions that create real options.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-015%7CRen+2%7Cparent+evaluating+whether+the+offer+is+serious%7CI+have+seen+many+learning+products+overpromise%2C+so+I+look+for+safety%2C+support%2C+and+realistic+outcomes.%7CMy+teenager+sent+me+the+link+and+asked+what+I+thought.%7CDecide+whether+the+product+feels+credible+enough+to+discuss+further.%7CHelp+my+family+make+education+decisions+that+create+real+options.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 2,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Help my family make education decisions that create real options.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Help my family make education decisions that create real options.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Start/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Contact/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    }
+  ],
+  "topIdeas": [
+    [
+      "show a clear sample path with time commitment, outcomes, and proof from past learners right away.",
+      1
+    ],
+    [
+      "show a concrete sample learning path immediately, with the first lesson visible before any signup.",
+      1
+    ],
+    [
+      "Put a sample AI-generated curriculum and first lesson directly on the homepage.",
+      1
+    ],
+    [
+      "Show a real sample week for one child, including mentor support, parent oversight, and what happens when the child gets stuck.",
+      1
+    ],
+    [
+      "show a founder-focused starting path with a sample result, time required, and what I can use by the end.",
+      1
+    ],
+    [
+      "Show separate paths for career switchers, with sample outcomes, time estimates, and evidence from real learners.",
+      1
+    ],
+    [
+      "Put a complete sample roadmap and first lesson directly on the landing page.",
+      1
+    ],
+    [
+      "Show one realistic child profile with the actual weekly plan, mentor involvement, and parent oversight.",
+      1
+    ],
+    [
+      "Show a founder-focused sample path with weekly outcomes and a finished project example.",
+      1
+    ],
+    [
+      "show a short starter path with the exact skill, time required, and result I will produce first.",
+      1
+    ],
+    [
+      "Show a career-switcher path with duration, projects, outcomes, and proof before the main call to action.",
+      1
+    ],
+    [
+      "show a sample first lesson, curriculum path, and expected project outcome immediately.",
+      1
+    ],
+    [
+      "Show a real sample week for one child, including mentor support, parent oversight, and limits of the AI.",
+      1
+    ],
+    [
+      "Show a sample 7-day practical learning plan with a measurable outcome before the signup button.",
+      1
+    ],
+    [
+      "Show separate paths for adult career switchers with sample curriculum, time estimate, and outcome evidence.",
+      1
+    ],
+    [
+      "Show one real sample roadmap with duration, weekly workload, skills learned, and proof of results.",
+      1
+    ],
+    [
+      "Put a sample roadmap with the first lesson, project, and expected outcome directly on the first screen.",
+      1
+    ],
+    [
+      "Show one real roadmap with lessons, projects, expected skills, and a finished student outcome.",
+      1
+    ],
+    [
+      "show a sample learning path and first lesson immediately, before asking for more attention.",
+      1
+    ],
+    [
+      "Show a sample child profile, weekly plan, mentor support, and parent oversight before the main call to start.",
+      1
+    ],
+    [
+      "Show a concrete sample learning path before asking for commitment.",
+      1
+    ],
+    [
+      "Show one concrete sample path for an adult professional before the main call to action.",
+      1
+    ],
+    [
+      "Show a sample AI-built curriculum with a practical project outcome and time estimate on the first screen.",
+      1
+    ],
+    [
+      "Show separate paths for adult career switchers, including timelines, sample curriculum, outcomes, and proof from real learners.",
+      1
+    ],
+    [
+      "Add a career-switcher track with sample roadmap, time estimate, and real learner outcomes.",
+      1
+    ],
+    [
+      "Show one full sample roadmap with the first lesson, projects, time estimates, and finished learner outcome.",
+      1
+    ],
+    [
+      "Show one real example of a child profile, the generated roadmap, mentor support, and how progress is judged.",
+      1
+    ],
+    [
+      "Show a sample child profile, weekly plan, mentor support, and safety boundaries before asking parents to trust the platform.",
+      1
+    ],
+    [
+      "Show one full example path with mentor support, weekly workload, outcomes, and parent-facing expectations.",
+      1
+    ],
+    [
+      "Show a founder-focused sample path with the exact skill, weekly time, and outcome produced.",
+      1
+    ],
+    [
+      "Show one sample roadmap with time saved, skills gained, and a real project outcome.",
+      1
+    ]
+  ],
+  "confidenceRows": [
+    {
+      "theme": "Proof and diligence layer",
+      "count": 19,
+      "examples": [
+        "show a clear sample path with time commitment, outcomes, and proof from past learners right away.",
+        "show a founder-focused starting path with a sample result, time required, and what I can use by the end.",
+        "Show separate paths for career switchers, with sample outcomes, time estimates, and evidence from real learners."
+      ],
+      "share": 0.95,
+      "tier": "high"
+    },
+    {
+      "theme": "show a concrete sample learning path immediately, with the first lesson visible before any signup.",
+      "count": 1,
+      "examples": [
+        "show a concrete sample learning path immediately, with the first lesson visible before any signup."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put a sample AI-generated curriculum and first lesson directly on the homepage.",
+      "count": 1,
+      "examples": [
+        "Put a sample AI-generated curriculum and first lesson directly on the homepage."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show a real sample week for one child, including mentor support, parent oversight, and what happens when the child gets ",
+      "count": 1,
+      "examples": [
+        "Show a real sample week for one child, including mentor support, parent oversight, and what happens when the child gets stuck."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Put a complete sample roadmap and first lesson directly on the landing page.",
+      "count": 1,
+      "examples": [
+        "Put a complete sample roadmap and first lesson directly on the landing page."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show one realistic child profile with the actual weekly plan, mentor involvement, and parent oversight.",
+      "count": 1,
+      "examples": [
+        "Show one realistic child profile with the actual weekly plan, mentor involvement, and parent oversight."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show a real sample week for one child, including mentor support, parent oversight, and limits of the AI.",
+      "count": 1,
+      "examples": [
+        "Show a real sample week for one child, including mentor support, parent oversight, and limits of the AI."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "show a sample learning path and first lesson immediately, before asking for more attention.",
+      "count": 1,
+      "examples": [
+        "show a sample learning path and first lesson immediately, before asking for more attention."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show a sample child profile, weekly plan, mentor support, and parent oversight before the main call to start.",
+      "count": 1,
+      "examples": [
+        "Show a sample child profile, weekly plan, mentor support, and parent oversight before the main call to start."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show a concrete sample learning path before asking for commitment.",
+      "count": 1,
+      "examples": [
+        "Show a concrete sample learning path before asking for commitment."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show one concrete sample path for an adult professional before the main call to action.",
+      "count": 1,
+      "examples": [
+        "Show one concrete sample path for an adult professional before the main call to action."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show one real example of a child profile, the generated roadmap, mentor support, and how progress is judged.",
+      "count": 1,
+      "examples": [
+        "Show one real example of a child profile, the generated roadmap, mentor support, and how progress is judged."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Show a sample child profile, weekly plan, mentor support, and safety boundaries before asking parents to trust the platf",
+      "count": 1,
+      "examples": [
+        "Show a sample child profile, weekly plan, mentor support, and safety boundaries before asking parents to trust the platform."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    }
+  ],
+  "results": [
+    {
+      "id": "thoughtful-betabot-001",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a clear sample path with time commitment, outcomes, and proof from past learners right away."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-001|Mira 1|career switcher deciding whether this can replace another course|I have bought online courses before and often quit when the path became vague after the first week.|I found Self Degree while searching for a more independent way to learn.|Understand what I would learn, how long it takes, and whether there is proof it works.|Build a career that gives me independence without wasting money on empty promises.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-001%7CMira+1%7Ccareer+switcher+deciding+whether+this+can+replace+another+course%7CI+have+bought+online+courses+before+and+often+quit+when+the+path+became+vague+after+the+first+week.%7CI+found+Self+Degree+while+searching+for+a+more+independent+way+to+learn.%7CUnderstand+what+I+would+learn%2C+how+long+it+takes%2C+and+whether+there+is+proof+it+works.%7CBuild+a+career+that+gives+me+independence+without+wasting+money+on+empty+promises.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-002",
+      "score": 0,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "follow destiny: thoughtful-betabot-002 follow destiny timed out after 60000ms",
+        "click next navigation: thoughtful-betabot-002 click next navigation timed out after 15000ms"
+      ],
+      "actions": 4,
+      "screenshots": 5,
+      "ideas": [
+        "show a concrete sample learning path immediately, with the first lesson visible before any signup.",
+        "Put a sample AI-generated curriculum and first lesson directly on the homepage."
+      ],
+      "thoughts": 5,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-002|Sol 1|self-directed learner comparing curriculum depth|I like teaching myself, but I need structure and examples or I drift.|Someone shared the site as an alternative to traditional degrees.|Find a sample curriculum, concrete outcome, or first lesson.|Become genuinely capable, not just collect another motivational bookmark.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-002%7CSol+1%7Cself-directed+learner+comparing+curriculum+depth%7CI+like+teaching+myself%2C+but+I+need+structure+and+examples+or+I+drift.%7CSomeone+shared+the+site+as+an+alternative+to+traditional+degrees.%7CFind+a+sample+curriculum%2C+concrete+outcome%2C+or+first+lesson.%7CBecome+genuinely+capable%2C+not+just+collect+another+motivational+bookmark.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 3,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 2,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-003",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show a real sample week for one child, including mentor support, parent oversight, and what happens when the child gets stuck."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-003|Niko 1|parent evaluating whether the offer is serious|I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.|My teenager sent me the link and asked what I thought.|Decide whether the product feels credible enough to discuss further.|Help my family make education decisions that create real options.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-003%7CNiko+1%7Cparent+evaluating+whether+the+offer+is+serious%7CI+have+seen+many+learning+products+overpromise%2C+so+I+look+for+safety%2C+support%2C+and+realistic+outcomes.%7CMy+teenager+sent+me+the+link+and+asked+what+I+thought.%7CDecide+whether+the+product+feels+credible+enough+to+discuss+further.%7CHelp+my+family+make+education+decisions+that+create+real+options.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Help my family make education decisions that create real options.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Help my family make education decisions that create real options.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-004",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a founder-focused starting path with a sample result, time required, and what I can use by the end."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-004|Tara 1|busy founder looking for practical upskilling|I need fast practical learning and will leave if the offer sounds abstract.|I opened the link between meetings after seeing it mentioned online.|Check whether there is a clear first step and practical result.|Spend scarce attention only on learning that compounds into better decisions.|impatient|high",
+        "backgroundColor": "ffd5dc",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-004%7CTara+1%7Cbusy+founder+looking+for+practical+upskilling%7CI+need+fast+practical+learning+and+will+leave+if+the+offer+sounds+abstract.%7CI+opened+the+link+between+meetings+after+seeing+it+mentioned+online.%7CCheck+whether+there+is+a+clear+first+step+and+practical+result.%7CSpend+scarce+attention+only+on+learning+that+compounds+into+better+decisions.%7Cimpatient%7Chigh&backgroundColor=ffd5dc",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-005",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show separate paths for career switchers, with sample outcomes, time estimates, and evidence from real learners."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-005|Ren 1|career switcher deciding whether this can replace another course|I have bought online courses before and often quit when the path became vague after the first week.|I found Self Degree while searching for a more independent way to learn.|Understand what I would learn, how long it takes, and whether there is proof it works.|Build a career that gives me independence without wasting money on empty promises.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-005%7CRen+1%7Ccareer+switcher+deciding+whether+this+can+replace+another+course%7CI+have+bought+online+courses+before+and+often+quit+when+the+path+became+vague+after+the+first+week.%7CI+found+Self+Degree+while+searching+for+a+more+independent+way+to+learn.%7CUnderstand+what+I+would+learn%2C+how+long+it+takes%2C+and+whether+there+is+proof+it+works.%7CBuild+a+career+that+gives+me+independence+without+wasting+money+on+empty+promises.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-006",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Put a complete sample roadmap and first lesson directly on the landing page."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-006|Ari 1|self-directed learner comparing curriculum depth|I like teaching myself, but I need structure and examples or I drift.|Someone shared the site as an alternative to traditional degrees.|Find a sample curriculum, concrete outcome, or first lesson.|Become genuinely capable, not just collect another motivational bookmark.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-006%7CAri+1%7Cself-directed+learner+comparing+curriculum+depth%7CI+like+teaching+myself%2C+but+I+need+structure+and+examples+or+I+drift.%7CSomeone+shared+the+site+as+an+alternative+to+traditional+degrees.%7CFind+a+sample+curriculum%2C+concrete+outcome%2C+or+first+lesson.%7CBecome+genuinely+capable%2C+not+just+collect+another+motivational+bookmark.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-007",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show one realistic child profile with the actual weekly plan, mentor involvement, and parent oversight."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-007|Vale 1|parent evaluating whether the offer is serious|I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.|My teenager sent me the link and asked what I thought.|Decide whether the product feels credible enough to discuss further.|Help my family make education decisions that create real options.|playful|medium",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-007%7CVale+1%7Cparent+evaluating+whether+the+offer+is+serious%7CI+have+seen+many+learning+products+overpromise%2C+so+I+look+for+safety%2C+support%2C+and+realistic+outcomes.%7CMy+teenager+sent+me+the+link+and+asked+what+I+thought.%7CDecide+whether+the+product+feels+credible+enough+to+discuss+further.%7CHelp+my+family+make+education+decisions+that+create+real+options.%7Cplayful%7Cmedium&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Help my family make education decisions that create real options.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Help my family make education decisions that create real options.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-008",
+      "score": 19,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "ask Betabook for help: thoughtful-betabot-008 ask Betabook for help timed out after 60000ms"
+      ],
+      "actions": 3,
+      "screenshots": 5,
+      "ideas": [
+        "Show a founder-focused sample path with weekly outcomes and a finished project example.",
+        "show a short starter path with the exact skill, time required, and result I will produce first."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-008|June 1|busy founder looking for practical upskilling|I need fast practical learning and will leave if the offer sounds abstract.|I opened the link between meetings after seeing it mentioned online.|Check whether there is a clear first step and practical result.|Spend scarce attention only on learning that compounds into better decisions.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-008%7CJune+1%7Cbusy+founder+looking+for+practical+upskilling%7CI+need+fast+practical+learning+and+will+leave+if+the+offer+sounds+abstract.%7CI+opened+the+link+between+meetings+after+seeing+it+mentioned+online.%7CCheck+whether+there+is+a+clear+first+step+and+practical+result.%7CSpend+scarce+attention+only+on+learning+that+compounds+into+better+decisions.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 1,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /pricing",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /About/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-009",
+      "score": 0,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "reflect on arrival: thoughtful-betabot-009 reflect on arrival timed out after 60000ms"
+      ],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show a career-switcher path with duration, projects, outcomes, and proof before the main call to action."
+      ],
+      "thoughts": 0,
+      "opinions": 0,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-009|Rook 1|career switcher deciding whether this can replace another course|I have bought online courses before and often quit when the path became vague after the first week.|I found Self Degree while searching for a more independent way to learn.|Understand what I would learn, how long it takes, and whether there is proof it works.|Build a career that gives me independence without wasting money on empty promises.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-009%7CRook+1%7Ccareer+switcher+deciding+whether+this+can+replace+another+course%7CI+have+bought+online+courses+before+and+often+quit+when+the+path+became+vague+after+the+first+week.%7CI+found+Self+Degree+while+searching+for+a+more+independent+way+to+learn.%7CUnderstand+what+I+would+learn%2C+how+long+it+takes%2C+and+whether+there+is+proof+it+works.%7CBuild+a+career+that+gives+me+independence+without+wasting+money+on+empty+promises.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-010",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a sample first lesson, curriculum path, and expected project outcome immediately."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-010|Iris 1|self-directed learner comparing curriculum depth|I like teaching myself, but I need structure and examples or I drift.|Someone shared the site as an alternative to traditional degrees.|Find a sample curriculum, concrete outcome, or first lesson.|Become genuinely capable, not just collect another motivational bookmark.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-010%7CIris+1%7Cself-directed+learner+comparing+curriculum+depth%7CI+like+teaching+myself%2C+but+I+need+structure+and+examples+or+I+drift.%7CSomeone+shared+the+site+as+an+alternative+to+traditional+degrees.%7CFind+a+sample+curriculum%2C+concrete+outcome%2C+or+first+lesson.%7CBecome+genuinely+capable%2C+not+just+collect+another+motivational+bookmark.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-011",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show a real sample week for one child, including mentor support, parent oversight, and limits of the AI."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-011|Mira 2|parent evaluating whether the offer is serious|I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.|My teenager sent me the link and asked what I thought.|Decide whether the product feels credible enough to discuss further.|Help my family make education decisions that create real options.|playful|medium",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-011%7CMira+2%7Cparent+evaluating+whether+the+offer+is+serious%7CI+have+seen+many+learning+products+overpromise%2C+so+I+look+for+safety%2C+support%2C+and+realistic+outcomes.%7CMy+teenager+sent+me+the+link+and+asked+what+I+thought.%7CDecide+whether+the+product+feels+credible+enough+to+discuss+further.%7CHelp+my+family+make+education+decisions+that+create+real+options.%7Cplayful%7Cmedium&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Help my family make education decisions that create real options.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Help my family make education decisions that create real options.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-012",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show a sample 7-day practical learning plan with a measurable outcome before the signup button."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-012|Sol 2|busy founder looking for practical upskilling|I need fast practical learning and will leave if the offer sounds abstract.|I opened the link between meetings after seeing it mentioned online.|Check whether there is a clear first step and practical result.|Spend scarce attention only on learning that compounds into better decisions.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-012%7CSol+2%7Cbusy+founder+looking+for+practical+upskilling%7CI+need+fast+practical+learning+and+will+leave+if+the+offer+sounds+abstract.%7CI+opened+the+link+between+meetings+after+seeing+it+mentioned+online.%7CCheck+whether+there+is+a+clear+first+step+and+practical+result.%7CSpend+scarce+attention+only+on+learning+that+compounds+into+better+decisions.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-013",
+      "score": 33,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 4,
+      "screenshots": 6,
+      "ideas": [
+        "Show separate paths for adult career switchers with sample curriculum, time estimate, and outcome evidence.",
+        "Show one real sample roadmap with duration, weekly workload, skills learned, and proof of results."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-013|Niko 2|career switcher deciding whether this can replace another course|I have bought online courses before and often quit when the path became vague after the first week.|I found Self Degree while searching for a more independent way to learn.|Understand what I would learn, how long it takes, and whether there is proof it works.|Build a career that gives me independence without wasting money on empty promises.|guarded|medium",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-013%7CNiko+2%7Ccareer+switcher+deciding+whether+this+can+replace+another+course%7CI+have+bought+online+courses+before+and+often+quit+when+the+path+became+vague+after+the+first+week.%7CI+found+Self+Degree+while+searching+for+a+more+independent+way+to+learn.%7CUnderstand+what+I+would+learn%2C+how+long+it+takes%2C+and+whether+there+is+proof+it+works.%7CBuild+a+career+that+gives+me+independence+without+wasting+money+on+empty+promises.%7Cguarded%7Cmedium&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 1,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 2,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Start/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Contact/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Contact/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-014",
+      "score": 40,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 7,
+      "screenshots": 9,
+      "ideas": [
+        "Put a sample roadmap with the first lesson, project, and expected outcome directly on the first screen.",
+        "Show one real roadmap with lessons, projects, expected skills, and a finished student outcome.",
+        "show a sample learning path and first lesson immediately, before asking for more attention."
+      ],
+      "thoughts": 6,
+      "opinions": 3,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-014|Tara 2|self-directed learner comparing curriculum depth|I like teaching myself, but I need structure and examples or I drift.|Someone shared the site as an alternative to traditional degrees.|Find a sample curriculum, concrete outcome, or first lesson.|Become genuinely capable, not just collect another motivational bookmark.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-014%7CTara+2%7Cself-directed+learner+comparing+curriculum+depth%7CI+like+teaching+myself%2C+but+I+need+structure+and+examples+or+I+drift.%7CSomeone+shared+the+site+as+an+alternative+to+traditional+degrees.%7CFind+a+sample+curriculum%2C+concrete+outcome%2C+or+first+lesson.%7CBecome+genuinely+capable%2C+not+just+collect+another+motivational+bookmark.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 4,
+      "destinyMoments": 3,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 2,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 2,
+      "loopRescuesFollowed": 1,
+      "curiosityActions": 2,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+        "startingYears": 100,
+        "yearsRemaining": 99.41666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 7,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.5833333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 3,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Program/i",
+            "yearsRemaining": 99.6667
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Contact/i",
+            "yearsRemaining": 99.5833
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /pricing",
+            "yearsRemaining": 99.5
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /curriculum",
+            "yearsRemaining": 99.4167
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-015",
+      "score": 22,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "reflect on arrival: thoughtful-betabot-015 reflect on arrival timed out after 60000ms"
+      ],
+      "actions": 4,
+      "screenshots": 6,
+      "ideas": [
+        "Show a sample child profile, weekly plan, mentor support, and parent oversight before the main call to start.",
+        "Show a concrete sample learning path before asking for commitment."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-015|Ren 2|parent evaluating whether the offer is serious|I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.|My teenager sent me the link and asked what I thought.|Decide whether the product feels credible enough to discuss further.|Help my family make education decisions that create real options.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-015%7CRen+2%7Cparent+evaluating+whether+the+offer+is+serious%7CI+have+seen+many+learning+products+overpromise%2C+so+I+look+for+safety%2C+support%2C+and+realistic+outcomes.%7CMy+teenager+sent+me+the+link+and+asked+what+I+thought.%7CDecide+whether+the+product+feels+credible+enough+to+discuss+further.%7CHelp+my+family+make+education+decisions+that+create+real+options.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 2,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Help my family make education decisions that create real options.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Help my family make education decisions that create real options.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /curriculum",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Start/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Contact/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-016",
+      "score": 33,
+      "endReason": "found enough value for one session",
+      "errors": [],
+      "actions": 4,
+      "screenshots": 5,
+      "ideas": [
+        "Show one concrete sample path for an adult professional before the main call to action.",
+        "Show a sample AI-built curriculum with a practical project outcome and time estimate on the first screen."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-016|Ari 2|busy founder looking for practical upskilling|I need fast practical learning and will leave if the offer sounds abstract.|I opened the link between meetings after seeing it mentioned online.|Check whether there is a clear first step and practical result.|Spend scarce attention only on learning that compounds into better decisions.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-016%7CAri+2%7Cbusy+founder+looking+for+practical+upskilling%7CI+need+fast+practical+learning+and+will+leave+if+the+offer+sounds+abstract.%7CI+opened+the+link+between+meetings+after+seeing+it+mentioned+online.%7CCheck+whether+there+is+a+clear+first+step+and+practical+result.%7CSpend+scarce+attention+only+on+learning+that+compounds+into+better+decisions.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 1,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Start/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Courses/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-017",
+      "score": 39,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 4,
+      "screenshots": 5,
+      "ideas": [
+        "Show separate paths for adult career switchers, including timelines, sample curriculum, outcomes, and proof from real learners.",
+        "Add a career-switcher track with sample roadmap, time estimate, and real learner outcomes."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-017|Vale 2|career switcher deciding whether this can replace another course|I have bought online courses before and often quit when the path became vague after the first week.|I found Self Degree while searching for a more independent way to learn.|Understand what I would learn, how long it takes, and whether there is proof it works.|Build a career that gives me independence without wasting money on empty promises.|guarded|medium",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-017%7CVale+2%7Ccareer+switcher+deciding+whether+this+can+replace+another+course%7CI+have+bought+online+courses+before+and+often+quit+when+the+path+became+vague+after+the+first+week.%7CI+found+Self+Degree+while+searching+for+a+more+independent+way+to+learn.%7CUnderstand+what+I+would+learn%2C+how+long+it+takes%2C+and+whether+there+is+proof+it+works.%7CBuild+a+career+that+gives+me+independence+without+wasting+money+on+empty+promises.%7Cguarded%7Cmedium&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /pricing",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Start/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-018",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Show one full sample roadmap with the first lesson, projects, time estimates, and finished learner outcome."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-018|June 2|self-directed learner comparing curriculum depth|I like teaching myself, but I need structure and examples or I drift.|Someone shared the site as an alternative to traditional degrees.|Find a sample curriculum, concrete outcome, or first lesson.|Become genuinely capable, not just collect another motivational bookmark.|impatient|high",
+        "backgroundColor": "ffd5dc",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-018%7CJune+2%7Cself-directed+learner+comparing+curriculum+depth%7CI+like+teaching+myself%2C+but+I+need+structure+and+examples+or+I+drift.%7CSomeone+shared+the+site+as+an+alternative+to+traditional+degrees.%7CFind+a+sample+curriculum%2C+concrete+outcome%2C+or+first+lesson.%7CBecome+genuinely+capable%2C+not+just+collect+another+motivational+bookmark.%7Cimpatient%7Chigh&backgroundColor=ffd5dc",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-019",
+      "score": 62,
+      "endReason": "found enough value for one session",
+      "errors": [],
+      "actions": 5,
+      "screenshots": 6,
+      "ideas": [
+        "Show one real example of a child profile, the generated roadmap, mentor support, and how progress is judged.",
+        "Show a sample child profile, weekly plan, mentor support, and safety boundaries before asking parents to trust the platform.",
+        "Show one full example path with mentor support, weekly workload, outcomes, and parent-facing expectations."
+      ],
+      "thoughts": 4,
+      "opinions": 3,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-019|Rook 2|parent evaluating whether the offer is serious|I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.|My teenager sent me the link and asked what I thought.|Decide whether the product feels credible enough to discuss further.|Help my family make education decisions that create real options.|hopeful|medium",
+        "backgroundColor": "b6f4cf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-019%7CRook+2%7Cparent+evaluating+whether+the+offer+is+serious%7CI+have+seen+many+learning+products+overpromise%2C+so+I+look+for+safety%2C+support%2C+and+realistic+outcomes.%7CMy+teenager+sent+me+the+link+and+asked+what+I+thought.%7CDecide+whether+the+product+feels+credible+enough+to+discuss+further.%7CHelp+my+family+make+education+decisions+that+create+real+options.%7Chopeful%7Cmedium&backgroundColor=b6f4cf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 3,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Help my family make education decisions that create real options.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Help my family make education decisions that create real options.",
+        "startingYears": 100,
+        "yearsRemaining": 99.58333333333333,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 5,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.41666666666666663,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 3,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Start/i",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /About/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Courses/i",
+            "yearsRemaining": 99.6667
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.5833
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-020",
+      "score": 39,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 3,
+      "screenshots": 5,
+      "ideas": [
+        "Show a founder-focused sample path with the exact skill, weekly time, and outcome produced.",
+        "Show one sample roadmap with time saved, skills gained, and a real project outcome."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Self Degree|thoughtful-betabot-020|Iris 2|busy founder looking for practical upskilling|I need fast practical learning and will leave if the offer sounds abstract.|I opened the link between meetings after seeing it mentioned online.|Check whether there is a clear first step and practical result.|Spend scarce attention only on learning that compounds into better decisions.|guarded|high",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-020%7CIris+2%7Cbusy+founder+looking+for+practical+upskilling%7CI+need+fast+practical+learning+and+will+leave+if+the+offer+sounds+abstract.%7CI+opened+the+link+between+meetings+after+seeing+it+mentioned+online.%7CCheck+whether+there+is+a+clear+first+step+and+practical+result.%7CSpend+scarce+attention+only+on+learning+that+compounds+into+better+decisions.%7Cguarded%7Chigh&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 2,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Start/i",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Learn/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Sign up/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    }
+  ]
+}

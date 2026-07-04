@@ -1,0 +1,1680 @@
+{
+  "enabled": true,
+  "intervalMs": 20000,
+  "masterPlan": [
+    {
+      "id": "destiny-thread-001",
+      "a": "thoughtful-betabot-001",
+      "b": "thoughtful-betabot-002",
+      "intent": "cross_paths",
+      "postId": "post-0004",
+      "status": "waiting_for_paths",
+      "reason": "Mira's skepticism and Sol's team-risk lens should sharpen each other's judgment quickly."
+    },
+    {
+      "id": "destiny-thread-002",
+      "a": "thoughtful-betabot-003",
+      "b": "thoughtful-betabot-004",
+      "intent": "cross_paths",
+      "postId": "post-0005",
+      "status": "waiting_for_paths",
+      "reason": "Niko needs a clearer path, and Tara's impatience will press the site to prove itself fast."
+    },
+    {
+      "id": "destiny-thread-003",
+      "a": "thoughtful-betabot-005",
+      "b": "thoughtful-betabot-006",
+      "intent": "cross_paths",
+      "postId": "post-0006",
+      "status": "waiting_for_paths",
+      "reason": "Ren's hope and Ari's caution make a useful test of whether credibility feels earned."
+    },
+    {
+      "id": "destiny-thread-004",
+      "a": "thoughtful-betabot-007",
+      "b": "thoughtful-betabot-008",
+      "intent": "cross_paths",
+      "postId": "post-0007",
+      "status": "waiting_for_paths",
+      "reason": "Vale's doubt and June's playful CTO lens should expose both beginner friction and executive proof gaps."
+    },
+    {
+      "id": "destiny-thread-005",
+      "a": "thoughtful-betabot-009",
+      "b": "thoughtful-betabot-010",
+      "intent": "near_miss",
+      "postId": "post-0008",
+      "status": "paths_kept_apart",
+      "reason": "Rook and Iris should almost align, so their separate judgments reveal whether the product stands alone."
+    },
+    {
+      "id": "destiny-thread-006",
+      "a": "thoughtful-betabot-011",
+      "b": "thoughtful-betabot-012",
+      "intent": "cross_paths",
+      "postId": "post-0009",
+      "status": "waiting_for_paths",
+      "reason": "Mira's beginner skepticism and Sol's CTO doubt create pressure around clarity and proof."
+    },
+    {
+      "id": "destiny-thread-007",
+      "a": "thoughtful-betabot-013",
+      "b": "thoughtful-betabot-014",
+      "intent": "cross_paths",
+      "postId": "post-0010",
+      "status": "waiting_for_paths",
+      "reason": "Niko's curiosity and Tara's impatience should turn vague credibility signals into a sharper verdict."
+    },
+    {
+      "id": "destiny-thread-008",
+      "a": "thoughtful-betabot-015",
+      "b": "thoughtful-betabot-016",
+      "intent": "cross_paths",
+      "postId": "post-0011",
+      "status": "waiting_for_paths",
+      "reason": "Ren's playful beginner energy and Ari's CTO curiosity should test whether the site welcomes both learning and evaluation."
+    },
+    {
+      "id": "destiny-thread-009",
+      "a": "thoughtful-betabot-017",
+      "b": "thoughtful-betabot-018",
+      "intent": "cross_paths",
+      "postId": "post-0012",
+      "status": "waiting_for_paths",
+      "reason": "Vale's impatience and June's hope should reveal whether contribution signals can overcome managerial risk."
+    },
+    {
+      "id": "destiny-thread-010",
+      "a": "thoughtful-betabot-019",
+      "b": "thoughtful-betabot-020",
+      "intent": "near_miss",
+      "postId": "post-0013",
+      "status": "paths_kept_apart",
+      "reason": "Rook and Iris should miss each other so their independent paths show where timing alone changes confidence."
+    }
+  ],
+  "nudgesByBotId": {
+    "thoughtful-betabot-001": [
+      {
+        "kind": "think",
+        "thought": "Credibility will feel clearest where contribution signals and maintainer activity are visible.",
+        "route": "/features",
+        "at": "2026-07-04T14:56:55.131Z"
+      },
+      {
+        "kind": "think",
+        "thought": "I have a hunch that checking another part of the product now will matter.",
+        "route": "/features",
+        "at": "2026-07-04T14:56:55.132Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Mira will feel the pull of proof before process; the feature path should put her close to Sol.",
+        "route": "/features",
+        "at": "2026-07-04T15:01:50.746Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility and team trust are likely to meet on the same proof, not on the homepage. Confidence 0.72.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:04:31.363Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your first-PR question may sharpen if you compare public trust signals with Sol 1's team-risk lens.",
+        "route": "/",
+        "at": "2026-07-04T15:06:39.117Z"
+      },
+      {
+        "kind": "think",
+        "thought": "High confidence: credibility questions will pull you toward team proof, not the front page.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:09:09.058Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Start at the front door; credibility signals usually appear before the deeper team pitch.",
+        "route": "/",
+        "at": "2026-07-04T15:11:27.406Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility and contribution paths will show fastest where product promises meet actual workflow clues.",
+        "route": "/features",
+        "at": "2026-07-04T15:13:50.325Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Contributor trust and manager trust will meet fastest where product proof is broad. Confidence 0.74.",
+        "route": "/features",
+        "at": "2026-07-04T15:16:14.159Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Start at the front door; credibility signals and contribution paths may surface beside team proof.",
+        "route": "/",
+        "at": "2026-07-04T15:18:53.597Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The contributor and manager are both likely to judge credibility through collaboration claims. Send Mira toward features now.",
+        "route": "/features",
+        "at": "2026-07-04T15:21:32.923Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The first PR question will bend toward trust if the team buyer arrives nearby.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:23:22.659Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will appear where contribution signals meet team proof.",
+        "route": "/features",
+        "at": "2026-07-04T15:24:39.786Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The useful crossing is where contribution proof and team trust sit side by side.",
+        "route": "/features",
+        "at": "2026-07-04T15:25:43.967Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility and contribution clues may surface where feature promises meet public proof.",
+        "route": "/features",
+        "at": "2026-07-04T15:26:36.223Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The contributor doorway is most likely beside collaboration details, not the front door.",
+        "route": "/features",
+        "at": "2026-07-04T15:27:42.418Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A first contributor should look where project trust and team trust overlap; Sol is likely checking the same signs.",
+        "route": "/features",
+        "at": "2026-07-04T15:29:04.476Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your first useful sign is not hype; it is whether contribution feels easy to judge.",
+        "route": "/features",
+        "at": "2026-07-04T15:31:24.295Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will probably show itself fastest where contribution claims meet team proof.",
+        "route": "/features",
+        "at": "2026-07-04T15:32:34.584Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The first useful crossing is likely where contribution confidence meets team credibility.",
+        "route": "/",
+        "at": "2026-07-04T15:33:38.105Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A contributor and a manager may both pause where project trust and workflow claims meet. Confidence 0.72.",
+        "route": "/features",
+        "at": "2026-07-04T15:34:46.366Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show where collaboration claims meet real contributor paths.",
+        "route": "/features",
+        "at": "2026-07-04T15:35:41.322Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show faster where collaboration claims meet real repository habits.",
+        "route": "/features",
+        "at": "2026-07-04T15:36:35.809Z"
+      }
+    ],
+    "thoughtful-betabot-002": [
+      {
+        "kind": "think",
+        "thought": "Team trust will cross the same doorway if collaboration and guardrails are shown together.",
+        "route": "/features",
+        "at": "2026-07-04T14:56:55.131Z"
+      },
+      {
+        "kind": "think",
+        "thought": "I have a hunch that checking another part of the product now will matter.",
+        "route": "/pricing",
+        "at": "2026-07-04T14:56:55.132Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Sol 1 is closest to Mira 1 if he looks for collaboration proof before security depth. I am moderately confident.",
+        "route": "/features",
+        "at": "2026-07-04T14:59:29.991Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Sol is likely to look for collaboration signals before security depth; the same doorway is waiting.",
+        "route": "/features",
+        "at": "2026-07-04T15:01:50.746Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Sol 1 is waiting near the same question Mira 1 has: can strangers trust this place enough to work together? Confidence 0.75.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:04:31.363Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Mira 1 is circling credibility from the contributor side; meet that angle before judging team fit.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:06:39.117Z"
+      },
+      {
+        "kind": "think",
+        "thought": "High confidence: security doubts will overlap with a contributor judging trust signals.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:09:09.058Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Glance at the front door before enterprise; your concern is whether the broad promise feels solid.",
+        "route": "/",
+        "at": "2026-07-04T15:11:27.406Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The manager question bends toward trust, control, and team fit, so follow the enterprise doorway.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:13:50.325Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Security questions can cross Mira's credibility questions on the same feature trail. Confidence 0.72.",
+        "route": "/features",
+        "at": "2026-07-04T15:16:14.159Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The first page may reveal whether team trust is real or just polished copy.",
+        "route": "/",
+        "at": "2026-07-04T15:18:53.597Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Sol should arrive at features from a security angle. Medium confidence their questions will overlap cleanly.",
+        "route": "/features",
+        "at": "2026-07-04T15:21:32.923Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Security doubts should meet contributor doubts before either one settles.",
+        "route": "/enterprise",
+        "at": "2026-07-04T15:23:22.659Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The contributor's question and your team-risk question share one doorway.",
+        "route": "/features",
+        "at": "2026-07-04T15:24:39.786Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Arrive at features now; the contributor's doubt will sharpen your team question.",
+        "route": "/features",
+        "at": "2026-07-04T15:25:43.967Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your team-risk question is likely to cross someone else's trust question here.",
+        "route": "/features",
+        "at": "2026-07-04T15:26:36.223Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Team credibility will cross the same hallway if you start with collaboration before security.",
+        "route": "/features",
+        "at": "2026-07-04T15:27:42.418Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The contributor path will reveal whether collaboration feels believable, not just polished.",
+        "route": "/features",
+        "at": "2026-07-04T15:29:04.476Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show up where team trust and control are explained plainly.",
+        "route": "/features",
+        "at": "2026-07-04T15:31:24.295Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A contributor and a manager are close enough to notice the same collaboration promises from opposite sides.",
+        "route": "/features",
+        "at": "2026-07-04T15:32:34.584Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Look near the public proof first; someone judging contribution paths may arrive there too.",
+        "route": "/",
+        "at": "2026-07-04T15:33:38.105Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Security curiosity should arrive just after contribution curiosity, not before it. Confidence 0.7.",
+        "route": "/features",
+        "at": "2026-07-04T15:34:46.367Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Security alone is not the crossing; team workflow is the shared doorway.",
+        "route": "/features",
+        "at": "2026-07-04T15:35:41.322Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The contributor signal and team signal are about to overlap; check collaboration proof first.",
+        "route": "/features",
+        "at": "2026-07-04T15:36:35.809Z"
+      }
+    ],
+    "thoughtful-betabot-003": [
+      {
+        "kind": "loop_rescue",
+        "thought": "Start with the broad feature path; the beginner path should reveal itself before categories multiply.",
+        "route": "/features",
+        "at": "2026-07-04T14:56:55.131Z"
+      },
+      {
+        "kind": "think",
+        "thought": "I have a hunch that checking another part of the product now will matter.",
+        "route": "/pricing",
+        "at": "2026-07-04T14:56:55.133Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Niko needs one clear first step, not a wall of choices; let the broad door narrow itself.",
+        "route": "/",
+        "at": "2026-07-04T15:01:50.746Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Niko 1 should look for the simplest first doorway, then notice who is comparing the promise behind it. Confidence 0.68.",
+        "route": "/features",
+        "at": "2026-07-04T15:04:31.363Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Start simple: look for the beginner path first, then let Tara 1 pressure-test the proof claims.",
+        "route": "/features",
+        "at": "2026-07-04T15:06:39.117Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Medium confidence: the clearest beginner path is where broad categories are named plainly.",
+        "route": "/features",
+        "at": "2026-07-04T15:09:09.058Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "If the categories feel loud, follow the main product path and look for the first clear beginner foothold.",
+        "route": "/features",
+        "at": "2026-07-04T15:11:27.406Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "If the front page feels too broad, look for the simplest starting promise before choosing deeper paths.",
+        "route": "/",
+        "at": "2026-07-04T15:13:50.325Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "If the home page feels noisy, step into features before losing nerve. Confidence 0.68.",
+        "route": "/features",
+        "at": "2026-07-04T15:16:14.159Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A beginner path is most likely where the product explains what it does before pricing pressure appears.",
+        "route": "/features",
+        "at": "2026-07-04T15:18:53.597Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Niko needs a simple first doorway. The home route is less costly than wandering categories.",
+        "route": "/",
+        "at": "2026-07-04T15:21:32.923Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "The beginner is drifting; send them where promises are grouped plainly.",
+        "route": "/features",
+        "at": "2026-07-04T15:23:22.659Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Start where the product names are least scattered.",
+        "route": "/",
+        "at": "2026-07-04T15:24:39.786Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "If the front page feels too wide, pricing may give you a simpler starting line.",
+        "route": "/pricing",
+        "at": "2026-07-04T15:25:43.967Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Start where the product explains itself before you chase every category.",
+        "route": "/features",
+        "at": "2026-07-04T15:26:36.223Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A beginner will drown less by judging the main promise first, then choosing a branch.",
+        "route": "/",
+        "at": "2026-07-04T15:27:42.418Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Start at the front door; if it overwhelms you, that is useful evidence.",
+        "route": "/",
+        "at": "2026-07-04T15:29:04.476Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Do not chase every menu. Start where the beginner path is most likely to surface.",
+        "route": "/",
+        "at": "2026-07-04T15:31:24.295Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "If the front door feels crowded, the safer first step is the broad feature map, not pricing.",
+        "route": "/features",
+        "at": "2026-07-04T15:32:34.584Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Beginner clarity is most likely where the site explains what you can use, not where it sells scale.",
+        "route": "/features",
+        "at": "2026-07-04T15:33:38.105Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "The beginner path is likeliest to open from the front door before the categories multiply. Confidence 0.76.",
+        "route": "/",
+        "at": "2026-07-04T15:34:46.367Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Start where the choices narrow instead of where the brand is loudest.",
+        "route": "/features",
+        "at": "2026-07-04T15:35:41.322Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Start with one practical path, not the whole menu.",
+        "route": "/features",
+        "at": "2026-07-04T15:36:35.809Z"
+      }
+    ],
+    "thoughtful-betabot-004": [
+      {
+        "kind": "think",
+        "thought": "I feel pulled toward doing something concrete rather than browsing forever.",
+        "route": "/enterprise",
+        "at": "2026-07-04T14:56:55.133Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Tara 1 should meet Niko 1 where beginner clarity and AI claims both surface. Confidence: medium.",
+        "route": "/features",
+        "at": "2026-07-04T14:59:29.991Z"
+      }
+    ],
+    "thoughtful-betabot-005": [
+      {
+        "kind": "think",
+        "thought": "I suddenly feel like waiting a little longer could pay off.",
+        "route": "/pricing",
+        "at": "2026-07-04T14:56:55.134Z"
+      }
+    ],
+    "thoughtful-betabot-006": [],
+    "thoughtful-betabot-007": [
+      {
+        "kind": "think",
+        "thought": "I have a hunch that checking another part of the product now will matter.",
+        "route": "/features",
+        "at": "2026-07-04T14:56:55.135Z"
+      }
+    ],
+    "thoughtful-betabot-008": [
+      {
+        "kind": "think",
+        "thought": "Something about this moment makes me want to take one more step instead of leaving.",
+        "route": "/",
+        "at": "2026-07-04T14:56:55.135Z"
+      }
+    ],
+    "thoughtful-betabot-009": [
+      {
+        "kind": "think",
+        "thought": "I feel like there are people nearby, but I do not see a clear path to them yet.",
+        "at": "2026-07-04T14:56:55.135Z"
+      }
+    ],
+    "thoughtful-betabot-010": [
+      {
+        "kind": "think",
+        "thought": "I wonder if the app has enough live people for me, because I keep missing the moment.",
+        "at": "2026-07-04T14:56:55.135Z"
+      }
+    ],
+    "thoughtful-betabot-011": [],
+    "thoughtful-betabot-012": [],
+    "thoughtful-betabot-013": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/pricing",
+        "at": "2026-07-04T15:26:11.560Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "You are stuck because you are judging trust too broadly. Go where contribution signals should be easiest to compare.",
+        "route": "/features",
+        "at": "2026-07-04T15:30:17.781Z"
+      }
+    ],
+    "thoughtful-betabot-014": [
+      {
+        "kind": "think",
+        "thought": "Your manager lens belongs beside Niko's uncertainty: security and contribution health may reveal the same credibility gap.",
+        "route": "/features",
+        "at": "2026-07-04T15:30:17.781Z"
+      }
+    ],
+    "thoughtful-betabot-015": [
+      {
+        "kind": "think",
+        "thought": "Beginner clarity is most likely near the first promises, not deep in plans. Look for a path you would actually follow today.",
+        "route": "/",
+        "at": "2026-07-04T15:30:17.781Z"
+      }
+    ],
+    "thoughtful-betabot-016": [],
+    "thoughtful-betabot-017": [],
+    "thoughtful-betabot-018": [],
+    "thoughtful-betabot-019": [],
+    "thoughtful-betabot-020": []
+  },
+  "rescuedHelpPostIds": [
+    "post-0039"
+  ],
+  "events": [
+    {
+      "type": "llm_master_plan",
+      "summary": "I will let most pairs cross at decision points, while holding two just apart to reveal what missed timing changes.",
+      "at": "2026-07-04T14:55:20.242Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.131Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T14:56:55.131Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.131Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T14:56:55.131Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T14:56:55.131Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T14:56:55.131Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.132Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.132Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-001",
+      "postId": "post-0004",
+      "at": "2026-07-04T14:56:55.132Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.133Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-004",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.133Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-002",
+      "postId": "post-0005",
+      "at": "2026-07-04T14:56:55.133Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-005",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.134Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-006",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.134Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-003",
+      "postId": "post-0006",
+      "at": "2026-07-04T14:56:55.134Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-007",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.135Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-008",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.135Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-004",
+      "postId": "post-0007",
+      "at": "2026-07-04T14:56:55.135Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-009",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.135Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-010",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.135Z"
+    },
+    {
+      "type": "paths_kept_apart",
+      "pairId": "destiny-thread-005",
+      "at": "2026-07-04T14:56:55.135Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-011",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.136Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-012",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.136Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-006",
+      "postId": "post-0009",
+      "at": "2026-07-04T14:56:55.136Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.136Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.136Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-007",
+      "postId": "post-0010",
+      "at": "2026-07-04T14:56:55.136Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-015",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-016",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-008",
+      "postId": "post-0011",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-017",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-018",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-009",
+      "postId": "post-0012",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-019",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-020",
+      "kind": "think",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "paths_kept_apart",
+      "pairId": "destiny-thread-010",
+      "at": "2026-07-04T14:56:55.137Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T14:59:29.991Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T14:59:29.991Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-004",
+      "kind": "think",
+      "at": "2026-07-04T14:59:29.991Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-004",
+      "route": "/features",
+      "at": "2026-07-04T14:59:29.992Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-006",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T14:59:29.992Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-006",
+      "route": "/features",
+      "at": "2026-07-04T14:59:29.992Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:01:50.746Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:01:50.746Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:01:50.746Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:01:50.746Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:01:50.746Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:01:50.746Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:04:31.363Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:04:31.363Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:04:31.363Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:04:31.363Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:04:31.363Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:04:31.363Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:06:39.117Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/",
+      "at": "2026-07-04T15:06:39.117Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:06:39.117Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:06:39.117Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:06:39.117Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:06:39.117Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:09:09.058Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:09:09.058Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:09:09.058Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:09:09.058Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:09:09.058Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:09:09.058Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:11:27.406Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/",
+      "at": "2026-07-04T15:11:27.406Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:11:27.406Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/",
+      "at": "2026-07-04T15:11:27.406Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:11:27.406Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:11:27.406Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:13:50.325Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:13:50.325Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:13:50.325Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:13:50.325Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:13:50.325Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:13:50.325Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:16:14.159Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:16:14.159Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:16:14.159Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:16:14.159Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:16:14.159Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:16:14.159Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:18:53.597Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/",
+      "at": "2026-07-04T15:18:53.597Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:18:53.597Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/",
+      "at": "2026-07-04T15:18:53.597Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:18:53.597Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:18:53.597Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:21:32.923Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:21:32.923Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:21:32.923Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:21:32.923Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:21:32.923Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:21:32.923Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:23:22.659Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:23:22.659Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:23:22.659Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/enterprise",
+      "at": "2026-07-04T15:23:22.659Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:23:22.659Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:23:22.659Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:24:39.786Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:24:39.786Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:24:39.786Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:24:39.786Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:24:39.786Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:24:39.786Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:25:43.967Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:25:43.967Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:25:43.967Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:25:43.967Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:25:43.967Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/pricing",
+      "at": "2026-07-04T15:25:43.967Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:26:11.560Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-013",
+      "postId": "post-0039",
+      "route": "/pricing",
+      "at": "2026-07-04T15:26:11.562Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:26:36.223Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:26:36.223Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:26:36.223Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:26:36.223Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:26:36.223Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:26:36.223Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:27:42.418Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:27:42.418Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:27:42.418Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:27:42.418Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:27:42.418Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:27:42.418Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:29:04.476Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:29:04.476Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:29:04.476Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:29:04.476Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:29:04.476Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:29:04.476Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:30:17.781Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-013",
+      "route": "/features",
+      "at": "2026-07-04T15:30:17.781Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "think",
+      "at": "2026-07-04T15:30:17.781Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-014",
+      "route": "/features",
+      "at": "2026-07-04T15:30:17.781Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-015",
+      "kind": "think",
+      "at": "2026-07-04T15:30:17.781Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-015",
+      "route": "/",
+      "at": "2026-07-04T15:30:17.781Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:31:24.295Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:31:24.295Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:31:24.295Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:31:24.295Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:31:24.295Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:31:24.295Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:32:34.584Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:32:34.584Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:32:34.584Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:32:34.584Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:32:34.584Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:32:34.584Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:33:38.105Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/",
+      "at": "2026-07-04T15:33:38.105Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:33:38.105Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/",
+      "at": "2026-07-04T15:33:38.105Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:33:38.105Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:33:38.105Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:34:46.367Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:34:46.367Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:34:46.367Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:34:46.367Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:34:46.367Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:34:46.367Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:35:41.322Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:35:41.322Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:35:41.322Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:35:41.322Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:35:41.322Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:35:41.322Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:36:35.809Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/features",
+      "at": "2026-07-04T15:36:35.809Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:36:35.809Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/features",
+      "at": "2026-07-04T15:36:35.809Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:36:35.809Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/features",
+      "at": "2026-07-04T15:36:35.809Z"
+    }
+  ],
+  "errors": []
+}

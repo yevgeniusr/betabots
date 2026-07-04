@@ -1423,7 +1423,7 @@ async function screenshot(page, bot, step, label = 'screen') {
   fs.mkdirSync(dir, { recursive: true })
   const file = path.join(dir, `${String(step).padStart(3, '0')}-${slugifyLabel(label)}.png`)
   try {
-    await page.screenshot({ path: file, fullPage: true })
+    await page.screenshot({ path: file, fullPage: false, timeout: 45000 })
     return file
   } catch {
     return ''
@@ -1901,7 +1901,7 @@ async function runBot(browser, bot, runtime = {}) {
       if (nudge.kind === 'loop_rescue') stats.loopRescuesFollowed += 1
       if (nudge.thought) recordThought(nudge.thought)
       if (nudge.route) {
-        await page.goto(`${config.appUrl}${nudge.route}`, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch((error) => {
+        await page.goto(`${config.appUrl}${nudge.route}`, { waitUntil: 'commit', timeout: 20000 }).catch((error) => {
           errors.push(`destiny navigation ${nudge.route}: ${error.message}`)
         })
         actions.push(`followed a hunch to ${nudge.route}`)
@@ -1929,7 +1929,7 @@ async function runBot(browser, bot, runtime = {}) {
       tags: ['arrival', bot.role],
       replyTarget: 1,
     })
-    await page.goto(config.appUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await page.goto(config.appUrl, { waitUntil: 'commit', timeout: config.actionTimeoutMs })
     await wait(2500 + random() * 5000)
     let observation = await observe(page)
     recordScreenQuality(observation)
@@ -1953,7 +1953,7 @@ async function runBot(browser, bot, runtime = {}) {
         actions.push(`clicked ${clicked}`)
         log(`I click "${clicked}" because it looks like the next natural thing.`)
       } else {
-        await runStep(`navigate ${route.fallback}`, () => page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'domcontentloaded', timeout: 20000 }), null, 25000)
+        await runStep(`navigate ${route.fallback}`, () => page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'commit', timeout: 20000 }), null, 25000)
         actions.push(`navigated ${route.fallback}`)
         log(`I cannot find the obvious link, so I try ${route.fallback} like a determined user using the address bar.`)
       }

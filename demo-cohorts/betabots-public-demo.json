@@ -1,0 +1,103 @@
+{
+  "appName": "Betabots Landing",
+  "audienceResearch": "Public-page evidence from betabots.rachkovan.com plus project context: open-source synthetic beta users, local dashboard, installable skills, cloud review request, Betabook, Destiny, and evidence artifacts.",
+  "researchSources": [
+    "public: https://betabots.rachkovan.com/ live landing page on 2026-07-04",
+    "project: Betabots open-source repository and dashboard intent",
+    "assumption: primary visitors are founders, product/design leads, open-source contributors, and agency/consulting buyers"
+  ],
+  "audienceSegments": [
+    {
+      "name": "Founder or product owner",
+      "weight": 35,
+      "evidence": "Landing positions Betabots as a way to get product evidence before real users are available.",
+      "jobs": ["understand value", "see proof", "request a review"],
+      "objections": ["fake AI praise", "unclear demo", "unclear pricing"],
+      "deviceBias": "desktop"
+    },
+    {
+      "name": "Designer or UX researcher",
+      "weight": 25,
+      "evidence": "Landing emphasizes screenshots, action timelines, truthful synthetic users, and evidence packs.",
+      "jobs": ["inspect method", "trust evidence quality", "compare to research workflow"],
+      "objections": ["not real users", "weak methodology", "dashboard not inspectable"],
+      "deviceBias": "desktop"
+    },
+    {
+      "name": "Developer contributor",
+      "weight": 25,
+      "evidence": "Landing and repo include open-source install paths for Codex, Claude Code, Cursor, docs, GitHub, and AGPL.",
+      "jobs": ["install locally", "find docs", "judge project seriousness"],
+      "objections": ["install command unclear", "license concerns", "missing real example"],
+      "deviceBias": "desktop"
+    },
+    {
+      "name": "Mobile founder doing a quick check",
+      "weight": 15,
+      "evidence": "Landing has mobile layout and cloud request path; mobile visitors need a fast proof path.",
+      "jobs": ["understand in one screen", "view demo", "request sample"],
+      "objections": ["long page", "tiny text", "hidden CTA"],
+      "deviceBias": "mobile"
+    }
+  ],
+  "roles": [
+    {
+      "role": "seed-stage founder evaluating whether Betabots can replace early beta feedback",
+      "past": "I have no patience for fake AI praise because product mistakes cost runway.",
+      "discovery": "A founder friend sent the Betabots link after I complained about slow beta recruitment.",
+      "goal": "See real evidence, understand what a run produces, and decide whether to request a review.",
+      "lifeGoal": "Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.",
+      "technicalComfort": "high",
+      "viewport": "desktop"
+    },
+    {
+      "role": "UX researcher skeptical of synthetic users",
+      "past": "I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.",
+      "discovery": "I opened the site after seeing a claim about truthful synthetic beta users.",
+      "goal": "Determine whether the method, dashboard, and evidence trail are credible.",
+      "lifeGoal": "Keep research decisions honest and avoid selling false confidence to teams.",
+      "technicalComfort": "medium",
+      "viewport": "desktop"
+    },
+    {
+      "role": "open-source developer deciding whether to install the skill",
+      "past": "I try agent plugins carefully because bad tools clutter my local setup.",
+      "discovery": "I found Betabots through the repository and clicked to the landing.",
+      "goal": "Find the install command, supported harnesses, docs, and license clarity.",
+      "lifeGoal": "Use tools I can inspect and extend without becoming dependent on opaque SaaS.",
+      "technicalComfort": "high",
+      "viewport": "desktop"
+    },
+    {
+      "role": "mobile founder checking the offer between meetings",
+      "past": "I am interested but impatient; if the site does not show proof fast, I will leave.",
+      "discovery": "I opened the link from a chat on my phone.",
+      "goal": "Quickly view a beta/demo and decide whether to request a free sample.",
+      "lifeGoal": "Spend my attention only on tools that can quickly improve product decisions.",
+      "technicalComfort": "medium",
+      "viewport": "mobile"
+    }
+  ],
+  "screenSizeDistribution": [
+    { "category": "desktop", "weight": 65, "devices": [{ "name": "Laptop 15", "width": 1440, "height": 900, "deviceScaleFactor": 1 }] },
+    { "category": "mobile", "weight": 25, "devices": [{ "name": "iPhone 13", "width": 390, "height": 844, "deviceScaleFactor": 3, "isMobile": true, "hasTouch": true }] },
+    { "category": "tablet", "weight": 10, "devices": [{ "name": "iPad Air", "width": 820, "height": 1180, "deviceScaleFactor": 2, "hasTouch": true }] }
+  ],
+  "routes": [
+    { "labels": ["View Beta", "Run locally", "Betabots Cloud", "Docs", "Contribute"], "fallback": "/" },
+    { "labels": ["Open dashboard demo", "View Beta", "Request Betabot review"], "fallback": "/demo" },
+    { "labels": ["Codex", "Claude Code", "Cursor", "Copy", "Run locally"], "fallback": "/#how" },
+    { "labels": ["Betabook", "Destiny", "GitHub", "Request Betabot review"], "fallback": "/#cloud" }
+  ],
+  "keywords": {
+    "value": ["evidence", "dashboard", "screenshots", "actions", "truth", "Betabook", "Destiny", "install", "cloud"],
+    "trust": ["open source", "AGPL", "GitHub", "docs", "local", "inspectable", "raw artifacts", "truthful"],
+    "risk": ["fake", "mock", "coming soon", "unclear", "generic", "loading", "not found"],
+    "empty": ["loading", "nothing", "not found", "coming soon"]
+  },
+  "ideaRules": [
+    { "when": ["View Beta", "demo"], "idea": "Make the demo an actual dashboard backed by real Betabot artifacts, not a static marketing page." },
+    { "when": ["Run locally", "Codex"], "idea": "Keep install commands as one real command per harness." },
+    { "when": ["Cloud", "Request"], "idea": "Show free sample expectations and paid full analytic clearly near the form." }
+  ]
+}

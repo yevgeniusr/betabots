@@ -1,0 +1,115 @@
+# thoughtful-betabot-014 — Thoughtful Browser Raw Storyline
+
+## Persona
+- Name: Tara 2
+- Role: self-directed learner comparing curriculum depth
+- Past: I like teaching myself, but I need structure and examples or I drift.
+- Discovery circumstance: Someone shared the site as an alternative to traditional degrees.
+- Goal today: Find a sample curriculum, concrete outcome, or first lesson.
+- Life goal: Become genuinely capable, not just collect another motivational bookmark.
+- Avatar: https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-014%7CTara+2%7Cself-directed+learner+comparing+curriculum+depth%7CI+like+teaching+myself%2C+but+I+need+structure+and+examples+or+I+drift.%7CSomeone+shared+the+site+as+an+alternative+to+traditional+degrees.%7CFind+a+sample+curriculum%2C+concrete+outcome%2C+or+first+lesson.%7CBecome+genuinely+capable%2C+not+just+collect+another+motivational+bookmark.%7Cskeptical%7Chigh&backgroundColor=c0aede
+- Avatar style: bottts-neutral
+- Avatar seed: 20260630|Self Degree|thoughtful-betabot-014|Tara 2|self-directed learner comparing curriculum depth|I like teaching myself, but I need structure and examples or I drift.|Someone shared the site as an alternative to traditional degrees.|Find a sample curriculum, concrete outcome, or first lesson.|Become genuinely capable, not just collect another motivational bookmark.|skeptical|high
+- Emotional baseline: skeptical
+- Technical comfort: high
+- Estimated session duration: 2 minutes
+- Visual evidence mode: audit
+- Truth pressure: always on
+
+## Raw Journey
+- T+0:00 I arrive as self-directed learner comparing curriculum depth. My past: I like teaching myself, but I need structure and examples or I drift.
+- T+0:00 My screen is Laptop 15 (1440x900, desktop).
+- T+0:00 Today I want to: Find a sample curriculum, concrete outcome, or first lesson.
+- T+0:00 My life goal is: Become genuinely capable, not just collect another motivational bookmark.
+- T+0:00 I have 100 life-years. Each meaningful action costs 1 month(s); each committed dollar costs 1 year(s).
+- T+0:07 Screenshot evidence (arrival): screenshots/thoughtful-betabot-014/001-arrival.png
+- T+0:07 I see "self-degree - AI Learning Platform That Replaces Traditional School". Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a un [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:21 I think: This sounds relevant, but the headline is heavy on speed and replacement claims before showing me an actual lesson or path. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:21 My reaction: I am skeptical but curious; I want proof of curriculum depth, not more promises about AI saving planning time. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:21 Idea: Put a sample roadmap with the first lesson, project, and expected outcome directly on the first screen. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:21 Life-cost decision: Spending 1 month of life is only worth it if exploring leads quickly to a real sample lesson or outcome I can judge. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:21 Truth assessment: My honest judgment is that the product might help with structure, but I have low confidence until I see a concrete curriculum sample. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:21 My impulse is to explore. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:34 I think: I feel pulled toward doing something concrete rather than browsing forever. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:34 I follow a hunch and check /curriculum. [screen: screenshots/thoughtful-betabot-014/001-arrival.png]
+- T+0:35 Screenshot evidence (destiny /curriculum): screenshots/thoughtful-betabot-014/002-destiny-curriculum.png
+- T+0:35 After following Destiny to /curriculum, I see:  [screen: screenshots/thoughtful-betabot-014/002-destiny-curriculum.png]
+- T+0:35 I think: If there is real curriculum depth, it should show up fastest in the lesson structure. [screen: screenshots/thoughtful-betabot-014/002-destiny-curriculum.png]
+- T+0:35 I follow a hunch and check /curriculum. [screen: screenshots/thoughtful-betabot-014/002-destiny-curriculum.png]
+- T+0:35 Screenshot evidence (destiny /curriculum): screenshots/thoughtful-betabot-014/003-destiny-curriculum.png
+- T+0:35 After following Destiny to /curriculum, I see:  [screen: screenshots/thoughtful-betabot-014/003-destiny-curriculum.png]
+- T+0:35 I cannot find the obvious link, so I try / like a determined user using the address bar. [screen: screenshots/thoughtful-betabot-014/003-destiny-curriculum.png]
+- T+0:41 Screenshot evidence (exploration): screenshots/thoughtful-betabot-014/004-exploration.png
+- T+0:41 I now see: Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a un [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+0:58 I think: I still do not see a sample curriculum or first lesson, just strong promises about speed and personalization. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+0:58 My reaction: I am interested but skeptical; the page sounds confident without showing enough substance yet. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+0:58 Idea: Show one real roadmap with lessons, projects, expected skills, and a finished student outcome. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+0:58 Life-cost decision: Spending 1 more month is worth it only if browsing reveals a concrete path toward becoming genuinely capable. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+0:58 Truth assessment: My private judgment is that this could be useful, but I have low confidence until I see actual curriculum depth. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+0:58 My impulse is to explore. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+1:10 I feel stuck, so I ask Betabook for help instead of silently looping. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+1:35 Curiosity gets me to try "Programming mentors" instead of repeating the same path. [screen: screenshots/thoughtful-betabot-014/004-exploration.png]
+- T+1:38 Screenshot evidence (curiosity-click): screenshots/thoughtful-betabot-014/005-curiosity-click.png
+- T+1:38 Curiosity gets me to try "Contact us" instead of repeating the same path. [screen: screenshots/thoughtful-betabot-014/005-curiosity-click.png]
+- T+1:40 Screenshot evidence (curiosity-click): screenshots/thoughtful-betabot-014/006-curiosity-click.png
+- T+1:40 Screenshot evidence (post-social-action): screenshots/thoughtful-betabot-014/007-post-social-action.png
+- T+1:40 After the social action, I see: Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning Contact Us We're here to help. Ask us anything. Get in Touch Name Email Subject Message Submit Contact Information yev@quested.io +1 (661) 268-6176 8 The Green #15319 Dover, DE, 19901 US RESOURCES Educational resources on TikTok Learn with YouTube Creators to learn math with Online design educators MENTORS Self-education coaches English-speaking mentors Programming mentors English tutors SELF-DEGREE FOR Mid-Career Professionals Feeling Stuck in Career Upskilling for Promotion Future-Proofing Your Career Aspiring Founders Returning to Workforce Mid-Career Crisis Job Search Strategy Transferable Skills Bes [screen: screenshots/thoughtful-betabot-014/007-post-social-action.png]
+- T+1:53 I think: I am stuck in a loop, so I should stop doing the same thing and try a different path. [screen: screenshots/thoughtful-betabot-014/007-post-social-action.png]
+- T+1:54 I follow a hunch and check /pricing. [screen: screenshots/thoughtful-betabot-014/007-post-social-action.png]
+- T+1:54 I notice I am seeing the same kind of screen again, so my patience drops a little. [screen: screenshots/thoughtful-betabot-014/007-post-social-action.png]
+- T+1:54 Screenshot evidence (destiny /pricing): screenshots/thoughtful-betabot-014/008-destiny-pricing.png
+- T+1:54 After following Destiny to /pricing, I see:  [screen: screenshots/thoughtful-betabot-014/008-destiny-pricing.png]
+- T+1:54 I cannot find the obvious link, so I try /curriculum like a determined user using the address bar. [screen: screenshots/thoughtful-betabot-014/008-destiny-pricing.png]
+- T+2:02 Screenshot evidence (exploration): screenshots/thoughtful-betabot-014/009-exploration.png
+- T+2:02 I now see:  [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+- T+2:17 I think: I feel stuck because I still cannot see a curriculum, outcome, or first lesson. [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+- T+2:17 My reaction: My reaction is frustration; this feels too vague for someone trying to learn seriously. [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+- T+2:17 Idea: show a sample learning path and first lesson immediately, before asking for more attention. [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+- T+2:17 Life-cost decision: Spending another 1 month(s) only makes sense if I can see real structure, and right now I cannot. [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+- T+2:17 Truth assessment: My honest judgment is that Self Degree has not yet shown enough concrete learning value for me to trust it. Confidence: high. [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+- T+2:17 My impulse is to leave. [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+- T+2:30 I feel stuck, so I ask Betabook for help instead of silently looping. [screen: screenshots/thoughtful-betabot-014/009-exploration.png]
+
+## Session End
+- End reason: got lost, did not know what to do, and left
+- Happiness score: 40
+- Return likelihood: low
+- Trust level: low
+- Value understood: unclear
+- Ideas expressed: 3
+- Thoughts expressed: 6
+- Opinions expressed: 3
+- Betabook moments: 4
+- Destiny nudges followed: 3
+- Likes sent: 0
+- Passes: 0
+- Messages sent through UI: 0
+- Repeated screen penalty events: 2
+- Meaningful social actions: 2
+- Betabook help requests: 2
+- Destiny loop rescues followed: 1
+- Curiosity actions: 2
+- Life years remaining: 99.42
+- Life years spent on actions: 0.58
+- Life years spent on money: 0.00
+- Dollars committed: 0
+- Truth assessments recorded: 3
+- Mortality status: alive
+
+## Action Evidence
+- followed a hunch to /curriculum
+- followed a hunch to /curriculum
+- navigated /
+- curiosity clicked /Program/i
+- curiosity clicked /Contact/i
+- followed a hunch to /pricing
+- navigated /curriculum
+
+## Visual Evidence
+- Live raw log: live/thoughtful-betabot-014.md
+- Evidence manifest: evidence/thoughtful-betabot-014.jsonl
+- Screenshot folder: screenshots/thoughtful-betabot-014
+- Screenshots captured: 9
+
+## Errors
+- None

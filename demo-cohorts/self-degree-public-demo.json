@@ -1,0 +1,103 @@
+{
+  "appName": "Self Degree",
+  "audienceResearch": "Public-page evidence is collected from the live website through browser sessions. Raw HTML returned little text, so this cohort is explicitly directional and based on the product name/domain, likely learning offer, and visible-session evidence gathered by bots.",
+  "researchSources": [
+    "public: https://self-degree.com/ live browser surface on 2026-07-04",
+    "assumption: product is education/self-directed learning based on name and URL",
+    "assumption: visitors include learners, career switchers, founders, and skeptical buyers"
+  ],
+  "audienceSegments": [
+    {
+      "name": "Career switcher",
+      "weight": 35,
+      "evidence": "Assumption from education/self-degree category; needs credible path and outcome proof.",
+      "jobs": ["understand what skill path is offered", "judge credibility", "see time commitment"],
+      "objections": ["vague curriculum", "no outcomes", "unclear cost"],
+      "deviceBias": "mobile"
+    },
+    {
+      "name": "Self-directed learner",
+      "weight": 30,
+      "evidence": "Assumption from product name; self-learners compare structure and momentum.",
+      "jobs": ["find curriculum", "see next step", "check whether it fits current level"],
+      "objections": ["generic motivation", "too much friction", "no sample lesson"],
+      "deviceBias": "desktop"
+    },
+    {
+      "name": "Parent or sponsor",
+      "weight": 20,
+      "evidence": "Education products often have buyers who are not the learner; this is marked as assumption.",
+      "jobs": ["judge safety and seriousness", "understand expected results", "decide if it is worth paying for"],
+      "objections": ["unproven claims", "unclear support", "weak trust signals"],
+      "deviceBias": "desktop"
+    },
+    {
+      "name": "Busy founder learning a practical skill",
+      "weight": 15,
+      "evidence": "Assumption: founders use self-guided learning when speed matters.",
+      "jobs": ["find practical outcome", "avoid long academic paths", "see proof fast"],
+      "objections": ["too theoretical", "no timeline", "unclear first action"],
+      "deviceBias": "mobile"
+    }
+  ],
+  "roles": [
+    {
+      "role": "career switcher deciding whether this can replace another course",
+      "past": "I have bought online courses before and often quit when the path became vague after the first week.",
+      "discovery": "I found Self Degree while searching for a more independent way to learn.",
+      "goal": "Understand what I would learn, how long it takes, and whether there is proof it works.",
+      "lifeGoal": "Build a career that gives me independence without wasting money on empty promises.",
+      "technicalComfort": "medium",
+      "viewport": "mobile"
+    },
+    {
+      "role": "self-directed learner comparing curriculum depth",
+      "past": "I like teaching myself, but I need structure and examples or I drift.",
+      "discovery": "Someone shared the site as an alternative to traditional degrees.",
+      "goal": "Find a sample curriculum, concrete outcome, or first lesson.",
+      "lifeGoal": "Become genuinely capable, not just collect another motivational bookmark.",
+      "technicalComfort": "high",
+      "viewport": "desktop"
+    },
+    {
+      "role": "parent evaluating whether the offer is serious",
+      "past": "I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.",
+      "discovery": "My teenager sent me the link and asked what I thought.",
+      "goal": "Decide whether the product feels credible enough to discuss further.",
+      "lifeGoal": "Help my family make education decisions that create real options.",
+      "technicalComfort": "medium",
+      "viewport": "desktop"
+    },
+    {
+      "role": "busy founder looking for practical upskilling",
+      "past": "I need fast practical learning and will leave if the offer sounds abstract.",
+      "discovery": "I opened the link between meetings after seeing it mentioned online.",
+      "goal": "Check whether there is a clear first step and practical result.",
+      "lifeGoal": "Spend scarce attention only on learning that compounds into better decisions.",
+      "technicalComfort": "high",
+      "viewport": "mobile"
+    }
+  ],
+  "screenSizeDistribution": [
+    { "category": "mobile", "weight": 45, "devices": [{ "name": "iPhone 13", "width": 390, "height": 844, "deviceScaleFactor": 3, "isMobile": true, "hasTouch": true }] },
+    { "category": "desktop", "weight": 45, "devices": [{ "name": "Laptop 15", "width": 1440, "height": 900, "deviceScaleFactor": 1 }] },
+    { "category": "tablet", "weight": 10, "devices": [{ "name": "iPad Air", "width": 820, "height": 1180, "deviceScaleFactor": 2, "hasTouch": true }] }
+  ],
+  "routes": [
+    { "labels": ["Start", "Get started", "Learn", "Curriculum", "Program", "Pricing", "About", "Contact", "Join", "Apply", "Sign up"], "fallback": "/" },
+    { "labels": ["Curriculum", "Courses", "Lessons", "Path", "Sample", "Preview"], "fallback": "/curriculum" },
+    { "labels": ["Pricing", "Plans", "Enroll", "Apply", "Contact"], "fallback": "/pricing" },
+    { "labels": ["About", "Results", "Testimonials", "FAQ"], "fallback": "/about" }
+  ],
+  "keywords": {
+    "value": ["curriculum", "degree", "learn", "path", "mentor", "project", "skill", "outcome", "lesson"],
+    "trust": ["testimonial", "result", "sample", "support", "mentor", "faq", "pricing", "about"],
+    "risk": ["waitlist", "unclear", "coming soon", "error", "loading", "empty", "apply"],
+    "empty": ["loading", "nothing", "not found", "coming soon"]
+  },
+  "ideaRules": [
+    { "when": ["curriculum", "path"], "idea": "Show a concrete sample learning path before asking for commitment." },
+    { "when": ["pricing", "apply"], "idea": "Explain price, time, and expected outcome near the first CTA." },
+    { "when": ["testimonial", "result"], "idea": "Make outcomes specific enough for skeptical learners and sponsors." }
+  ]
+}

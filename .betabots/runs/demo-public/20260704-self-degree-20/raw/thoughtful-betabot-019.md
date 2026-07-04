@@ -1,0 +1,102 @@
+# thoughtful-betabot-019 — Thoughtful Browser Raw Storyline
+
+## Persona
+- Name: Rook 2
+- Role: parent evaluating whether the offer is serious
+- Past: I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.
+- Discovery circumstance: My teenager sent me the link and asked what I thought.
+- Goal today: Decide whether the product feels credible enough to discuss further.
+- Life goal: Help my family make education decisions that create real options.
+- Avatar: https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CSelf+Degree%7Cthoughtful-betabot-019%7CRook+2%7Cparent+evaluating+whether+the+offer+is+serious%7CI+have+seen+many+learning+products+overpromise%2C+so+I+look+for+safety%2C+support%2C+and+realistic+outcomes.%7CMy+teenager+sent+me+the+link+and+asked+what+I+thought.%7CDecide+whether+the+product+feels+credible+enough+to+discuss+further.%7CHelp+my+family+make+education+decisions+that+create+real+options.%7Chopeful%7Cmedium&backgroundColor=b6f4cf
+- Avatar style: bottts-neutral
+- Avatar seed: 20260630|Self Degree|thoughtful-betabot-019|Rook 2|parent evaluating whether the offer is serious|I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.|My teenager sent me the link and asked what I thought.|Decide whether the product feels credible enough to discuss further.|Help my family make education decisions that create real options.|hopeful|medium
+- Emotional baseline: hopeful
+- Technical comfort: medium
+- Estimated session duration: 2 minutes
+- Visual evidence mode: audit
+- Truth pressure: always on
+
+## Raw Journey
+- T+0:00 I arrive as parent evaluating whether the offer is serious. My past: I have seen many learning products overpromise, so I look for safety, support, and realistic outcomes.
+- T+0:00 My screen is Laptop 15 (1440x900, desktop).
+- T+0:00 Today I want to: Decide whether the product feels credible enough to discuss further.
+- T+0:00 My life goal is: Help my family make education decisions that create real options.
+- T+0:00 I have 100 life-years. Each meaningful action costs 1 month(s); each committed dollar costs 1 year(s).
+- T+0:07 Screenshot evidence (arrival): screenshots/thoughtful-betabot-019/001-arrival.png
+- T+0:07 I see "self-degree - AI Learning Platform That Replaces Traditional School". Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a un [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:23 I think: I am interested, but the headline is making a very large promise for something as serious as replacing school. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:23 My reaction: My first reaction is cautious hope. The personalization and planning help sound useful, but the speed claims feel too neat. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:23 Idea: Show one real example of a child profile, the generated roadmap, mentor support, and how progress is judged. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:23 Life-cost decision: Spending 1 month of life is acceptable only because verifying safety, support, and real outcomes directly serves my goal of making better education decisions. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:23 Truth assessment: My honest judgment is that this is not yet credible enough to discuss seriously with my family, but it is worth one deeper look. Confidence: medium-high. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:23 My impulse is to explore. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:30 I think: I feel like there are people nearby, but I do not see a clear path to them yet. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:30 I click "/Start/i" because it looks like the next natural thing. [screen: screenshots/thoughtful-betabot-019/001-arrival.png]
+- T+0:37 Screenshot evidence (exploration): screenshots/thoughtful-betabot-019/002-exploration.png
+- T+0:37 I now see: Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a un [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+0:55 I think: I am interested, but the promise to replace school is a very big claim and I need proof before I would bring this to my family. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+0:55 My reaction: My reaction is cautious hope. The time-saving pitch is appealing, but the screen feels more like a strong sales claim than a serious education plan. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+0:55 Idea: Show a sample child profile, weekly plan, mentor support, and safety boundaries before asking parents to trust the platform. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+0:55 Life-cost decision: Spending one more month of life is worth it only if the next step shows concrete evidence that this could create real education options for my family. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+0:55 Truth assessment: My honest judgment is that Self Degree might be useful, but I am not yet convinced it is credible as a complete school replacement. Confidence: medium-high. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+0:55 My impulse is to explore. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+1:06 I feel stuck, so I ask Betabook for help instead of silently looping. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+1:31 Curiosity gets me to try "What about socialization? Will my child have friends?" instead of repeating the same path. [screen: screenshots/thoughtful-betabot-019/002-exploration.png]
+- T+1:34 Screenshot evidence (curiosity-click): screenshots/thoughtful-betabot-019/003-curiosity-click.png
+- T+1:34 I try "/contact/i" and watch whether the app reacts clearly. [screen: screenshots/thoughtful-betabot-019/003-curiosity-click.png]
+- T+1:40 Screenshot evidence (post-/contact/i): screenshots/thoughtful-betabot-019/004-post-contact-i.png
+- T+1:40 After trying "/contact/i", I see: Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning Contact Us We're here to help. Ask us anything. Get in Touch Name Email Subject Message Submit Contact Information yev@quested.io +1 (661) 268-6176 8 The Green #15319 Dover, DE, 19901 US RESOURCES Educational resources on TikTok Learn with YouTube Creators to learn math with Online design educators MENTORS Self-education coaches English-speaking mentors Programming mentors English tutors SELF-DEGREE FOR Mid-Career Professionals Feeling Stuck in Career Upskilling for Promotion Future-Proofing Your Career Aspiring Founders Returning to Workforce Mid-Career Crisis Job Search Strategy Transferable Skills Bes [screen: screenshots/thoughtful-betabot-019/004-post-contact-i.png]
+- T+1:58 I click "/Courses/i" because it looks like the next natural thing. [screen: screenshots/thoughtful-betabot-019/004-post-contact-i.png]
+- T+2:06 Screenshot evidence (exploration): screenshots/thoughtful-betabot-019/005-exploration.png
+- T+2:06 I now see: Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning Online Courses Learn What Actually Matters. Not all courses are created equal. Choose learning paths that lead to real career outcomes. Explore Course Catalog 5-10 Hours Per Week 3-6 Months to Proficiency 85% Career Impact How to Choose the Right Courses The internet is full of courses. But most professionals waste time and money on learning that does not translate to career results. The key is choosing courses based on your specific career goal, not just what sounds interesting. Start with the outcome you want, then work backward to the skills you need. Courses by Career Goal 🔄 Career Change Build foun [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:20 I think: I see a serious promise here, but I am looking for proof that the paths are guided and realistic. [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:20 My reaction: My reaction is cautiously hopeful; the career-goal framing feels useful, but the numbers need evidence. [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:20 Idea: Show one full example path with mentor support, weekly workload, outcomes, and parent-facing expectations. [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:20 Life-cost decision: Spending one more month of life is worth it if the next step shows whether this can genuinely help my family make better education decisions. [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:20 Truth assessment: My honest judgment is that Self Degree looks more credible than a generic course list, but I am only moderately confident because I have not seen proof of student outcomes or support quality. [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:20 My impulse is to continue. [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:20 I try "/contact/i" and watch whether the app reacts clearly. [screen: screenshots/thoughtful-betabot-019/005-exploration.png]
+- T+2:24 Screenshot evidence (post-/contact/i): screenshots/thoughtful-betabot-019/006-post-contact-i.png
+- T+2:24 After trying "/contact/i", I see: Mentors Students Roadmaps Missions Resources Study Groups Activities 🇬🇧 Start Learning Contact Us We're here to help. Ask us anything. Get in Touch Name Email Subject Message Submit Contact Information yev@quested.io +1 (661) 268-6176 8 The Green #15319 Dover, DE, 19901 US RESOURCES Educational resources on TikTok Learn with YouTube Creators to learn math with Online design educators MENTORS Self-education coaches English-speaking mentors Programming mentors English tutors SELF-DEGREE FOR Mid-Career Professionals Feeling Stuck in Career Upskilling for Promotion Future-Proofing Your Career Aspiring Founders Returning to Workforce Mid-Career Crisis Job Search Strategy Transferable Skills Bes [screen: screenshots/thoughtful-betabot-019/006-post-contact-i.png]
+
+## Session End
+- End reason: found enough value for one session
+- Happiness score: 62
+- Return likelihood: medium
+- Trust level: medium
+- Value understood: partial
+- Ideas expressed: 3
+- Thoughts expressed: 4
+- Opinions expressed: 3
+- Betabook moments: 2
+- Destiny nudges followed: 1
+- Likes sent: 0
+- Passes: 0
+- Messages sent through UI: 0
+- Repeated screen penalty events: 0
+- Meaningful social actions: 3
+- Betabook help requests: 1
+- Destiny loop rescues followed: 0
+- Curiosity actions: 1
+- Life years remaining: 99.58
+- Life years spent on actions: 0.42
+- Life years spent on money: 0.00
+- Dollars committed: 0
+- Truth assessments recorded: 3
+- Mortality status: alive
+
+## Action Evidence
+- clicked /Start/i
+- curiosity clicked /About/i
+- clicked /contact/i
+- clicked /Courses/i
+- clicked /contact/i
+
+## Visual Evidence
+- Live raw log: live/thoughtful-betabot-019.md
+- Evidence manifest: evidence/thoughtful-betabot-019.jsonl
+- Screenshot folder: screenshots/thoughtful-betabot-019
+- Screenshots captured: 6
+
+## Errors
+- None

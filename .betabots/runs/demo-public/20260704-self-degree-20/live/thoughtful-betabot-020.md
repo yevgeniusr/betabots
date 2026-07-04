@@ -1,0 +1,33 @@
+# thoughtful-betabot-020 — Live Thoughtful Browser Storyline
+
+## Raw Journey
+- T+0:00 I arrive as busy founder looking for practical upskilling. My past: I need fast practical learning and will leave if the offer sounds abstract.
+- T+0:00 My screen is iPhone 13 (390x844, mobile).
+- T+0:00 Today I want to: Check whether there is a clear first step and practical result.
+- T+0:00 My life goal is: Spend scarce attention only on learning that compounds into better decisions.
+- T+0:00 I have 100 life-years. Each meaningful action costs 1 month(s); each committed dollar costs 1 year(s).
+- T+0:08 Screenshot evidence (arrival): screenshots/thoughtful-betabot-020/001-arrival.png
+- T+0:08 I see "self-degree - AI Learning Platform That Replaces Traditional School". 🇬🇧 AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a unique roadmap adapted to their level, interests, and pace. No more one-size-fits-all  [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:21 I think: This looks polished, but it seems aimed at tech-savvy homeschoolers, not a busy founder like me. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:21 My reaction: I like the promise of saving planning time, but the practical result is still too broad and school-focused for my needs. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:21 Idea: Show a founder-focused sample path with the exact skill, weekly time, and outcome produced. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:21 Life-cost decision: Spending 1 month(s) to browse once is only worth it if I quickly find a concrete, practical learning path for my situation. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:21 Truth assessment: My honest judgment is that the first step is visible, but the offer does not yet prove it will compound into better decisions for me. Confidence: high. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:21 My impulse is to explore. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:31 I think: I wonder if the app has enough live people for me, because I keep missing the moment. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:31 I click "/Start/i" because it looks like the next natural thing. [screen: screenshots/thoughtful-betabot-020/001-arrival.png]
+- T+0:35 Screenshot evidence (exploration): screenshots/thoughtful-betabot-020/002-exploration.png
+- T+0:35 I now see: 🇬🇧 AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a unique roadmap adapted to their level, interests, and pace. No more one-size-fits-all  [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+0:50 I think: I see a clear first step, but the offer seems aimed at homeschoolers, not a busy founder like me. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+0:50 My reaction: I am interested in the speed claim, but guarded because the practical outcome is still vague. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+0:50 Idea: Show one sample roadmap with time saved, skills gained, and a real project outcome. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+0:50 Life-cost decision: Spending one more month of life is acceptable only to check whether the directory shows learning that compounds into better decisions. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+0:50 Truth assessment: My honest judgment is that this may be useful for structured learning, but I am only moderately confident because I have not seen proof of practical results. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+0:50 My impulse is to explore. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+1:07 I feel stuck, so I ask Betabook for help instead of silently looping. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+1:32 Curiosity gets me to try "START LEARNING 5X FASTER" instead of repeating the same path. [screen: screenshots/thoughtful-betabot-020/002-exploration.png]
+- T+1:33 Screenshot evidence (curiosity-click): screenshots/thoughtful-betabot-020/003-curiosity-click.png
+- T+1:36 Curiosity gets me to try "Sign up now" instead of repeating the same path. [screen: screenshots/thoughtful-betabot-020/003-curiosity-click.png]
+- T+1:37 Screenshot evidence (curiosity-click): screenshots/thoughtful-betabot-020/004-curiosity-click.png
+- T+1:38 Screenshot evidence (post-social-action): screenshots/thoughtful-betabot-020/005-post-social-action.png
+- T+1:38 After the social action, I see: Log In 0 0 Self-degree Education made just for you Stop changing yourself to fit the system and start building a system that works Sign up now Back Next Subjects Rating Home Social Chats No session found No session found [screen: screenshots/thoughtful-betabot-020/005-post-social-action.png]

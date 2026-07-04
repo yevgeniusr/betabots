@@ -1,0 +1,1950 @@
+{
+  "enabled": true,
+  "intervalMs": 20000,
+  "masterPlan": [
+    {
+      "id": "destiny-thread-001",
+      "a": "thoughtful-betabot-001",
+      "b": "thoughtful-betabot-002",
+      "intent": "cross_paths",
+      "postId": "post-0004",
+      "status": "waiting_for_paths",
+      "reason": "Curiosity and skepticism should meet before either turns vague doubts into exit."
+    },
+    {
+      "id": "destiny-thread-002",
+      "a": "thoughtful-betabot-003",
+      "b": "thoughtful-betabot-004",
+      "intent": "cross_paths",
+      "postId": "post-0005",
+      "status": "waiting_for_paths",
+      "reason": "A serious parent and impatient founder can sharpen each other's sense of credibility."
+    },
+    {
+      "id": "destiny-thread-003",
+      "a": "thoughtful-betabot-005",
+      "b": "thoughtful-betabot-006",
+      "intent": "cross_paths",
+      "postId": "post-0006",
+      "status": "waiting_for_paths",
+      "reason": "A course-wary switcher needs structure pressure from someone who values examples."
+    },
+    {
+      "id": "destiny-thread-004",
+      "a": "thoughtful-betabot-007",
+      "b": "thoughtful-betabot-008",
+      "intent": "cross_paths",
+      "postId": "post-0007",
+      "status": "waiting_for_paths",
+      "reason": "Playful caution and founder curiosity may make the offer feel less abstract."
+    },
+    {
+      "id": "destiny-thread-005",
+      "a": "thoughtful-betabot-009",
+      "b": "thoughtful-betabot-010",
+      "intent": "near_miss",
+      "postId": "post-0008",
+      "status": "paths_kept_apart",
+      "reason": "Their almost-meeting should expose whether the path is clear without social rescue."
+    },
+    {
+      "id": "destiny-thread-006",
+      "a": "thoughtful-betabot-011",
+      "b": "thoughtful-betabot-012",
+      "intent": "cross_paths",
+      "postId": "post-0009",
+      "status": "waiting_for_paths",
+      "reason": "A playful parent and skeptical founder can quickly surface weak promises."
+    },
+    {
+      "id": "destiny-thread-007",
+      "a": "thoughtful-betabot-013",
+      "b": "thoughtful-betabot-014",
+      "intent": "cross_paths",
+      "postId": "post-0010",
+      "status": "waiting_for_paths",
+      "reason": "Guarded hope and curriculum skepticism should collide before commitment grows."
+    },
+    {
+      "id": "destiny-thread-008",
+      "a": "thoughtful-betabot-015",
+      "b": "thoughtful-betabot-016",
+      "intent": "cross_paths",
+      "postId": "post-0011",
+      "status": "waiting_for_paths",
+      "reason": "Curious seriousness and practical ambition can reveal whether the next step feels real."
+    },
+    {
+      "id": "destiny-thread-009",
+      "a": "thoughtful-betabot-017",
+      "b": "thoughtful-betabot-018",
+      "intent": "cross_paths",
+      "postId": "post-0012",
+      "status": "waiting_for_paths",
+      "reason": "A guarded switcher and impatient learner should force clarity on depth and pace."
+    },
+    {
+      "id": "destiny-thread-010",
+      "a": "thoughtful-betabot-019",
+      "b": "thoughtful-betabot-020",
+      "intent": "near_miss",
+      "postId": "post-0013",
+      "status": "paths_kept_apart",
+      "reason": "Their missed timing should show whether credibility survives without peer validation."
+    }
+  ],
+  "nudgesByBotId": {
+    "thoughtful-betabot-001": [
+      {
+        "kind": "think",
+        "thought": "The proof question probably lives after the first promise, not before it.",
+        "route": "/curriculum",
+        "at": "2026-07-04T14:57:16.791Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Something about this moment makes me want to take one more step instead of leaving.",
+        "route": "/about",
+        "at": "2026-07-04T14:57:16.791Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The clearest proof will probably be where the learning path is laid out, not on the front page.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:02:02.046Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The proof question pulls toward curriculum first; if Mira waits there, Sol is likely to arrive with the missing detail.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:04:18.763Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The proof question will probably only move if I look for the actual lesson path.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:06:39.685Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Sol is already looking for curriculum depth; send Mira toward the curriculum page so their doubts can meet in the same doorway.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:09:20.041Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The proof question will pull you toward the same evidence someone else is hunting.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:13:58.735Z"
+      },
+      {
+        "kind": "think",
+        "thought": "You and Sol may both be looking for proof, but through different doors. Start where the learning path is most visible.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:16:23.635Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The lesson list is where your doubt will either loosen or harden. Arrive there now.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:19:08.941Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The proof question will probably become clearer where promises are forced into details.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:23:07.747Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The curriculum page is where Mira's doubt and Sol's curiosity should collide. I am 0.78 sure this is worth one month.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:25:38.152Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your answer is likely hiding where timeline and outcomes are named together.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:26:49.948Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your proof question probably gets clearer beside someone asking for lesson depth. Drift toward the curriculum.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:27:55.348Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Look for proof before you spend more attention; Sol is likely circling the same doubt.",
+        "route": "/about",
+        "at": "2026-07-04T15:29:12.590Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your doubt belongs beside someone hunting for curriculum proof, not on the homepage.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:32:14.221Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The proof question will matter most if you arrive after seeing the promise, not before.",
+        "route": "/about",
+        "at": "2026-07-04T15:34:24.998Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The course either proves itself in the lesson map or it does not. Look there first.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:35:39.123Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The proof question and the sample-lesson question are about to meet in the same doorway.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:36:23.766Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The proof question may meet the curriculum question if you both look for outcomes first.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:38:23.223Z"
+      }
+    ],
+    "thoughtful-betabot-002": [
+      {
+        "kind": "think",
+        "thought": "Someone else is about to ask the same depth question; stay with the curriculum details.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:02:02.046Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Sol's strongest path is the sample lesson, not the front page. The useful crossing is in curriculum.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:04:18.763Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A sample lesson is more valuable than another promise, so I should check the curriculum now.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:06:39.685Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Sol arrived but has not been answered; nudge them to look for a first lesson before patience thins.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:09:20.041Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A sample lesson is the place where your doubt can meet someone else's caution.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:13:58.735Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Mira is probably weighing this like a replacement course. Your curriculum questions can pull the missing details into the open.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:16:23.635Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Someone else is weighing the same gap between promise and proof. Follow the curriculum trail.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:19:08.941Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Mira 1 is circling the same doubt from the other side. Check curriculum depth first, then compare notes where proof feels missing.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:21:31.235Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A sample lesson is the shortest path; look where depth would have to show itself.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:23:07.747Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Look for a first lesson, not a promise. Mira is likely searching for the same proof.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:25:38.152Z"
+      },
+      {
+        "kind": "think",
+        "thought": "The sample-lesson trail may overlap with someone deciding if this can replace a course.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:27:55.348Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A sample lesson matters more than the pitch; Mira may notice what feels missing.",
+        "route": "/about",
+        "at": "2026-07-04T15:29:12.590Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Wait on the curriculum page; a career-switcher question will make your search sharper.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:32:14.221Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your first useful clue is likely where structure is exposed, not where trust is argued.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:34:24.998Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Someone with the same question is about to check depth, not slogans. Stay with the outline.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:35:39.123Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Look where the learner who needs proof would look; your doubts rhyme.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:36:23.766Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A first lesson or sample may answer more than the headline does.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:38:23.223Z"
+      }
+    ],
+    "thoughtful-betabot-003": [
+      {
+        "kind": "think",
+        "thought": "Credibility may show up in who is behind it.",
+        "route": "/about",
+        "at": "2026-07-04T14:57:16.791Z"
+      },
+      {
+        "kind": "think",
+        "thought": "I suddenly feel like waiting a little longer could pay off.",
+        "route": "/",
+        "at": "2026-07-04T14:57:16.792Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show in who is behind this and whether the promise feels grounded.",
+        "route": "/about",
+        "at": "2026-07-04T15:02:02.046Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility and practical payoff meet best where price forces seriousness. Niko should look there.",
+        "route": "/pricing",
+        "at": "2026-07-04T15:04:18.763Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility starts with who is behind this and whether the claim feels grounded.",
+        "route": "/about",
+        "at": "2026-07-04T15:06:39.685Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Niko needs seriousness, and Tara needs a practical first step; let credibility and usefulness collide near the offer.",
+        "route": "/about",
+        "at": "2026-07-04T15:09:20.041Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your caution will meet Tara's urgency if you both look for proof before promises.",
+        "route": "/about",
+        "at": "2026-07-04T15:11:36.306Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will feel clearer where the people and promises are named.",
+        "route": "/about",
+        "at": "2026-07-04T15:13:58.735Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show up fastest in who is behind it and what claims they avoid making.",
+        "route": "/about",
+        "at": "2026-07-04T15:16:23.635Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show in what they say about themselves when nobody is selling hard.",
+        "route": "/about",
+        "at": "2026-07-04T15:19:08.941Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility may hinge less on claims and more on who stands behind them.",
+        "route": "/about",
+        "at": "2026-07-04T15:23:07.747Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility usually shows up in the about page before the price page. Tara may arrive there from a practical angle.",
+        "route": "/about",
+        "at": "2026-07-04T15:25:38.152Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility may show up where the offer explains who it is for and why it exists.",
+        "route": "/about",
+        "at": "2026-07-04T15:27:55.348Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show up fastest where the first step is clearest.",
+        "route": "/",
+        "at": "2026-07-04T15:29:12.590Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will show first in who made this and why it should be trusted.",
+        "route": "/about",
+        "at": "2026-07-04T15:32:14.221Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will turn on whether the people behind this feel real enough.",
+        "route": "/about",
+        "at": "2026-07-04T15:34:24.998Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility is hiding in who made this and why they expect trust.",
+        "route": "/about",
+        "at": "2026-07-04T15:35:39.123Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility is waiting beside practical outcomes, not the headline.",
+        "route": "/about",
+        "at": "2026-07-04T15:36:23.766Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility will probably show in who made this and why.",
+        "route": "/about",
+        "at": "2026-07-04T15:38:23.223Z"
+      }
+    ],
+    "thoughtful-betabot-004": [
+      {
+        "kind": "think",
+        "thought": "I feel pulled toward doing something concrete rather than browsing forever.",
+        "route": "/",
+        "at": "2026-07-04T14:57:16.792Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Niko 1 needs seriousness, not hype. The about page is the shortest crossing point.",
+        "route": "/about",
+        "at": "2026-07-04T14:59:37.362Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Niko is circling credibility; your practical-first lens can collide there cleanly.",
+        "route": "/about",
+        "at": "2026-07-04T15:11:36.307Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Niko 1 will trust this more if the first step feels concrete. Look for the quickest practical result, not the broad promise.",
+        "route": "/",
+        "at": "2026-07-04T15:21:31.235Z"
+      }
+    ],
+    "thoughtful-betabot-005": [
+      {
+        "kind": "think",
+        "thought": "I suddenly feel like waiting a little longer could pay off.",
+        "route": "/",
+        "at": "2026-07-04T14:57:16.792Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Ari is likely hunting lesson depth; your replacement-course question belongs beside that.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:11:36.307Z"
+      }
+    ],
+    "thoughtful-betabot-006": [
+      {
+        "kind": "think",
+        "thought": "I feel pulled toward doing something concrete rather than browsing forever.",
+        "route": "/about",
+        "at": "2026-07-04T14:57:16.792Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Ren 1 just surfaced a useful next step; a sample lesson answer would actually help both of you.",
+        "route": "/curriculum",
+        "at": "2026-07-04T14:59:37.362Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Ren 1 needs proof before belief. If the curriculum page feels vague, that shared doubt is the crossing point.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:21:31.235Z"
+      }
+    ],
+    "thoughtful-betabot-007": [
+      {
+        "kind": "think",
+        "thought": "Something about this moment makes me want to take one more step instead of leaving.",
+        "route": "/pricing",
+        "at": "2026-07-04T14:57:16.794Z"
+      }
+    ],
+    "thoughtful-betabot-008": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/",
+        "at": "2026-07-04T15:15:23.688Z"
+      }
+    ],
+    "thoughtful-betabot-009": [
+      {
+        "kind": "think",
+        "thought": "I feel like there are people nearby, but I do not see a clear path to them yet.",
+        "at": "2026-07-04T14:57:16.794Z"
+      }
+    ],
+    "thoughtful-betabot-010": [
+      {
+        "kind": "think",
+        "thought": "I wonder if the app has enough live people for me, because I keep missing the moment.",
+        "at": "2026-07-04T14:57:16.794Z"
+      }
+    ],
+    "thoughtful-betabot-011": [
+      {
+        "kind": "think",
+        "thought": "I have a hunch that checking another part of the product now will matter.",
+        "route": "/",
+        "at": "2026-07-04T14:57:16.794Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Credibility usually leaks through the about page before the sales page does.",
+        "route": "/about",
+        "at": "2026-07-04T15:24:26.923Z"
+      }
+    ],
+    "thoughtful-betabot-012": [
+      {
+        "kind": "think",
+        "thought": "I have a hunch that checking another part of the product now will matter.",
+        "route": "/curriculum",
+        "at": "2026-07-04T14:57:16.794Z"
+      }
+    ],
+    "thoughtful-betabot-013": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/",
+        "at": "2026-07-04T15:24:03.988Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "The answer may not be on the first page. I should look for cost or proof before deciding I am stuck.",
+        "route": "/pricing",
+        "at": "2026-07-04T15:24:26.923Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "The clearest next crossing is where proof meets syllabus; arrive there now, before the introduction cools.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:26:49.948Z"
+      },
+      {
+        "kind": "think",
+        "thought": "A timing hunch: Tara 2 is stuck where your doubt is sharpest. Go look for the first concrete lesson; confidence 0.72.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:30:06.655Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your doubt wants a concrete lesson before another promise. Go where the shape of the learning should be visible.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:31:08.798Z"
+      }
+    ],
+    "thoughtful-betabot-014": [
+      {
+        "kind": "loop_rescue",
+        "thought": "The person with the same question is already circling curriculum; meet the doubt there, not in another loop.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:26:49.948Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/",
+        "at": "2026-07-04T15:27:23.998Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "You are circling the same missing proof. Step back to the curriculum and look for one real outcome; confidence 0.78.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:30:06.655Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "You are circling because you need the same thing Niko needs: not inspiration, a first real lesson.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:31:08.798Z"
+      }
+    ],
+    "thoughtful-betabot-015": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/pricing",
+        "at": "2026-07-04T15:29:44.007Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Your seriousness check is blocked by vague trust signals. The about page may either steady you or end this quickly; confidence 0.69.",
+        "route": "/about",
+        "at": "2026-07-04T15:30:06.655Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Your seriousness question will not settle in introductions. Look for the people, terms, and proof behind the offer.",
+        "route": "/about",
+        "at": "2026-07-04T15:31:08.798Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Ari 2 is already visible and stuck; Ren 2 should notice the founder angle and ask what practical result Ari found missing. Confidence: medium.",
+        "route": "/",
+        "at": "2026-07-04T15:33:23.717Z"
+      }
+    ],
+    "thoughtful-betabot-016": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/pricing",
+        "at": "2026-07-04T15:31:44.017Z"
+      }
+    ],
+    "thoughtful-betabot-017": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:33:04.026Z"
+      },
+      {
+        "kind": "think",
+        "thought": "June 2 just arrived looking for curriculum depth; Vale 2 may miss the best clue unless they check the curriculum path now. Confidence: low-medium.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:33:23.717Z"
+      },
+      {
+        "kind": "think",
+        "thought": "You and June are circling the same proof question from different doors; the next crossing belongs near outcomes, not hype.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:37:23.427Z"
+      }
+    ],
+    "thoughtful-betabot-018": [
+      {
+        "kind": "think",
+        "thought": "I have a hunch that checking another part of the product now will matter.",
+        "route": "/about",
+        "at": "2026-07-04T14:57:16.795Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Vale 2 is close by with the same uncertainty about seriousness; June 2 should compare notes before spending more attention. Confidence: medium.",
+        "route": "/",
+        "at": "2026-07-04T15:33:23.717Z"
+      },
+      {
+        "kind": "think",
+        "thought": "Your search for depth will likely sharpen if you follow the public path that names what is actually taught.",
+        "route": "/curriculum",
+        "at": "2026-07-04T15:37:23.427Z"
+      }
+    ],
+    "thoughtful-betabot-019": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/about",
+        "at": "2026-07-04T15:36:04.042Z"
+      },
+      {
+        "kind": "loop_rescue",
+        "thought": "Do not spend more life circling doubt. Look for seriousness signals in the plainest place, then leave if they are thin.",
+        "route": "/about",
+        "at": "2026-07-04T15:37:23.427Z"
+      }
+    ],
+    "thoughtful-betabot-020": [
+      {
+        "kind": "loop_rescue",
+        "thought": "I am stuck in a loop, so I should stop doing the same thing and try a different path.",
+        "route": "/",
+        "at": "2026-07-04T15:38:00.005Z"
+      }
+    ]
+  },
+  "rescuedHelpPostIds": [
+    "post-0028",
+    "post-0038",
+    "post-0042",
+    "post-0044",
+    "post-0047",
+    "post-0051",
+    "post-0055",
+    "post-0060",
+    "post-0065"
+  ],
+  "events": [
+    {
+      "type": "llm_master_plan",
+      "summary": "I will cross most paths to create timely reassurance, while leaving two near misses to reveal who keeps moving without company.",
+      "at": "2026-07-04T14:55:40.215Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-001",
+      "postId": "post-0004",
+      "at": "2026-07-04T14:57:16.791Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.792Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-004",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.792Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-002",
+      "postId": "post-0005",
+      "at": "2026-07-04T14:57:16.792Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-005",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.792Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-006",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.792Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-003",
+      "postId": "post-0006",
+      "at": "2026-07-04T14:57:16.792Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-007",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-008",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-004",
+      "postId": "post-0007",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-009",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-010",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "paths_kept_apart",
+      "pairId": "destiny-thread-005",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-011",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-012",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-006",
+      "postId": "post-0009",
+      "at": "2026-07-04T14:57:16.794Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-007",
+      "postId": "post-0010",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-015",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-016",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-008",
+      "postId": "post-0011",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-017",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-018",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "paths_set_to_cross",
+      "pairId": "destiny-thread-009",
+      "postId": "post-0012",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-019",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-020",
+      "kind": "think",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "paths_kept_apart",
+      "pairId": "destiny-thread-010",
+      "at": "2026-07-04T14:57:16.795Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T14:59:37.362Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T14:59:37.362Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-004",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T14:59:37.362Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-004",
+      "route": "/about",
+      "at": "2026-07-04T14:59:37.362Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-006",
+      "kind": "think",
+      "at": "2026-07-04T14:59:37.362Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-006",
+      "route": "/curriculum",
+      "at": "2026-07-04T14:59:37.362Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:02:02.046Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:02:02.046Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:02:02.046Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:02:02.046Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:02:02.046Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:02:02.046Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:04:18.763Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:04:18.763Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:04:18.763Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:04:18.763Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:04:18.763Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/pricing",
+      "at": "2026-07-04T15:04:18.763Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:06:39.685Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:06:39.685Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:06:39.685Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:06:39.685Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:06:39.685Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:06:39.685Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:09:20.041Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:09:20.041Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:09:20.041Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:09:20.041Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:09:20.041Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:09:20.041Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:11:36.307Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:11:36.307Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-004",
+      "kind": "think",
+      "at": "2026-07-04T15:11:36.307Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-004",
+      "route": "/about",
+      "at": "2026-07-04T15:11:36.307Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-005",
+      "kind": "think",
+      "at": "2026-07-04T15:11:36.307Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-005",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:11:36.307Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:13:58.735Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:13:58.735Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:13:58.735Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:13:58.735Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:13:58.735Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:13:58.735Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-008",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:15:23.688Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-008",
+      "postId": "post-0028",
+      "route": "/",
+      "at": "2026-07-04T15:15:23.690Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:16:23.635Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:16:23.635Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:16:23.635Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:16:23.635Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:16:23.635Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:16:23.635Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:19:08.941Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:19:08.941Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:19:08.941Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:19:08.941Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:19:08.941Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:19:08.941Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:21:31.235Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:21:31.235Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-004",
+      "kind": "think",
+      "at": "2026-07-04T15:21:31.235Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-004",
+      "route": "/",
+      "at": "2026-07-04T15:21:31.235Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-006",
+      "kind": "think",
+      "at": "2026-07-04T15:21:31.235Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-006",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:21:31.235Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:23:07.747Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:23:07.747Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:23:07.747Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:23:07.747Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:23:07.747Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:23:07.747Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:24:03.988Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-013",
+      "postId": "post-0038",
+      "route": "/",
+      "at": "2026-07-04T15:24:03.990Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:24:26.923Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-013",
+      "route": "/pricing",
+      "at": "2026-07-04T15:24:26.923Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "think",
+      "at": "2026-07-04T15:24:26.923Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-014",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:24:26.923Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-011",
+      "kind": "think",
+      "at": "2026-07-04T15:24:26.923Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-011",
+      "route": "/about",
+      "at": "2026-07-04T15:24:26.923Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:25:38.152Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:25:38.152Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:25:38.152Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:25:38.152Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:25:38.152Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:25:38.152Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:26:23.994Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-014",
+      "postId": "post-0042",
+      "route": "/pricing",
+      "at": "2026-07-04T15:26:23.996Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:26:49.948Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-013",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:26:49.948Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:26:49.948Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-014",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:26:49.948Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:26:49.948Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:26:49.948Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:27:23.998Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-014",
+      "postId": "post-0044",
+      "route": "/",
+      "at": "2026-07-04T15:27:24.000Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:27:55.348Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:27:55.348Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:27:55.348Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:27:55.348Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:27:55.348Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:27:55.348Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:29:12.590Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/about",
+      "at": "2026-07-04T15:29:12.590Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:29:12.590Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/about",
+      "at": "2026-07-04T15:29:12.590Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:29:12.590Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/",
+      "at": "2026-07-04T15:29:12.590Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-015",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:29:44.007Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-015",
+      "postId": "post-0047",
+      "route": "/pricing",
+      "at": "2026-07-04T15:29:44.008Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "think",
+      "at": "2026-07-04T15:30:06.655Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-013",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:30:06.655Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:30:06.655Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-014",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:30:06.655Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-015",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:30:06.655Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-015",
+      "route": "/about",
+      "at": "2026-07-04T15:30:06.655Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-013",
+      "kind": "think",
+      "at": "2026-07-04T15:31:08.798Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-013",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:31:08.798Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-014",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:31:08.798Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-014",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:31:08.798Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-015",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:31:08.798Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-015",
+      "route": "/about",
+      "at": "2026-07-04T15:31:08.798Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-016",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:31:44.017Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-016",
+      "postId": "post-0051",
+      "route": "/pricing",
+      "at": "2026-07-04T15:31:44.018Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:32:14.221Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:32:14.221Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:32:14.221Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:32:14.221Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:32:14.221Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:32:14.221Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-017",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:33:04.026Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-017",
+      "postId": "post-0055",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:33:04.027Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-015",
+      "kind": "think",
+      "at": "2026-07-04T15:33:23.717Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-015",
+      "route": "/",
+      "at": "2026-07-04T15:33:23.717Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-018",
+      "kind": "think",
+      "at": "2026-07-04T15:33:23.717Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-018",
+      "route": "/",
+      "at": "2026-07-04T15:33:23.717Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-017",
+      "kind": "think",
+      "at": "2026-07-04T15:33:23.717Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-017",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:33:23.717Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:34:24.998Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/about",
+      "at": "2026-07-04T15:34:24.998Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:34:24.998Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:34:24.998Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:34:24.998Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:34:24.998Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:35:39.123Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:35:39.123Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:35:39.123Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:35:39.123Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:35:39.123Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:35:39.123Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-019",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:36:04.042Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-019",
+      "postId": "post-0060",
+      "route": "/about",
+      "at": "2026-07-04T15:36:04.043Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:36:23.766Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:36:23.766Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:36:23.766Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:36:23.766Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:36:23.766Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:36:23.766Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-018",
+      "kind": "think",
+      "at": "2026-07-04T15:37:23.427Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-018",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:37:23.427Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-017",
+      "kind": "think",
+      "at": "2026-07-04T15:37:23.427Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-017",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:37:23.427Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-019",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:37:23.427Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-019",
+      "route": "/about",
+      "at": "2026-07-04T15:37:23.427Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-020",
+      "kind": "loop_rescue",
+      "at": "2026-07-04T15:38:00.005Z"
+    },
+    {
+      "type": "loop_rescue_planned",
+      "botId": "thoughtful-betabot-020",
+      "postId": "post-0065",
+      "route": "/",
+      "at": "2026-07-04T15:38:00.006Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-001",
+      "kind": "think",
+      "at": "2026-07-04T15:38:23.223Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-001",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:38:23.223Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-002",
+      "kind": "think",
+      "at": "2026-07-04T15:38:23.223Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-002",
+      "route": "/curriculum",
+      "at": "2026-07-04T15:38:23.223Z"
+    },
+    {
+      "type": "nudge_created",
+      "botId": "thoughtful-betabot-003",
+      "kind": "think",
+      "at": "2026-07-04T15:38:23.223Z"
+    },
+    {
+      "type": "llm_live_nudge",
+      "botId": "thoughtful-betabot-003",
+      "route": "/about",
+      "at": "2026-07-04T15:38:23.223Z"
+    }
+  ],
+  "errors": []
+}

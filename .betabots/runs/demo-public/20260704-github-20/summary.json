@@ -1,0 +1,2363 @@
+{
+  "config": {
+    "appUrl": "https://github.com",
+    "count": 20,
+    "minutes": 1,
+    "minMinutes": 1,
+    "maxMinutes": 2,
+    "concurrency": 1,
+    "headless": true,
+    "requestedTimeScale": 1,
+    "timeScale": 1,
+    "seed": 20260630,
+    "authLocalStorageKey": "",
+    "cohortFile": "demo-cohorts/github-public-demo.json",
+    "audienceResearchFile": "",
+    "cohortOnly": false,
+    "betabookEnabled": true,
+    "destinyEnabled": true,
+    "destinyIntervalMs": 20000,
+    "strictScoring": true,
+    "loopRepeatThreshold": 2,
+    "curiosityChance": 0.25,
+    "maxCuriosityActions": 5,
+    "avatarStyle": "bottts-neutral",
+    "avatarBaseUrl": "https://api.dicebear.com/10.x",
+    "truthPressureStartingYears": 100,
+    "truthPressureActionMonths": 1,
+    "truthPressureDollarYears": 1,
+    "llmProvider": "codex",
+    "llmModel": "",
+    "llmMaxCalls": 500,
+    "llmTimeoutMs": 120000,
+    "actionTimeoutMs": 60000,
+    "codexCommand": "codex",
+    "openrouterBaseUrl": "https://openrouter.ai/api/v1",
+    "openrouterSiteUrl": "",
+    "openrouterAppName": "Betabots",
+    "visualEvidenceMode": "audit",
+    "screenSizeDistribution": "",
+    "runDir": ".betabots/runs/demo-public/20260704-github-20",
+    "authTokenTemplate": "",
+    "openrouterApiKey": ""
+  },
+  "cohort": {
+    "appName": "GitHub",
+    "source": "/Users/mac/Desktop/projects/personal/betabots-workspace/betabots/demo-cohorts/github-public-demo.json",
+    "audienceResearchFile": "",
+    "researchSources": [
+      "public: github.com homepage/footer navigation visible on 2026-07-04",
+      "public: GitHub category knowledge as a code hosting and collaboration platform",
+      "assumption: sample cohort covers unauthenticated visitors because no real accounts are used"
+    ],
+    "audienceSegments": [
+      {
+        "name": "Open-source contributor",
+        "weight": 30,
+        "evidence": "Public platform vocabulary emphasizes repositories, docs, community, GitHub CLI/Desktop/Mobile, and developer ecosystem.",
+        "jobs": [
+          "find repository credibility",
+          "understand contribution path",
+          "trust project activity"
+        ],
+        "objections": [
+          "too much navigation",
+          "unclear first contribution path",
+          "account wall"
+        ],
+        "deviceBias": "desktop"
+      },
+      {
+        "name": "Engineering team evaluator",
+        "weight": 30,
+        "evidence": "Public navigation includes Enterprise, Security, Copilot, Pricing, Team, and Professional Services.",
+        "jobs": [
+          "evaluate platform credibility",
+          "compare team value",
+          "understand security and governance"
+        ],
+        "objections": [
+          "pricing uncertainty",
+          "enterprise complexity",
+          "AI trust concerns"
+        ],
+        "deviceBias": "desktop"
+      },
+      {
+        "name": "Learning developer",
+        "weight": 20,
+        "evidence": "Public navigation includes Education, Skills, Docs, Community Forum, and developer newsletter.",
+        "jobs": [
+          "learn what GitHub is",
+          "find beginner docs",
+          "avoid feeling lost"
+        ],
+        "objections": [
+          "jargon",
+          "too many product branches",
+          "unclear next step"
+        ],
+        "deviceBias": "mobile"
+      },
+      {
+        "name": "Mobile checker",
+        "weight": 20,
+        "evidence": "GitHub Mobile is a public product path; mobile visitors may inspect links and trust cues.",
+        "jobs": [
+          "check a repo or docs quickly",
+          "see if mobile browsing is usable"
+        ],
+        "objections": [
+          "dense menus",
+          "small touch targets",
+          "sign-in interruptions"
+        ],
+        "deviceBias": "mobile"
+      }
+    ],
+    "confidenceRules": null,
+    "roleCount": 4,
+    "routeCount": 4,
+    "screenSizeDistribution": [
+      {
+        "category": "desktop",
+        "weight": 60,
+        "devices": [
+          {
+            "name": "Laptop 15",
+            "category": "desktop",
+            "width": 1440,
+            "height": 900,
+            "deviceScaleFactor": 1,
+            "userAgent": ""
+          }
+        ]
+      },
+      {
+        "category": "mobile",
+        "weight": 30,
+        "devices": [
+          {
+            "name": "iPhone 13",
+            "category": "mobile",
+            "width": 390,
+            "height": 844,
+            "deviceScaleFactor": 3,
+            "isMobile": true,
+            "hasTouch": true,
+            "userAgent": ""
+          }
+        ]
+      },
+      {
+        "category": "tablet",
+        "weight": 10,
+        "devices": [
+          {
+            "name": "iPad Air",
+            "category": "tablet",
+            "width": 820,
+            "height": 1180,
+            "deviceScaleFactor": 2,
+            "hasTouch": true,
+            "userAgent": ""
+          }
+        ]
+      }
+    ]
+  },
+  "betabook": {
+    "enabled": true,
+    "posts": 56,
+    "comments": 53,
+    "invites": 9,
+    "events": 170,
+    "errors": []
+  },
+  "destiny": {
+    "enabled": true,
+    "masterPlan": [
+      {
+        "id": "destiny-thread-001",
+        "a": "thoughtful-betabot-001",
+        "b": "thoughtful-betabot-002",
+        "intent": "cross_paths",
+        "postId": "post-0004",
+        "status": "waiting_for_paths",
+        "reason": "Mira's skepticism and Sol's team-risk lens should sharpen each other's judgment quickly."
+      },
+      {
+        "id": "destiny-thread-002",
+        "a": "thoughtful-betabot-003",
+        "b": "thoughtful-betabot-004",
+        "intent": "cross_paths",
+        "postId": "post-0005",
+        "status": "waiting_for_paths",
+        "reason": "Niko needs a clearer path, and Tara's impatience will press the site to prove itself fast."
+      },
+      {
+        "id": "destiny-thread-003",
+        "a": "thoughtful-betabot-005",
+        "b": "thoughtful-betabot-006",
+        "intent": "cross_paths",
+        "postId": "post-0006",
+        "status": "waiting_for_paths",
+        "reason": "Ren's hope and Ari's caution make a useful test of whether credibility feels earned."
+      },
+      {
+        "id": "destiny-thread-004",
+        "a": "thoughtful-betabot-007",
+        "b": "thoughtful-betabot-008",
+        "intent": "cross_paths",
+        "postId": "post-0007",
+        "status": "waiting_for_paths",
+        "reason": "Vale's doubt and June's playful CTO lens should expose both beginner friction and executive proof gaps."
+      },
+      {
+        "id": "destiny-thread-005",
+        "a": "thoughtful-betabot-009",
+        "b": "thoughtful-betabot-010",
+        "intent": "near_miss",
+        "postId": "post-0008",
+        "status": "paths_kept_apart",
+        "reason": "Rook and Iris should almost align, so their separate judgments reveal whether the product stands alone."
+      },
+      {
+        "id": "destiny-thread-006",
+        "a": "thoughtful-betabot-011",
+        "b": "thoughtful-betabot-012",
+        "intent": "cross_paths",
+        "postId": "post-0009",
+        "status": "waiting_for_paths",
+        "reason": "Mira's beginner skepticism and Sol's CTO doubt create pressure around clarity and proof."
+      },
+      {
+        "id": "destiny-thread-007",
+        "a": "thoughtful-betabot-013",
+        "b": "thoughtful-betabot-014",
+        "intent": "cross_paths",
+        "postId": "post-0010",
+        "status": "waiting_for_paths",
+        "reason": "Niko's curiosity and Tara's impatience should turn vague credibility signals into a sharper verdict."
+      },
+      {
+        "id": "destiny-thread-008",
+        "a": "thoughtful-betabot-015",
+        "b": "thoughtful-betabot-016",
+        "intent": "cross_paths",
+        "postId": "post-0011",
+        "status": "waiting_for_paths",
+        "reason": "Ren's playful beginner energy and Ari's CTO curiosity should test whether the site welcomes both learning and evaluation."
+      },
+      {
+        "id": "destiny-thread-009",
+        "a": "thoughtful-betabot-017",
+        "b": "thoughtful-betabot-018",
+        "intent": "cross_paths",
+        "postId": "post-0012",
+        "status": "waiting_for_paths",
+        "reason": "Vale's impatience and June's hope should reveal whether contribution signals can overcome managerial risk."
+      },
+      {
+        "id": "destiny-thread-010",
+        "a": "thoughtful-betabot-019",
+        "b": "thoughtful-betabot-020",
+        "intent": "near_miss",
+        "postId": "post-0013",
+        "status": "paths_kept_apart",
+        "reason": "Rook and Iris should miss each other so their independent paths show where timing alone changes confidence."
+      }
+    ],
+    "events": 177,
+    "errors": []
+  },
+  "truthPressure": {
+    "enabled": true,
+    "startingYears": 100,
+    "actionMonthsCost": 1,
+    "dollarYearsCost": 1,
+    "totalActionsCharged": 37,
+    "totalDollarsCommitted": 0,
+    "totalYearsSpentOnActions": 3.0833,
+    "totalYearsSpentOnMoney": 0,
+    "averageYearsRemaining": 99.8458,
+    "deaths": 0,
+    "truthAuditRiskEvents": 33,
+    "truthAssessments": 33
+  },
+  "llm": {
+    "provider": "codex",
+    "model": null,
+    "calls": 111,
+    "failures": 0,
+    "fallbacks": 0,
+    "tasks": {
+      "destiny_master_plan": 1,
+      "destiny_live_advice": 24,
+      "betabook_thread_reply": 52,
+      "betabot_reflection": 33,
+      "betabot_help_request": 1
+    },
+    "errors": []
+  },
+  "elapsedSeconds": 2573,
+  "happy": 0,
+  "unhappy": 19,
+  "median": 22,
+  "errorBots": [
+    {
+      "id": "thoughtful-betabot-006",
+      "score": 0,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "follow destiny: thoughtful-betabot-006 follow destiny timed out after 60000ms",
+        "click next navigation: thoughtful-betabot-006 click next navigation timed out after 15000ms"
+      ],
+      "actions": 4,
+      "screenshots": 6,
+      "ideas": [
+        "show a clear first screen for team security, reliability, and collaboration proof instead of leading with broad positioning.",
+        "Give engineering managers a fast path to team controls, compliance, uptime history, and rollout planning from the first screen."
+      ],
+      "thoughts": 4,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-006|Ari 1|engineering manager evaluating team collaboration and security|My team already uses several tools, and every platform decision creates migration and compliance risk.|A colleague said GitHub might consolidate code review, security, and AI assistance.|Decide whether GitHub feels credible enough for a team evaluation.|Protect my team's delivery reputation by choosing stable engineering systems.|guarded|high",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-006%7CAri+1%7Cengineering+manager+evaluating+team+collaboration+and+security%7CMy+team+already+uses+several+tools%2C+and+every+platform+decision+creates+migration+and+compliance+risk.%7CA+colleague+said+GitHub+might+consolidate+code+review%2C+security%2C+and+AI+assistance.%7CDecide+whether+GitHub+feels+credible+enough+for+a+team+evaluation.%7CProtect+my+team%27s+delivery+reputation+by+choosing+stable+engineering+systems.%7Cguarded%7Chigh&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 2,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 1,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 1,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /enterprise",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /features",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Sign up/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    }
+  ],
+  "topIdeas": [
+    [
+      "show a fast contributor credibility path from the front page, like active projects, maintainer signals, and first-PR routes.",
+      1
+    ],
+    [
+      "show security, collaboration, and enterprise stability proof immediately for leaders making platform decisions.",
+      1
+    ],
+    [
+      "show a clear beginner route like Learn Git, Make First Project, Build Portfolio before the bigger product choices.",
+      1
+    ],
+    [
+      "put concrete trust signals and outcome proof above the fold for technical buyers.",
+      1
+    ],
+    [
+      "show contribution health signals early, such as recent maintainer activity, open beginner issues, and response patterns.",
+      1
+    ],
+    [
+      "show a clear first screen for team security, reliability, and collaboration proof instead of leading with broad positioning.",
+      1
+    ],
+    [
+      "Give engineering managers a fast path to team controls, compliance, uptime history, and rollout planning from the first screen.",
+      1
+    ],
+    [
+      "show a clear \"Start learning GitHub\" path for beginners before the product menu gets dense.",
+      1
+    ],
+    [
+      "Give startup teams a fast evidence path with customer scale, security posture, pricing clarity, and Copilot impact in one compact proof panel.",
+      1
+    ],
+    [
+      "Give contributors a fast credibility lens for any repository: activity, maintainer responsiveness, good first issues, and contribution guide quality.",
+      1
+    ],
+    [
+      "show a clear path from the homepage to enterprise security, migration, and team governance proof.",
+      1
+    ],
+    [
+      "Add a clear beginner path like “New to GitHub?” with three calm steps: create account, learn repositories, make first contribution.",
+      1
+    ],
+    [
+      "Add a beginner path that starts with one project goal and explains which feature to use first, second, and later.",
+      1
+    ],
+    [
+      "Put security, reliability, and small-team outcomes directly beside the main sign-up path.",
+      1
+    ],
+    [
+      "Give small technical teams a direct proof path with concrete outcomes, security posture, and setup effort upfront.",
+      1
+    ],
+    [
+      "Give newcomers a fast path to assess a project’s activity, maintainer responsiveness, and first-contribution options.",
+      1
+    ],
+    [
+      "Give contributors a fast credibility view with maintainer activity, issue quality, and first-contribution signals.",
+      1
+    ],
+    [
+      "Give engineering leaders a direct path to reliability, governance, and migration confidence from the first screen.",
+      1
+    ],
+    [
+      "Give engineering managers a direct evaluation path that compares collaboration, security, governance, and migration effort in one view.",
+      1
+    ],
+    [
+      "Add a clear beginner route near the top, like \"Start learning GitHub\" with three plain steps.",
+      1
+    ],
+    [
+      "Add a beginner route that says, “Start here if you know Git basics,” with three clear next steps.",
+      1
+    ],
+    [
+      "Give small technical teams a fast proof path with security posture, admin controls, AI limits, pricing, and customer results in one comparison view.",
+      1
+    ],
+    [
+      "Put concrete security outcomes, adoption examples, and small-team decision paths directly near the enterprise pitch.",
+      1
+    ],
+    [
+      "Give contributors a direct path to discover active repositories with maintainer responsiveness, beginner issues, and recent activity surfaced upfront.",
+      1
+    ],
+    [
+      "Give contributors a quick credibility panel for activity, maintainer response, open beginner issues, and contribution docs.",
+      1
+    ],
+    [
+      "Give managers a direct path to collaboration controls, governance, uptime, and security evidence from the first screen.",
+      1
+    ],
+    [
+      "Give engineering managers a compact evaluation path that compares collaboration, security, and administration needs for small teams versus enterprise teams.",
+      1
+    ],
+    [
+      "Give team leads a short evaluation path that connects security, migrations, permissions, and collaboration setup in one checklist.",
+      1
+    ],
+    [
+      "Give engineering leaders a compact comparison focused on control, audit needs, support, and rollout risk.",
+      1
+    ],
+    [
+      "Add a clear beginner route like “Start learning GitHub” beside sign-up and Copilot prompts.",
+      1
+    ],
+    [
+      "Add a beginner mode that turns the Features page into a short path based on my goal and comfort level.",
+      1
+    ],
+    [
+      "Put a CTO path up front with proof points for small teams: reliability, permissions, AI governance, and migration effort.",
+      1
+    ],
+    [
+      "Give startup teams a proof-first path that compares speed, security, and setup effort in one clear view.",
+      1
+    ]
+  ],
+  "confidenceRows": [
+    {
+      "theme": "Proof and diligence layer",
+      "count": 13,
+      "examples": [
+        "show security, collaboration, and enterprise stability proof immediately for leaders making platform decisions.",
+        "show a clear beginner route like Learn Git, Make First Project, Build Portfolio before the bigger product choices.",
+        "put concrete trust signals and outcome proof above the fold for technical buyers."
+      ],
+      "share": 0.65,
+      "tier": "high"
+    },
+    {
+      "theme": "show a fast contributor credibility path from the front page, like active projects, maintainer signals, and first-PR rou",
+      "count": 1,
+      "examples": [
+        "show a fast contributor credibility path from the front page, like active projects, maintainer signals, and first-PR routes."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "show contribution health signals early, such as recent maintainer activity, open beginner issues, and response patterns.",
+      "count": 1,
+      "examples": [
+        "show contribution health signals early, such as recent maintainer activity, open beginner issues, and response patterns."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Give engineering managers a fast path to team controls, compliance, uptime history, and rollout planning from the first ",
+      "count": 1,
+      "examples": [
+        "Give engineering managers a fast path to team controls, compliance, uptime history, and rollout planning from the first screen."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "show a clear \"Start learning GitHub\" path for beginners before the product menu gets dense.",
+      "count": 1,
+      "examples": [
+        "show a clear \"Start learning GitHub\" path for beginners before the product menu gets dense."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Give contributors a fast credibility lens for any repository: activity, maintainer responsiveness, good first issues, an",
+      "count": 1,
+      "examples": [
+        "Give contributors a fast credibility lens for any repository: activity, maintainer responsiveness, good first issues, and contribution guide quality."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Add a clear beginner path like “New to GitHub?” with three calm steps: create account, learn repositories, make first co",
+      "count": 1,
+      "examples": [
+        "Add a clear beginner path like “New to GitHub?” with three calm steps: create account, learn repositories, make first contribution."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Add a beginner path that starts with one project goal and explains which feature to use first, second, and later.",
+      "count": 1,
+      "examples": [
+        "Add a beginner path that starts with one project goal and explains which feature to use first, second, and later."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Give newcomers a fast path to assess a project’s activity, maintainer responsiveness, and first-contribution options.",
+      "count": 1,
+      "examples": [
+        "Give newcomers a fast path to assess a project’s activity, maintainer responsiveness, and first-contribution options."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Give contributors a fast credibility view with maintainer activity, issue quality, and first-contribution signals.",
+      "count": 1,
+      "examples": [
+        "Give contributors a fast credibility view with maintainer activity, issue quality, and first-contribution signals."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Give engineering leaders a direct path to reliability, governance, and migration confidence from the first screen.",
+      "count": 1,
+      "examples": [
+        "Give engineering leaders a direct path to reliability, governance, and migration confidence from the first screen."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Give engineering managers a direct evaluation path that compares collaboration, security, governance, and migration effo",
+      "count": 1,
+      "examples": [
+        "Give engineering managers a direct evaluation path that compares collaboration, security, governance, and migration effort in one view."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Add a clear beginner route near the top, like \"Start learning GitHub\" with three plain steps.",
+      "count": 1,
+      "examples": [
+        "Add a clear beginner route near the top, like \"Start learning GitHub\" with three plain steps."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Starter content and subscription trust",
+      "count": 1,
+      "examples": [
+        "Add a beginner route that says, “Start here if you know Git basics,” with three clear next steps."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    },
+    {
+      "theme": "Give contributors a direct path to discover active repositories with maintainer responsiveness, beginner issues, and rec",
+      "count": 1,
+      "examples": [
+        "Give contributors a direct path to discover active repositories with maintainer responsiveness, beginner issues, and recent activity surfaced upfront."
+      ],
+      "share": 0.05,
+      "tier": "low"
+    }
+  ],
+  "results": [
+    {
+      "id": "thoughtful-betabot-001",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a fast contributor credibility path from the front page, like active projects, maintainer signals, and first-PR routes."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-001|Mira 1|open-source contributor deciding whether a project is worth a first PR|I have wasted weekends on inactive repositories and now look for maintainers, docs, issues, and contribution signals before investing time.|A search result sent me to GitHub while I was comparing tools.|Find whether GitHub helps me judge repository credibility and contribution paths quickly.|Build a public technical reputation without wasting years on dead projects.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-001%7CMira+1%7Copen-source+contributor+deciding+whether+a+project+is+worth+a+first+PR%7CI+have+wasted+weekends+on+inactive+repositories+and+now+look+for+maintainers%2C+docs%2C+issues%2C+and+contribution+signals+before+investing+time.%7CA+search+result+sent+me+to+GitHub+while+I+was+comparing+tools.%7CFind+whether+GitHub+helps+me+judge+repository+credibility+and+contribution+paths+quickly.%7CBuild+a+public+technical+reputation+without+wasting+years+on+dead+projects.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-002",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show security, collaboration, and enterprise stability proof immediately for leaders making platform decisions."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-002|Sol 1|engineering manager evaluating team collaboration and security|My team already uses several tools, and every platform decision creates migration and compliance risk.|A colleague said GitHub might consolidate code review, security, and AI assistance.|Decide whether GitHub feels credible enough for a team evaluation.|Protect my team's delivery reputation by choosing stable engineering systems.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-002%7CSol+1%7Cengineering+manager+evaluating+team+collaboration+and+security%7CMy+team+already+uses+several+tools%2C+and+every+platform+decision+creates+migration+and+compliance+risk.%7CA+colleague+said+GitHub+might+consolidate+code+review%2C+security%2C+and+AI+assistance.%7CDecide+whether+GitHub+feels+credible+enough+for+a+team+evaluation.%7CProtect+my+team%27s+delivery+reputation+by+choosing+stable+engineering+systems.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-003",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a clear beginner route like Learn Git, Make First Project, Build Portfolio before the bigger product choices."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-003|Niko 1|junior developer learning where to start|I know Git basics but product menus and enterprise language can make me feel like I do not belong yet.|I clicked GitHub from a tutorial that said to create an account.|Find a clear beginner path without drowning in product categories.|Become employable without losing confidence to confusing tooling.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-003%7CNiko+1%7Cjunior+developer+learning+where+to+start%7CI+know+Git+basics+but+product+menus+and+enterprise+language+can+make+me+feel+like+I+do+not+belong+yet.%7CI+clicked+GitHub+from+a+tutorial+that+said+to+create+an+account.%7CFind+a+clear+beginner+path+without+drowning+in+product+categories.%7CBecome+employable+without+losing+confidence+to+confusing+tooling.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-004",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "put concrete trust signals and outcome proof above the fold for technical buyers."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-004|Tara 1|startup CTO comparing code hosting and AI coding claims|I need developer speed, but AI and security claims need proof before I stake my team on them.|I opened GitHub after hearing about Copilot and enterprise security.|Understand whether the site gives enough proof to investigate further.|Protect my startup runway by choosing developer infrastructure that compounds.|impatient|high",
+        "backgroundColor": "ffd5dc",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-004%7CTara+1%7Cstartup+CTO+comparing+code+hosting+and+AI+coding+claims%7CI+need+developer+speed%2C+but+AI+and+security+claims+need+proof+before+I+stake+my+team+on+them.%7CI+opened+GitHub+after+hearing+about+Copilot+and+enterprise+security.%7CUnderstand+whether+the+site+gives+enough+proof+to+investigate+further.%7CProtect+my+startup+runway+by+choosing+developer+infrastructure+that+compounds.%7Cimpatient%7Chigh&backgroundColor=ffd5dc",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-005",
+      "score": 4,
+      "endReason": "found enough value for one session",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show contribution health signals early, such as recent maintainer activity, open beginner issues, and response patterns."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-005|Ren 1|open-source contributor deciding whether a project is worth a first PR|I have wasted weekends on inactive repositories and now look for maintainers, docs, issues, and contribution signals before investing time.|A search result sent me to GitHub while I was comparing tools.|Find whether GitHub helps me judge repository credibility and contribution paths quickly.|Build a public technical reputation without wasting years on dead projects.|hopeful|high",
+        "backgroundColor": "b6f4cf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-005%7CRen+1%7Copen-source+contributor+deciding+whether+a+project+is+worth+a+first+PR%7CI+have+wasted+weekends+on+inactive+repositories+and+now+look+for+maintainers%2C+docs%2C+issues%2C+and+contribution+signals+before+investing+time.%7CA+search+result+sent+me+to+GitHub+while+I+was+comparing+tools.%7CFind+whether+GitHub+helps+me+judge+repository+credibility+and+contribution+paths+quickly.%7CBuild+a+public+technical+reputation+without+wasting+years+on+dead+projects.%7Chopeful%7Chigh&backgroundColor=b6f4cf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-006",
+      "score": 0,
+      "endReason": "hit a bug or dead end",
+      "errors": [
+        "follow destiny: thoughtful-betabot-006 follow destiny timed out after 60000ms",
+        "click next navigation: thoughtful-betabot-006 click next navigation timed out after 15000ms"
+      ],
+      "actions": 4,
+      "screenshots": 6,
+      "ideas": [
+        "show a clear first screen for team security, reliability, and collaboration proof instead of leading with broad positioning.",
+        "Give engineering managers a fast path to team controls, compliance, uptime history, and rollout planning from the first screen."
+      ],
+      "thoughts": 4,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-006|Ari 1|engineering manager evaluating team collaboration and security|My team already uses several tools, and every platform decision creates migration and compliance risk.|A colleague said GitHub might consolidate code review, security, and AI assistance.|Decide whether GitHub feels credible enough for a team evaluation.|Protect my team's delivery reputation by choosing stable engineering systems.|guarded|high",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-006%7CAri+1%7Cengineering+manager+evaluating+team+collaboration+and+security%7CMy+team+already+uses+several+tools%2C+and+every+platform+decision+creates+migration+and+compliance+risk.%7CA+colleague+said+GitHub+might+consolidate+code+review%2C+security%2C+and+AI+assistance.%7CDecide+whether+GitHub+feels+credible+enough+for+a+team+evaluation.%7CProtect+my+team%27s+delivery+reputation+by+choosing+stable+engineering+systems.%7Cguarded%7Chigh&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 2,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 1,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 1,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /enterprise",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /features",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /Sign up/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-007",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a clear \"Start learning GitHub\" path for beginners before the product menu gets dense."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-007|Vale 1|junior developer learning where to start|I know Git basics but product menus and enterprise language can make me feel like I do not belong yet.|I clicked GitHub from a tutorial that said to create an account.|Find a clear beginner path without drowning in product categories.|Become employable without losing confidence to confusing tooling.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-007%7CVale+1%7Cjunior+developer+learning+where+to+start%7CI+know+Git+basics+but+product+menus+and+enterprise+language+can+make+me+feel+like+I+do+not+belong+yet.%7CI+clicked+GitHub+from+a+tutorial+that+said+to+create+an+account.%7CFind+a+clear+beginner+path+without+drowning+in+product+categories.%7CBecome+employable+without+losing+confidence+to+confusing+tooling.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-008",
+      "score": 4,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Give startup teams a fast evidence path with customer scale, security posture, pricing clarity, and Copilot impact in one compact proof panel."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-008|June 1|startup CTO comparing code hosting and AI coding claims|I need developer speed, but AI and security claims need proof before I stake my team on them.|I opened GitHub after hearing about Copilot and enterprise security.|Understand whether the site gives enough proof to investigate further.|Protect my startup runway by choosing developer infrastructure that compounds.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-008%7CJune+1%7Cstartup+CTO+comparing+code+hosting+and+AI+coding+claims%7CI+need+developer+speed%2C+but+AI+and+security+claims+need+proof+before+I+stake+my+team+on+them.%7CI+opened+GitHub+after+hearing+about+Copilot+and+enterprise+security.%7CUnderstand+whether+the+site+gives+enough+proof+to+investigate+further.%7CProtect+my+startup+runway+by+choosing+developer+infrastructure+that+compounds.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-009",
+      "score": 4,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "Give contributors a fast credibility lens for any repository: activity, maintainer responsiveness, good first issues, and contribution guide quality."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-009|Rook 1|open-source contributor deciding whether a project is worth a first PR|I have wasted weekends on inactive repositories and now look for maintainers, docs, issues, and contribution signals before investing time.|A search result sent me to GitHub while I was comparing tools.|Find whether GitHub helps me judge repository credibility and contribution paths quickly.|Build a public technical reputation without wasting years on dead projects.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-009%7CRook+1%7Copen-source+contributor+deciding+whether+a+project+is+worth+a+first+PR%7CI+have+wasted+weekends+on+inactive+repositories+and+now+look+for+maintainers%2C+docs%2C+issues%2C+and+contribution+signals+before+investing+time.%7CA+search+result+sent+me+to+GitHub+while+I+was+comparing+tools.%7CFind+whether+GitHub+helps+me+judge+repository+credibility+and+contribution+paths+quickly.%7CBuild+a+public+technical+reputation+without+wasting+years+on+dead+projects.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-010",
+      "score": 4,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 0,
+      "screenshots": 1,
+      "ideas": [
+        "show a clear path from the homepage to enterprise security, migration, and team governance proof."
+      ],
+      "thoughts": 1,
+      "opinions": 1,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-010|Iris 1|engineering manager evaluating team collaboration and security|My team already uses several tools, and every platform decision creates migration and compliance risk.|A colleague said GitHub might consolidate code review, security, and AI assistance.|Decide whether GitHub feels credible enough for a team evaluation.|Protect my team's delivery reputation by choosing stable engineering systems.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-010%7CIris+1%7Cengineering+manager+evaluating+team+collaboration+and+security%7CMy+team+already+uses+several+tools%2C+and+every+platform+decision+creates+migration+and+compliance+risk.%7CA+colleague+said+GitHub+might+consolidate+code+review%2C+security%2C+and+AI+assistance.%7CDecide+whether+GitHub+feels+credible+enough+for+a+team+evaluation.%7CProtect+my+team%27s+delivery+reputation+by+choosing+stable+engineering+systems.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 0,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 0,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+        "startingYears": 100,
+        "yearsRemaining": 100,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 0,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 1,
+        "death": false,
+        "deathReason": "",
+        "entries": []
+      }
+    },
+    {
+      "id": "thoughtful-betabot-011",
+      "score": 29,
+      "endReason": "found enough value for one session",
+      "errors": [],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Add a clear beginner path like “New to GitHub?” with three calm steps: create account, learn repositories, make first contribution.",
+        "Add a beginner path that starts with one project goal and explains which feature to use first, second, and later."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-011|Mira 2|junior developer learning where to start|I know Git basics but product menus and enterprise language can make me feel like I do not belong yet.|I clicked GitHub from a tutorial that said to create an account.|Find a clear beginner path without drowning in product categories.|Become employable without losing confidence to confusing tooling.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-011%7CMira+2%7Cjunior+developer+learning+where+to+start%7CI+know+Git+basics+but+product+menus+and+enterprise+language+can+make+me+feel+like+I+do+not+belong+yet.%7CI+clicked+GitHub+from+a+tutorial+that+said+to+create+an+account.%7CFind+a+clear+beginner+path+without+drowning+in+product+categories.%7CBecome+employable+without+losing+confidence+to+confusing+tooling.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-012",
+      "score": 37,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Put security, reliability, and small-team outcomes directly beside the main sign-up path.",
+        "Give small technical teams a direct proof path with concrete outcomes, security posture, and setup effort upfront."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-012|Sol 2|startup CTO comparing code hosting and AI coding claims|I need developer speed, but AI and security claims need proof before I stake my team on them.|I opened GitHub after hearing about Copilot and enterprise security.|Understand whether the site gives enough proof to investigate further.|Protect my startup runway by choosing developer infrastructure that compounds.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-012%7CSol+2%7Cstartup+CTO+comparing+code+hosting+and+AI+coding+claims%7CI+need+developer+speed%2C+but+AI+and+security+claims+need+proof+before+I+stake+my+team+on+them.%7CI+opened+GitHub+after+hearing+about+Copilot+and+enterprise+security.%7CUnderstand+whether+the+site+gives+enough+proof+to+investigate+further.%7CProtect+my+startup+runway+by+choosing+developer+infrastructure+that+compounds.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-013",
+      "score": 22,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 4,
+      "screenshots": 5,
+      "ideas": [
+        "Give newcomers a fast path to assess a project’s activity, maintainer responsiveness, and first-contribution options.",
+        "Give contributors a fast credibility view with maintainer activity, issue quality, and first-contribution signals."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-013|Niko 2|open-source contributor deciding whether a project is worth a first PR|I have wasted weekends on inactive repositories and now look for maintainers, docs, issues, and contribution signals before investing time.|A search result sent me to GitHub while I was comparing tools.|Find whether GitHub helps me judge repository credibility and contribution paths quickly.|Build a public technical reputation without wasting years on dead projects.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-013%7CNiko+2%7Copen-source+contributor+deciding+whether+a+project+is+worth+a+first+PR%7CI+have+wasted+weekends+on+inactive+repositories+and+now+look+for+maintainers%2C+docs%2C+issues%2C+and+contribution+signals+before+investing+time.%7CA+search+result+sent+me+to+GitHub+while+I+was+comparing+tools.%7CFind+whether+GitHub+helps+me+judge+repository+credibility+and+contribution+paths+quickly.%7CBuild+a+public+technical+reputation+without+wasting+years+on+dead+projects.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 2,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 2,
+      "loopHelpRequests": 1,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 1,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+        "startingYears": 100,
+        "yearsRemaining": 99.66666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 4,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.3333333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /pricing",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "curiosity clicked /GitHub Mobile/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.6667
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-014",
+      "score": 37,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Give engineering leaders a direct path to reliability, governance, and migration confidence from the first screen.",
+        "Give engineering managers a direct evaluation path that compares collaboration, security, governance, and migration effort in one view."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-014|Tara 2|engineering manager evaluating team collaboration and security|My team already uses several tools, and every platform decision creates migration and compliance risk.|A colleague said GitHub might consolidate code review, security, and AI assistance.|Decide whether GitHub feels credible enough for a team evaluation.|Protect my team's delivery reputation by choosing stable engineering systems.|impatient|high",
+        "backgroundColor": "ffd5dc",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-014%7CTara+2%7Cengineering+manager+evaluating+team+collaboration+and+security%7CMy+team+already+uses+several+tools%2C+and+every+platform+decision+creates+migration+and+compliance+risk.%7CA+colleague+said+GitHub+might+consolidate+code+review%2C+security%2C+and+AI+assistance.%7CDecide+whether+GitHub+feels+credible+enough+for+a+team+evaluation.%7CProtect+my+team%27s+delivery+reputation+by+choosing+stable+engineering+systems.%7Cimpatient%7Chigh&backgroundColor=ffd5dc",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /enterprise",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-015",
+      "score": 29,
+      "endReason": "felt cautious and left for now",
+      "errors": [],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Add a clear beginner route near the top, like \"Start learning GitHub\" with three plain steps.",
+        "Add a beginner route that says, “Start here if you know Git basics,” with three clear next steps."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-015|Ren 2|junior developer learning where to start|I know Git basics but product menus and enterprise language can make me feel like I do not belong yet.|I clicked GitHub from a tutorial that said to create an account.|Find a clear beginner path without drowning in product categories.|Become employable without losing confidence to confusing tooling.|playful|medium",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-015%7CRen+2%7Cjunior+developer+learning+where+to+start%7CI+know+Git+basics+but+product+menus+and+enterprise+language+can+make+me+feel+like+I+do+not+belong+yet.%7CI+clicked+GitHub+from+a+tutorial+that+said+to+create+an+account.%7CFind+a+clear+beginner+path+without+drowning+in+product+categories.%7CBecome+employable+without+losing+confidence+to+confusing+tooling.%7Cplayful%7Cmedium&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-016",
+      "score": 37,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Give small technical teams a fast proof path with security posture, admin controls, AI limits, pricing, and customer results in one comparison view.",
+        "Put concrete security outcomes, adoption examples, and small-team decision paths directly near the enterprise pitch."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-016|Ari 2|startup CTO comparing code hosting and AI coding claims|I need developer speed, but AI and security claims need proof before I stake my team on them.|I opened GitHub after hearing about Copilot and enterprise security.|Understand whether the site gives enough proof to investigate further.|Protect my startup runway by choosing developer infrastructure that compounds.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-016%7CAri+2%7Cstartup+CTO+comparing+code+hosting+and+AI+coding+claims%7CI+need+developer+speed%2C+but+AI+and+security+claims+need+proof+before+I+stake+my+team+on+them.%7CI+opened+GitHub+after+hearing+about+Copilot+and+enterprise+security.%7CUnderstand+whether+the+site+gives+enough+proof+to+investigate+further.%7CProtect+my+startup+runway+by+choosing+developer+infrastructure+that+compounds.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /enterprise",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Platform/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-017",
+      "score": 37,
+      "endReason": "understood value but needs more proof or live content",
+      "errors": [],
+      "actions": 3,
+      "screenshots": 4,
+      "ideas": [
+        "Give contributors a direct path to discover active repositories with maintainer responsiveness, beginner issues, and recent activity surfaced upfront.",
+        "Give contributors a quick credibility panel for activity, maintainer response, open beginner issues, and contribution docs."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-017|Vale 2|open-source contributor deciding whether a project is worth a first PR|I have wasted weekends on inactive repositories and now look for maintainers, docs, issues, and contribution signals before investing time.|A search result sent me to GitHub while I was comparing tools.|Find whether GitHub helps me judge repository credibility and contribution paths quickly.|Build a public technical reputation without wasting years on dead projects.|impatient|high",
+        "backgroundColor": "ffd5dc",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-017%7CVale+2%7Copen-source+contributor+deciding+whether+a+project+is+worth+a+first+PR%7CI+have+wasted+weekends+on+inactive+repositories+and+now+look+for+maintainers%2C+docs%2C+issues%2C+and+contribution+signals+before+investing+time.%7CA+search+result+sent+me+to+GitHub+while+I+was+comparing+tools.%7CFind+whether+GitHub+helps+me+judge+repository+credibility+and+contribution+paths+quickly.%7CBuild+a+public+technical+reputation+without+wasting+years+on+dead+projects.%7Cimpatient%7Chigh&backgroundColor=ffd5dc",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Build a public technical reputation without wasting years on dead projects.",
+        "startingYears": 100,
+        "yearsRemaining": 99.75,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 3,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.25,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-018",
+      "score": 57,
+      "endReason": "understood value but needs more live people",
+      "errors": [],
+      "actions": 7,
+      "screenshots": 8,
+      "ideas": [
+        "Give managers a direct path to collaboration controls, governance, uptime, and security evidence from the first screen.",
+        "Give engineering managers a compact evaluation path that compares collaboration, security, and administration needs for small teams versus enterprise teams.",
+        "Give team leads a short evaluation path that connects security, migrations, permissions, and collaboration setup in one checklist.",
+        "Give engineering leaders a compact comparison focused on control, audit needs, support, and rollout risk."
+      ],
+      "thoughts": 5,
+      "opinions": 4,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-018|June 2|engineering manager evaluating team collaboration and security|My team already uses several tools, and every platform decision creates migration and compliance risk.|A colleague said GitHub might consolidate code review, security, and AI assistance.|Decide whether GitHub feels credible enough for a team evaluation.|Protect my team's delivery reputation by choosing stable engineering systems.|hopeful|high",
+        "backgroundColor": "b6f4cf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-018%7CJune+2%7Cengineering+manager+evaluating+team+collaboration+and+security%7CMy+team+already+uses+several+tools%2C+and+every+platform+decision+creates+migration+and+compliance+risk.%7CA+colleague+said+GitHub+might+consolidate+code+review%2C+security%2C+and+AI+assistance.%7CDecide+whether+GitHub+feels+credible+enough+for+a+team+evaluation.%7CProtect+my+team%27s+delivery+reputation+by+choosing+stable+engineering+systems.%7Chopeful%7Chigh&backgroundColor=b6f4cf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 3,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 2,
+      "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my team's delivery reputation by choosing stable engineering systems.",
+        "startingYears": 100,
+        "yearsRemaining": 99.41666666666667,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 7,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.5833333333333333,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 4,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "followed a hunch to /",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.8333
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.75
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Docs/i",
+            "yearsRemaining": 99.6667
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.5833
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "navigated /pricing",
+            "yearsRemaining": 99.5
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.4167
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-019",
+      "score": 29,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 2,
+      "screenshots": 3,
+      "ideas": [
+        "Add a clear beginner route like “Start learning GitHub” beside sign-up and Copilot prompts.",
+        "Add a beginner mode that turns the Features page into a short path based on my goal and comfort level."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "iPhone 13",
+        "category": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true,
+        "userAgent": "",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-019|Rook 2|junior developer learning where to start|I know Git basics but product menus and enterprise language can make me feel like I do not belong yet.|I clicked GitHub from a tutorial that said to create an account.|Find a clear beginner path without drowning in product categories.|Become employable without losing confidence to confusing tooling.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-019%7CRook+2%7Cjunior+developer+learning+where+to+start%7CI+know+Git+basics+but+product+menus+and+enterprise+language+can+make+me+feel+like+I+do+not+belong+yet.%7CI+clicked+GitHub+from+a+tutorial+that+said+to+create+an+account.%7CFind+a+clear+beginner+path+without+drowning+in+product+categories.%7CBecome+employable+without+losing+confidence+to+confusing+tooling.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Become employable without losing confidence to confusing tooling.",
+        "startingYears": 100,
+        "yearsRemaining": 99.83333333333333,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 2,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.16666666666666666,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.8333
+          }
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-020",
+      "score": 37,
+      "endReason": "got lost, did not know what to do, and left",
+      "errors": [],
+      "actions": 2,
+      "screenshots": 3,
+      "ideas": [
+        "Put a CTO path up front with proof points for small teams: reliability, permissions, AI governance, and migration effort.",
+        "Give startup teams a proof-first path that compares speed, security, and setup effort in one clear view."
+      ],
+      "thoughts": 3,
+      "opinions": 2,
+      "screenSize": {
+        "name": "Laptop 15",
+        "category": "desktop",
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1,
+        "userAgent": "",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|GitHub|thoughtful-betabot-020|Iris 2|startup CTO comparing code hosting and AI coding claims|I need developer speed, but AI and security claims need proof before I stake my team on them.|I opened GitHub after hearing about Copilot and enterprise security.|Understand whether the site gives enough proof to investigate further.|Protect my startup runway by choosing developer infrastructure that compounds.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CGitHub%7Cthoughtful-betabot-020%7CIris+2%7Cstartup+CTO+comparing+code+hosting+and+AI+coding+claims%7CI+need+developer+speed%2C+but+AI+and+security+claims+need+proof+before+I+stake+my+team+on+them.%7CI+opened+GitHub+after+hearing+about+Copilot+and+enterprise+security.%7CUnderstand+whether+the+site+gives+enough+proof+to+investigate+further.%7CProtect+my+startup+runway+by+choosing+developer+infrastructure+that+compounds.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      },
+      "betabookMoments": 0,
+      "destinyMoments": 1,
+      "likes": 0,
+      "passes": 0,
+      "messages": 0,
+      "repeatedScreens": 0,
+      "meaningfulSocialActions": 1,
+      "loopHelpRequests": 0,
+      "loopRescuesFollowed": 0,
+      "curiosityActions": 0,
+      "attentionSpanMinutes": 1,
+      "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+      "mortality": {
+        "enabled": true,
+        "lifeGoal": "Protect my startup runway by choosing developer infrastructure that compounds.",
+        "startingYears": 100,
+        "yearsRemaining": 99.83333333333333,
+        "actionMonthsCost": 1,
+        "dollarYearsCost": 1,
+        "actionsCharged": 2,
+        "dollarsCommitted": 0,
+        "yearsSpentOnActions": 0.16666666666666666,
+        "yearsSpentOnMoney": 0,
+        "truthAuditRiskEvents": 2,
+        "death": false,
+        "deathReason": "",
+        "entries": [
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /Features/i",
+            "yearsRemaining": 99.9167
+          },
+          {
+            "kind": "action",
+            "amount": 1,
+            "reason": "clicked /contact/i",
+            "yearsRemaining": 99.8333
+          }
+        ]
+      }
+    }
+  ]
+}

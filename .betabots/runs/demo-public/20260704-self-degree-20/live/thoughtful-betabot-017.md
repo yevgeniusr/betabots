@@ -1,0 +1,35 @@
+# thoughtful-betabot-017 — Live Thoughtful Browser Storyline
+
+## Raw Journey
+- T+0:00 I arrive as career switcher deciding whether this can replace another course. My past: I have bought online courses before and often quit when the path became vague after the first week.
+- T+0:00 My screen is iPhone 13 (390x844, mobile).
+- T+0:00 Today I want to: Understand what I would learn, how long it takes, and whether there is proof it works.
+- T+0:00 My life goal is: Build a career that gives me independence without wasting money on empty promises.
+- T+0:00 I have 100 life-years. Each meaningful action costs 1 month(s); each committed dollar costs 1 year(s).
+- T+0:06 Screenshot evidence (arrival): screenshots/thoughtful-betabot-017/001-arrival.png
+- T+0:06 I see "self-degree - AI Learning Platform That Replaces Traditional School". 🇬🇧 AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a unique roadmap adapted to their level, interests, and pace. No more one-size-fits-all  [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:22 I think: This looks aimed at homeschoolers and children, not someone switching careers, so I am already cautious. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:22 My reaction: The speed claims are tempting, but they feel unproven from this screen. I do not yet see what I would learn, how long it takes, or evidence that it works for adults. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:22 Idea: Show separate paths for adult career switchers, including timelines, sample curriculum, outcomes, and proof from real learners. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:22 Life-cost decision: Spending 1 month(s) to browse once is barely justified if it quickly shows whether this can help me build independence without buying empty promises. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:22 Truth assessment: My honest judgment is that this may not be for me because the visible promise is about replacing school for children. Confidence: high. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:22 My impulse is to explore. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:28 I think: I have a hunch that checking another part of the product now will matter. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:28 I follow a hunch and check /pricing. [screen: screenshots/thoughtful-betabot-017/001-arrival.png]
+- T+0:28 Screenshot evidence (destiny /pricing): screenshots/thoughtful-betabot-017/002-destiny-pricing.png
+- T+0:28 After following Destiny to /pricing, I see:  [screen: screenshots/thoughtful-betabot-017/002-destiny-pricing.png]
+- T+0:28 I cannot find the obvious link, so I try / like a determined user using the address bar. [screen: screenshots/thoughtful-betabot-017/002-destiny-pricing.png]
+- T+0:35 Screenshot evidence (exploration): screenshots/thoughtful-betabot-017/003-exploration.png
+- T+0:35 I now see: 🇬🇧 AI EDUCATIONAL PLATFORM Stop Spending 10+ Hours Planning Curriculum. Our AI Does It in Minutes. 1 hour here = 4-5 hours of traditional learning. Do the math. The AI learning platform that holistically replaces traditional school for tech-savvy homeschoolers. 100% personalized. Completely automated. START FREE BROWSE DIRECTORY Be among the first to explore the future of learning • No credit card required 5x Faster Learning vs traditional methods 10+ Hours Saved per week on planning 100% Personalized AI adapts to each child Complete School Replacement System AI Personalizes Everything Every child gets a unique roadmap adapted to their level, interests, and pace. No more one-size-fits-all  [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+0:50 I think: This looks aimed at homeschoolers and children, not someone switching careers, so I feel like I may be in the wrong place. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+0:50 My reaction: The speed claims are bold, but I do not see proof, outcomes, or a clear adult learning path yet. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+0:50 Idea: Add a career-switcher track with sample roadmap, time estimate, and real learner outcomes. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+0:50 Life-cost decision: Spending 1 more month of life is only worth it if I can quickly find adult career proof instead of more broad claims. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+0:50 Truth assessment: My honest judgment is that the promise is interesting but mismatched for me right now; confidence 0.74. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+0:50 My impulse is to explore. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+1:06 I feel stuck, so I ask Betabook for help instead of silently looping. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+1:33 Curiosity gets me to try "START FREE" instead of repeating the same path. [screen: screenshots/thoughtful-betabot-017/003-exploration.png]
+- T+1:36 Screenshot evidence (curiosity-click): screenshots/thoughtful-betabot-017/004-curiosity-click.png
+- T+1:36 I try "/contact/i" and watch whether the app reacts clearly. [screen: screenshots/thoughtful-betabot-017/004-curiosity-click.png]
+- T+1:40 Screenshot evidence (post-/contact/i): screenshots/thoughtful-betabot-017/005-post-contact-i.png
+- T+1:40 After trying "/contact/i", I see: 🇬🇧 Contact Us We're here to help. Ask us anything. Get in Touch Name Email Subject Message Submit Contact Information yev@quested.io +1 (661) 268-6176 8 The Green #15319 Dover, DE, 19901 US RESOURCES Educational resources on TikTok Learn with YouTube Creators to learn math with Online design educators MENTORS Self-education coaches English-speaking mentors Programming mentors English tutors SELF-DEGREE FOR Mid-Career Professionals Feeling Stuck in Career Upskilling for Promotion Future-Proofing Your Career Aspiring Founders Returning to Workforce Mid-Career Crisis Job Search Strategy Transferable Skills Best Skills for Career Change Online Courses HOMESCHOOLING Fastest Way to Learn Secular [screen: screenshots/thoughtful-betabot-017/005-post-contact-i.png]

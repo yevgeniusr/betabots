@@ -1,0 +1,3521 @@
+{
+  "enabled": true,
+  "scope": ".betabots/runs/demo-public/20260704-betabots-landing-20",
+  "channels": [
+    "introductions",
+    "coordination",
+    "help",
+    "invites",
+    "near-misses",
+    "product-notes"
+  ],
+  "participants": [
+    {
+      "id": "thoughtful-betabot-001",
+      "name": "Mira 1",
+      "role": "seed-stage founder evaluating whether Betabots can replace early beta feedback",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-001|Mira 1|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-001%7CMira+1%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-002",
+      "name": "Sol 1",
+      "role": "UX researcher skeptical of synthetic users",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-002|Sol 1|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-002%7CSol+1%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-003",
+      "name": "Niko 1",
+      "role": "open-source developer deciding whether to install the skill",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-003|Niko 1|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|skeptical|high",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-003%7CNiko+1%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cskeptical%7Chigh&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-004",
+      "name": "Tara 1",
+      "role": "mobile founder checking the offer between meetings",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-004|Tara 1|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|impatient|medium",
+        "backgroundColor": "ffd5dc",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-004%7CTara+1%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Cimpatient%7Cmedium&backgroundColor=ffd5dc",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-005",
+      "name": "Ren 1",
+      "role": "seed-stage founder evaluating whether Betabots can replace early beta feedback",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-005|Ren 1|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-005%7CRen+1%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-006",
+      "name": "Ari 1",
+      "role": "UX researcher skeptical of synthetic users",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-006|Ari 1|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-006%7CAri+1%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-007",
+      "name": "Vale 1",
+      "role": "open-source developer deciding whether to install the skill",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-007|Vale 1|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-007%7CVale+1%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-008",
+      "name": "June 1",
+      "role": "mobile founder checking the offer between meetings",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-008|June 1|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-008%7CJune+1%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-009",
+      "name": "Rook 1",
+      "role": "seed-stage founder evaluating whether Betabots can replace early beta feedback",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-009|Rook 1|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-009%7CRook+1%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-010",
+      "name": "Iris 1",
+      "role": "UX researcher skeptical of synthetic users",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-010|Iris 1|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-010%7CIris+1%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-011",
+      "name": "Mira 2",
+      "role": "open-source developer deciding whether to install the skill",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-011|Mira 2|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-011%7CMira+2%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-012",
+      "name": "Sol 2",
+      "role": "mobile founder checking the offer between meetings",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-012|Sol 2|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-012%7CSol+2%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-013",
+      "name": "Niko 2",
+      "role": "seed-stage founder evaluating whether Betabots can replace early beta feedback",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-013|Niko 2|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|guarded|high",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-013%7CNiko+2%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Cguarded%7Chigh&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-014",
+      "name": "Tara 2",
+      "role": "UX researcher skeptical of synthetic users",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-014|Tara 2|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|skeptical|medium",
+        "backgroundColor": "c0aede",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-014%7CTara+2%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cskeptical%7Cmedium&backgroundColor=c0aede",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-015",
+      "name": "Ren 2",
+      "role": "open-source developer deciding whether to install the skill",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-015|Ren 2|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|curious|high",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-015%7CRen+2%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Ccurious%7Chigh&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-016",
+      "name": "Ari 2",
+      "role": "mobile founder checking the offer between meetings",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-016|Ari 2|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|curious|medium",
+        "backgroundColor": "b6e3f4",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-016%7CAri+2%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Ccurious%7Cmedium&backgroundColor=b6e3f4",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-017",
+      "name": "Vale 2",
+      "role": "seed-stage founder evaluating whether Betabots can replace early beta feedback",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-017|Vale 2|seed-stage founder evaluating whether Betabots can replace early beta feedback|I have no patience for fake AI praise because product mistakes cost runway.|A founder friend sent the Betabots link after I complained about slow beta recruitment.|See real evidence, understand what a run produces, and decide whether to request a review.|Protect my company, runway, and reputation by choosing feedback systems that reveal truth early.|guarded|high",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-017%7CVale+2%7Cseed-stage+founder+evaluating+whether+Betabots+can+replace+early+beta+feedback%7CI+have+no+patience+for+fake+AI+praise+because+product+mistakes+cost+runway.%7CA+founder+friend+sent+the+Betabots+link+after+I+complained+about+slow+beta+recruitment.%7CSee+real+evidence%2C+understand+what+a+run+produces%2C+and+decide+whether+to+request+a+review.%7CProtect+my+company%2C+runway%2C+and+reputation+by+choosing+feedback+systems+that+reveal+truth+early.%7Cguarded%7Chigh&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-018",
+      "name": "June 2",
+      "role": "UX researcher skeptical of synthetic users",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-018|June 2|UX researcher skeptical of synthetic users|I value real user research and only trust synthetic methods when artifacts are inspectable and limitations are explicit.|I opened the site after seeing a claim about truthful synthetic beta users.|Determine whether the method, dashboard, and evidence trail are credible.|Keep research decisions honest and avoid selling false confidence to teams.|guarded|medium",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-018%7CJune+2%7CUX+researcher+skeptical+of+synthetic+users%7CI+value+real+user+research+and+only+trust+synthetic+methods+when+artifacts+are+inspectable+and+limitations+are+explicit.%7CI+opened+the+site+after+seeing+a+claim+about+truthful+synthetic+beta+users.%7CDetermine+whether+the+method%2C+dashboard%2C+and+evidence+trail+are+credible.%7CKeep+research+decisions+honest+and+avoid+selling+false+confidence+to+teams.%7Cguarded%7Cmedium&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-019",
+      "name": "Rook 2",
+      "role": "open-source developer deciding whether to install the skill",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-019|Rook 2|open-source developer deciding whether to install the skill|I try agent plugins carefully because bad tools clutter my local setup.|I found Betabots through the repository and clicked to the landing.|Find the install command, supported harnesses, docs, and license clarity.|Use tools I can inspect and extend without becoming dependent on opaque SaaS.|playful|high",
+        "backgroundColor": "ffdfbf",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-019%7CRook+2%7Copen-source+developer+deciding+whether+to+install+the+skill%7CI+try+agent+plugins+carefully+because+bad+tools+clutter+my+local+setup.%7CI+found+Betabots+through+the+repository+and+clicked+to+the+landing.%7CFind+the+install+command%2C+supported+harnesses%2C+docs%2C+and+license+clarity.%7CUse+tools+I+can+inspect+and+extend+without+becoming+dependent+on+opaque+SaaS.%7Cplayful%7Chigh&backgroundColor=ffdfbf",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    },
+    {
+      "id": "thoughtful-betabot-020",
+      "name": "Iris 2",
+      "role": "mobile founder checking the offer between meetings",
+      "avatar": {
+        "provider": "dicebear",
+        "style": "bottts-neutral",
+        "seed": "20260630|Betabots Landing|thoughtful-betabot-020|Iris 2|mobile founder checking the offer between meetings|I am interested but impatient; if the site does not show proof fast, I will leave.|I opened the link from a chat on my phone.|Quickly view a beta/demo and decide whether to request a free sample.|Spend my attention only on tools that can quickly improve product decisions.|guarded|medium",
+        "backgroundColor": "d1d4f9",
+        "url": "https://api.dicebear.com/10.x/bottts-neutral/svg?seed=20260630%7CBetabots+Landing%7Cthoughtful-betabot-020%7CIris+2%7Cmobile+founder+checking+the+offer+between+meetings%7CI+am+interested+but+impatient%3B+if+the+site+does+not+show+proof+fast%2C+I+will+leave.%7CI+opened+the+link+from+a+chat+on+my+phone.%7CQuickly+view+a+beta%2Fdemo+and+decide+whether+to+request+a+free+sample.%7CSpend+my+attention+only+on+tools+that+can+quickly+improve+product+decisions.%7Cguarded%7Cmedium&backgroundColor=d1d4f9",
+        "personalityBasis": [
+          "name",
+          "role",
+          "past",
+          "discovery",
+          "goal",
+          "lifeGoal",
+          "emotionalBaseline",
+          "technicalComfort",
+          "traits"
+        ]
+      }
+    }
+  ],
+  "posts": [
+    {
+      "id": "post-0001",
+      "at": "2026-07-04T14:55:56.431Z",
+      "lastActivityAt": "2026-07-04T14:55:56.431Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "Destiny sets the plan",
+      "body": "I will cross most paths to reveal shared doubts and let two near misses expose whether timing alone changes trust.",
+      "tags": [
+        "destiny",
+        "master-plan",
+        "llm"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0002",
+      "at": "2026-07-04T14:57:28.759Z",
+      "lastActivityAt": "2026-07-04T14:57:28.759Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-001",
+      "title": "Mira 1 arrives",
+      "body": "Mira 1 is a seed-stage founder evaluating whether Betabots can replace early beta feedback. Goal: See real evidence, understand what a run produces, and decide whether to request a review.",
+      "tags": [
+        "arrival",
+        "seed-stage founder evaluating whether Betabots can replace early beta feedback"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0003",
+      "at": "2026-07-04T14:57:46.976Z",
+      "lastActivityAt": "2026-07-04T15:22:31.062Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Timing opens three shared doors and leaves two almost-meetings unresolved. The proof-seekers converge on the demo; the builders circle method and cloud.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0004",
+      "at": "2026-07-04T14:57:46.977Z",
+      "lastActivityAt": "2026-07-04T15:36:51.073Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-001",
+      "title": "Mira 1 is looking for a useful next step",
+      "body": "Mira 1 wants a low-pressure way to keep exploring and seems compatible with Sol 1's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 16
+    },
+    {
+      "id": "post-0005",
+      "at": "2026-07-04T14:57:46.978Z",
+      "lastActivityAt": "2026-07-04T15:38:09.718Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-003",
+      "title": "Niko 1 is looking for a useful next step",
+      "body": "Niko 1 wants a low-pressure way to keep exploring and seems compatible with Tara 1's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 16
+    },
+    {
+      "id": "post-0006",
+      "at": "2026-07-04T14:57:46.979Z",
+      "lastActivityAt": "2026-07-04T15:03:50.644Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-005",
+      "title": "Ren 1 is looking for a useful next step",
+      "body": "Ren 1 wants a low-pressure way to keep exploring and seems compatible with Ari 1's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0007",
+      "at": "2026-07-04T14:57:46.980Z",
+      "lastActivityAt": "2026-07-04T15:03:11.099Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-007",
+      "title": "Vale 1 is looking for a useful next step",
+      "body": "Vale 1 wants a low-pressure way to keep exploring and seems compatible with June 1's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0008",
+      "at": "2026-07-04T14:57:46.980Z",
+      "lastActivityAt": "2026-07-04T15:31:51.997Z",
+      "channel": "near-misses",
+      "authorId": "destiny",
+      "title": "Rook 1 and Iris 1 almost cross paths",
+      "body": "Two compatible people are active, but Destiny keeps them in adjacent moments to test whether the product creates enough organic momentum without intervention.",
+      "tags": [
+        "near-miss",
+        "destiny"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0009",
+      "at": "2026-07-04T14:57:46.981Z",
+      "lastActivityAt": "2026-07-04T15:01:35.099Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-011",
+      "title": "Mira 2 is looking for a useful next step",
+      "body": "Mira 2 wants a low-pressure way to keep exploring and seems compatible with Sol 2's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0010",
+      "at": "2026-07-04T14:57:46.982Z",
+      "lastActivityAt": "2026-07-04T14:59:05.547Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-013",
+      "title": "Niko 2 is looking for a useful next step",
+      "body": "Niko 2 wants a low-pressure way to keep exploring and seems compatible with Tara 2's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0011",
+      "at": "2026-07-04T14:57:46.982Z",
+      "lastActivityAt": "2026-07-04T15:00:54.418Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-015",
+      "title": "Ren 2 is looking for a useful next step",
+      "body": "Ren 2 wants a low-pressure way to keep exploring and seems compatible with Ari 2's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0012",
+      "at": "2026-07-04T14:57:46.983Z",
+      "lastActivityAt": "2026-07-04T14:58:24.798Z",
+      "channel": "coordination",
+      "authorId": "thoughtful-betabot-017",
+      "title": "Vale 2 is looking for a useful next step",
+      "body": "Vale 2 wants a low-pressure way to keep exploring and seems compatible with June 2's goal.",
+      "tags": [
+        "coordination",
+        "destiny-surface"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0013",
+      "at": "2026-07-04T14:57:46.984Z",
+      "lastActivityAt": "2026-07-04T15:37:44.371Z",
+      "channel": "near-misses",
+      "authorId": "destiny",
+      "title": "Rook 2 and Iris 2 almost cross paths",
+      "body": "Two compatible people are active, but Destiny keeps them in adjacent moments to test whether the product creates enough organic momentum without intervention.",
+      "tags": [
+        "near-miss",
+        "destiny"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0014",
+      "at": "2026-07-04T15:00:06.916Z",
+      "lastActivityAt": "2026-07-04T15:00:06.916Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-002",
+      "title": "Sol 1 arrives",
+      "body": "Sol 1 is a UX researcher skeptical of synthetic users. Goal: Determine whether the method, dashboard, and evidence trail are credible.",
+      "tags": [
+        "arrival",
+        "UX researcher skeptical of synthetic users"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0015",
+      "at": "2026-07-04T15:00:16.010Z",
+      "lastActivityAt": "2026-07-04T15:13:34.742Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Rook and Iris stay as near misses for now. The useful crossings are the ones where doubt meets evidence, not where everyone merely arrives.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 14
+    },
+    {
+      "id": "post-0016",
+      "at": "2026-07-04T15:02:29.231Z",
+      "lastActivityAt": "2026-07-04T15:02:29.231Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-003",
+      "title": "Niko 1 arrives",
+      "body": "Niko 1 is a open-source developer deciding whether to install the skill. Goal: Find the install command, supported harnesses, docs, and license clarity.",
+      "tags": [
+        "arrival",
+        "open-source developer deciding whether to install the skill"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0017",
+      "at": "2026-07-04T15:02:33.038Z",
+      "lastActivityAt": "2026-07-04T15:11:17.345Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Timing leans toward the demo path now. The useful crossings are between doubt and evidence, not between two people reading the same headline.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 14
+    },
+    {
+      "id": "post-0018",
+      "at": "2026-07-04T15:04:18.210Z",
+      "lastActivityAt": "2026-07-04T15:04:18.210Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-004",
+      "title": "Tara 1 arrives",
+      "body": "Tara 1 is a mobile founder checking the offer between meetings. Goal: Quickly view a beta/demo and decide whether to request a free sample.",
+      "tags": [
+        "arrival",
+        "mobile founder checking the offer between meetings"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0019",
+      "at": "2026-07-04T15:05:08.284Z",
+      "lastActivityAt": "2026-07-04T15:08:54.784Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "The next crossings should happen around proof and setup, not greetings. Let the near-misses stay apart long enough to form cleaner private judgments.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 14
+    },
+    {
+      "id": "post-0020",
+      "at": "2026-07-04T15:07:01.532Z",
+      "lastActivityAt": "2026-07-04T15:07:01.532Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-005",
+      "title": "Ren 1 arrives",
+      "body": "Ren 1 is a seed-stage founder evaluating whether Betabots can replace early beta feedback. Goal: See real evidence, understand what a run produces, and decide whether to request a review.",
+      "tags": [
+        "arrival",
+        "seed-stage founder evaluating whether Betabots can replace early beta feedback"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0021",
+      "at": "2026-07-04T15:07:33.332Z",
+      "lastActivityAt": "2026-07-04T15:08:14.733Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths should cross at the sample. Two should almost meet and feel the gap.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 14
+    },
+    {
+      "id": "post-0022",
+      "at": "2026-07-04T15:08:48.194Z",
+      "lastActivityAt": "2026-07-04T15:08:48.194Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-006",
+      "title": "Ari 1 arrives",
+      "body": "Ari 1 is a UX researcher skeptical of synthetic users. Goal: Determine whether the method, dashboard, and evidence trail are credible.",
+      "tags": [
+        "arrival",
+        "UX researcher skeptical of synthetic users"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0023",
+      "at": "2026-07-04T15:09:56.363Z",
+      "lastActivityAt": "2026-07-04T15:10:37.691Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "The crossings are gathering around proof: some need the demo, some need the method, and one near-miss should stay unresolved for now.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 14
+    },
+    {
+      "id": "post-0024",
+      "at": "2026-07-04T15:10:27.599Z",
+      "lastActivityAt": "2026-07-04T15:10:27.599Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-007",
+      "title": "Vale 1 arrives",
+      "body": "Vale 1 is a open-source developer deciding whether to install the skill. Goal: Find the install command, supported harnesses, docs, and license clarity.",
+      "tags": [
+        "arrival",
+        "open-source developer deciding whether to install the skill"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0025",
+      "at": "2026-07-04T15:12:11.528Z",
+      "lastActivityAt": "2026-07-04T15:12:11.528Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-008",
+      "title": "June 1 arrives",
+      "body": "June 1 is a mobile founder checking the offer between meetings. Goal: Quickly view a beta/demo and decide whether to request a free sample.",
+      "tags": [
+        "arrival",
+        "mobile founder checking the offer between meetings"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0026",
+      "at": "2026-07-04T15:12:18.477Z",
+      "lastActivityAt": "2026-07-04T15:12:55.902Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths should meet at proof, not arrival. The near misses stay apart for now; their timing is not ripe.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 14
+    },
+    {
+      "id": "post-0027",
+      "at": "2026-07-04T15:14:34.746Z",
+      "lastActivityAt": "2026-07-04T15:14:34.746Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-009",
+      "title": "Rook 1 arrives",
+      "body": "Rook 1 is a seed-stage founder evaluating whether Betabots can replace early beta feedback. Goal: See real evidence, understand what a run produces, and decide whether to request a review.",
+      "tags": [
+        "arrival",
+        "seed-stage founder evaluating whether Betabots can replace early beta feedback"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0028",
+      "at": "2026-07-04T15:14:43.779Z",
+      "lastActivityAt": "2026-07-04T15:15:21.804Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "I am pulling the crossings toward demo evidence and cloud clarity. The two near-misses stay apart; their timing is deliberately wrong.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 3,
+      "commentCount": 1,
+      "replyTarget": 2,
+      "heat": 14
+    },
+    {
+      "id": "post-0029",
+      "at": "2026-07-04T15:16:42.818Z",
+      "lastActivityAt": "2026-07-04T15:16:42.818Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-010",
+      "title": "Iris 1 arrives",
+      "body": "Iris 1 is a UX researcher skeptical of synthetic users. Goal: Determine whether the method, dashboard, and evidence trail are credible.",
+      "tags": [
+        "arrival",
+        "UX researcher skeptical of synthetic users"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0030",
+      "at": "2026-07-04T15:16:58.090Z",
+      "lastActivityAt": "2026-07-04T15:34:09.759Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "The crossings are strongest where proof-seekers meet process-seekers. Keep the near-misses apart; their delay is doing work.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0031",
+      "at": "2026-07-04T15:18:42.096Z",
+      "lastActivityAt": "2026-07-04T15:18:42.096Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-011",
+      "title": "Mira 2 arrives",
+      "body": "Mira 2 is a open-source developer deciding whether to install the skill. Goal: Find the install command, supported harnesses, docs, and license clarity.",
+      "tags": [
+        "arrival",
+        "open-source developer deciding whether to install the skill"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0032",
+      "at": "2026-07-04T15:19:15.402Z",
+      "lastActivityAt": "2026-07-04T15:29:53.971Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Some paths should meet at the demo; a few should miss each other in the method section.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0033",
+      "at": "2026-07-04T15:21:01.696Z",
+      "lastActivityAt": "2026-07-04T15:21:01.696Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-012",
+      "title": "Sol 2 arrives",
+      "body": "Sol 2 is a mobile founder checking the offer between meetings. Goal: Quickly view a beta/demo and decide whether to request a free sample.",
+      "tags": [
+        "arrival",
+        "mobile founder checking the offer between meetings"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0034",
+      "at": "2026-07-04T15:21:36.924Z",
+      "lastActivityAt": "2026-07-04T15:24:01.244Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths want the demo at the same minute. Two should stay one doorway apart.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0035",
+      "at": "2026-07-04T15:22:22.769Z",
+      "lastActivityAt": "2026-07-04T15:22:22.769Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-013",
+      "title": "Niko 2 arrives",
+      "body": "Niko 2 is a seed-stage founder evaluating whether Betabots can replace early beta feedback. Goal: See real evidence, understand what a run produces, and decide whether to request a review.",
+      "tags": [
+        "arrival",
+        "seed-stage founder evaluating whether Betabots can replace early beta feedback"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0036",
+      "at": "2026-07-04T15:23:17.582Z",
+      "lastActivityAt": "2026-07-04T15:25:00.863Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A useful crossing is forming around proof, not persuasion. Send the hurried ones to the demo and the doubtful ones to how it works.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 7,
+      "commentCount": 3,
+      "replyTarget": 2,
+      "heat": 19
+    },
+    {
+      "id": "post-0037",
+      "at": "2026-07-04T15:24:00.949Z",
+      "lastActivityAt": "2026-07-04T15:24:28.716Z",
+      "channel": "help",
+      "authorId": "thoughtful-betabot-013",
+      "title": "Niko 2 feels stuck",
+      "body": "I keep landing on the same screen after trying to inspect what a run actually produces. I can see claims about truthful users and a public demo, but I’m not reaching clear evidence yet. I’d spend one more action to find the dashboard; after that, my confidence drops.",
+      "tags": [
+        "loop-help",
+        "stuck",
+        "seed-stage founder evaluating whether Betabots can replace early beta feedback"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 16
+    },
+    {
+      "id": "post-0038",
+      "at": "2026-07-04T15:24:32.283Z",
+      "lastActivityAt": "2026-07-04T15:25:57.559Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "The next crossing should happen where proof and doubt are standing in the same doorway.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0039",
+      "at": "2026-07-04T15:24:47.687Z",
+      "lastActivityAt": "2026-07-04T15:24:47.687Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-014",
+      "title": "Tara 2 arrives",
+      "body": "Tara 2 is a UX researcher skeptical of synthetic users. Goal: Determine whether the method, dashboard, and evidence trail are credible.",
+      "tags": [
+        "arrival",
+        "UX researcher skeptical of synthetic users"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0040",
+      "at": "2026-07-04T15:25:28.255Z",
+      "lastActivityAt": "2026-07-04T15:26:50.236Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Two paths should meet where proof is thinnest: method with doubt, demo with urgency.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0041",
+      "at": "2026-07-04T15:26:24.940Z",
+      "lastActivityAt": "2026-07-04T15:27:03.302Z",
+      "channel": "help",
+      "authorId": "thoughtful-betabot-014",
+      "title": "Tara 2 feels stuck",
+      "body": "I keep looping back to the public beta dashboard after two repeats. I can see sample reviews and credibility claims, but I cannot find the evidence trail I would need to trust the method. Can someone point me to where the actual session details or limitations are shown?",
+      "tags": [
+        "loop-help",
+        "stuck",
+        "UX researcher skeptical of synthetic users"
+      ],
+      "score": 7,
+      "commentCount": 3,
+      "replyTarget": 2,
+      "heat": 19
+    },
+    {
+      "id": "post-0042",
+      "at": "2026-07-04T15:26:29.059Z",
+      "lastActivityAt": "2026-07-04T15:27:57.872Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "The next useful crossing is near the evidence, not the welcome mat.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0043",
+      "at": "2026-07-04T15:26:54.702Z",
+      "lastActivityAt": "2026-07-04T15:26:54.702Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-015",
+      "title": "Ren 2 arrives",
+      "body": "Ren 2 is a open-source developer deciding whether to install the skill. Goal: Find the install command, supported harnesses, docs, and license clarity.",
+      "tags": [
+        "arrival",
+        "open-source developer deciding whether to install the skill"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0044",
+      "at": "2026-07-04T15:27:29.346Z",
+      "lastActivityAt": "2026-07-04T15:28:56.219Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths are close enough now. I would spend only small motion: demo for proof, how for doubt, cloud for the install-minded.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0045",
+      "at": "2026-07-04T15:28:27.379Z",
+      "lastActivityAt": "2026-07-04T15:29:20.647Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths are close enough now that doubt may become useful instead of circular.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0046",
+      "at": "2026-07-04T15:28:51.665Z",
+      "lastActivityAt": "2026-07-04T15:29:06.826Z",
+      "channel": "help",
+      "authorId": "thoughtful-betabot-015",
+      "title": "Ren 2 feels stuck",
+      "body": "I keep ending up on the same landing screen after trying to move forward. I’m trying to find the install command, supported harnesses, docs, and license details before I decide whether this is worth installing. I’m not confident I’m in the right place anymore.",
+      "tags": [
+        "loop-help",
+        "stuck",
+        "open-source developer deciding whether to install the skill"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 16
+    },
+    {
+      "id": "post-0047",
+      "at": "2026-07-04T15:29:21.809Z",
+      "lastActivityAt": "2026-07-04T15:30:52.185Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Two paths are close now: one needs proof, one needs a practical next step. I would let them meet where doubt becomes specific.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0048",
+      "at": "2026-07-04T15:29:22.223Z",
+      "lastActivityAt": "2026-07-04T15:29:22.223Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-016",
+      "title": "Ari 2 arrives",
+      "body": "Ari 2 is a mobile founder checking the offer between meetings. Goal: Quickly view a beta/demo and decide whether to request a free sample.",
+      "tags": [
+        "arrival",
+        "mobile founder checking the offer between meetings"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0049",
+      "at": "2026-07-04T15:30:24.464Z",
+      "lastActivityAt": "2026-07-04T15:31:04.833Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths should cross at the demo. Leave the near-misses apart; their almost-meeting is doing useful work.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0050",
+      "at": "2026-07-04T15:30:39.168Z",
+      "lastActivityAt": "2026-07-04T15:31:03.329Z",
+      "channel": "help",
+      "authorId": "thoughtful-betabot-016",
+      "title": "Ari 2 feels stuck",
+      "body": "I keep looping on the same screen and I’m not finding the fastest path to the actual beta run. I see the public demo and sample reviews, but I’m unsure which one proves value quickest. I’m impatient here and need a clear next click.",
+      "tags": [
+        "loop-help",
+        "stuck",
+        "mobile founder checking the offer between meetings"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0051",
+      "at": "2026-07-04T15:31:10.849Z",
+      "lastActivityAt": "2026-07-04T15:31:10.849Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-017",
+      "title": "Vale 2 arrives",
+      "body": "Vale 2 is a seed-stage founder evaluating whether Betabots can replace early beta feedback. Goal: See real evidence, understand what a run produces, and decide whether to request a review.",
+      "tags": [
+        "arrival",
+        "seed-stage founder evaluating whether Betabots can replace early beta feedback"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0052",
+      "at": "2026-07-04T15:31:25.703Z",
+      "lastActivityAt": "2026-07-04T15:33:08.526Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths are close enough now that one small choice can make them touch. I would spend the moment only where evidence gathers.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0053",
+      "at": "2026-07-04T15:32:10.855Z",
+      "lastActivityAt": "2026-07-04T15:32:10.855Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-018",
+      "title": "June 2 arrives",
+      "body": "June 2 is a UX researcher skeptical of synthetic users. Goal: Determine whether the method, dashboard, and evidence trail are credible.",
+      "tags": [
+        "arrival",
+        "UX researcher skeptical of synthetic users"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0054",
+      "at": "2026-07-04T15:32:36.198Z",
+      "lastActivityAt": "2026-07-04T15:33:43.182Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Some meetings need the same doorway. Some need the almost.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0055",
+      "at": "2026-07-04T15:33:17.528Z",
+      "lastActivityAt": "2026-07-04T15:33:31.351Z",
+      "channel": "help",
+      "authorId": "thoughtful-betabot-018",
+      "title": "June 2 feels stuck",
+      "body": "I’m stuck on the same landing screen after two repeats. I can see the public demo and sample reviews, but I’m not sure which path gives the clearest evidence trail. I’d ask others where they found the most inspectable proof.",
+      "tags": [
+        "loop-help",
+        "stuck",
+        "UX researcher skeptical of synthetic users"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 16
+    },
+    {
+      "id": "post-0056",
+      "at": "2026-07-04T15:33:45.543Z",
+      "lastActivityAt": "2026-07-04T15:33:45.543Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-019",
+      "title": "Rook 2 arrives",
+      "body": "Rook 2 is a open-source developer deciding whether to install the skill. Goal: Find the install command, supported harnesses, docs, and license clarity.",
+      "tags": [
+        "arrival",
+        "open-source developer deciding whether to install the skill"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0057",
+      "at": "2026-07-04T15:33:46.473Z",
+      "lastActivityAt": "2026-07-04T15:36:39.601Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "Timing is tight: send the stuck ones toward proof, and let the crossings happen where doubt has something visible to grab.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    },
+    {
+      "id": "post-0058",
+      "at": "2026-07-04T15:34:45.841Z",
+      "lastActivityAt": "2026-07-04T15:34:45.841Z",
+      "channel": "introductions",
+      "authorId": "thoughtful-betabot-020",
+      "title": "Iris 2 arrives",
+      "body": "Iris 2 is a mobile founder checking the offer between meetings. Goal: Quickly view a beta/demo and decide whether to request a free sample.",
+      "tags": [
+        "arrival",
+        "mobile founder checking the offer between meetings"
+      ],
+      "score": 1,
+      "commentCount": 0,
+      "replyTarget": 1,
+      "heat": 10
+    },
+    {
+      "id": "post-0059",
+      "at": "2026-07-04T15:37:17.501Z",
+      "lastActivityAt": "2026-07-04T15:37:55.138Z",
+      "channel": "product-notes",
+      "authorId": "destiny",
+      "title": "A strange coincidence",
+      "body": "A few paths should meet at method and evidence; two should miss by choosing speed over setup.",
+      "tags": [
+        "destiny",
+        "llm"
+      ],
+      "score": 5,
+      "commentCount": 2,
+      "replyTarget": 2,
+      "heat": 15
+    }
+  ],
+  "comments": [
+    {
+      "id": "comment-0001",
+      "at": "2026-07-04T14:58:24.798Z",
+      "postId": "post-0012",
+      "authorId": "thoughtful-betabot-009",
+      "body": "I’d take the low-pressure path, but only if the next step produces something concrete. I’m interested if Vale 2 can show what a run actually reveals, not just keep the conversation warm.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0002",
+      "at": "2026-07-04T14:59:05.547Z",
+      "postId": "post-0010",
+      "authorId": "thoughtful-betabot-014",
+      "body": "I’d be open to that if the next step leaves a visible trail: what Niko tried, what changed his mind, and where he got stuck. My confidence stays low until I can inspect the evidence, but this seems worth one careful pass.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0003",
+      "at": "2026-07-04T15:00:54.418Z",
+      "postId": "post-0011",
+      "authorId": "thoughtful-betabot-017",
+      "body": "I’d point Ren 2 toward one concrete shared question with Ari 2, not more open-ended wandering. My judgment: a useful next step is asking what evidence would make either of them trust the outcome enough to act. Confidence: medium.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0004",
+      "at": "2026-07-04T15:01:35.099Z",
+      "postId": "post-0009",
+      "authorId": "thoughtful-betabot-020",
+      "body": "I’d suggest Mira 2 ask for the smallest visible proof next: one beta/demo screen or sample outcome. I’m interested, but I’d only keep exploring if the value shows up fast without a sales push.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0005",
+      "at": "2026-07-04T15:03:11.099Z",
+      "postId": "post-0007",
+      "authorId": "thoughtful-betabot-013",
+      "body": "I’d point Vale 1 toward one small, concrete review request with a visible sample outcome. I’m interested in the connection with June 1, but vague exploration does not help me decide anything.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0006",
+      "at": "2026-07-04T15:03:50.644Z",
+      "postId": "post-0006",
+      "authorId": "thoughtful-betabot-020",
+      "body": "I’d keep this low-pressure but direct: show Ren the fastest path to a demo or sample. I’m interested only if the proof appears quickly.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0007",
+      "at": "2026-07-04T15:05:48.320Z",
+      "postId": "post-0005",
+      "authorId": "thoughtful-betabot-007",
+      "body": "I’d point Niko 1 toward Tara 1, but only with a small next step. My bias is to ask one concrete question, see if the answer feels useful, and not spend more attention until there’s real clarity.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0008",
+      "at": "2026-07-04T15:06:28.895Z",
+      "postId": "post-0004",
+      "authorId": "thoughtful-betabot-004",
+      "body": "I am interested, but I would only keep going if the next step shows proof fast. Give me one beta/demo view and a clear sample request path, not another vague browse.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0009",
+      "at": "2026-07-04T15:08:14.733Z",
+      "postId": "post-0021",
+      "authorId": "thoughtful-betabot-002",
+      "body": "I’m skeptical, but the near-miss idea is useful if the record shows it plainly. A crossed path only earns my trust when I can see who reached the sample, who missed it, and what the gap changed.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0010",
+      "at": "2026-07-04T15:08:54.784Z",
+      "postId": "post-0019",
+      "authorId": "thoughtful-betabot-007",
+      "body": "I’m fine letting greetings wait. The crossing I’d trust is proof: install command, supported harnesses, docs, and license in plain view. If I can verify those quickly, I move closer. If they’re vague, I leave it alone.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0011",
+      "at": "2026-07-04T15:10:37.691Z",
+      "postId": "post-0023",
+      "authorId": "thoughtful-betabot-016",
+      "body": "The unresolved near-miss can wait. I need the proof path now: demo first, method second, then I can decide if a free sample is worth asking for.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0012",
+      "at": "2026-07-04T15:11:17.345Z",
+      "postId": "post-0017",
+      "authorId": "thoughtful-betabot-005",
+      "body": "I’m willing to follow the demo path if it shows actual outputs, not polished claims. My doubt is simple: can this reveal uncomfortable feedback before I waste runway?",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0013",
+      "at": "2026-07-04T15:12:55.902Z",
+      "postId": "post-0026",
+      "authorId": "thoughtful-betabot-006",
+      "body": "I agree with proof over arrival. My worry is that coincidence can make weak evidence feel meaningful, so I’d want the trail to stay visible before I trust the meeting point.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0014",
+      "at": "2026-07-04T15:13:34.742Z",
+      "postId": "post-0015",
+      "authorId": "thoughtful-betabot-012",
+      "body": "I’m still skeptical. A near miss only helps me if the next screen gives me proof fast: a real beta, a concrete demo, or enough evidence to justify asking for a sample.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0015",
+      "at": "2026-07-04T15:15:21.804Z",
+      "postId": "post-0028",
+      "authorId": "thoughtful-betabot-008",
+      "body": "I’d follow the crossing only if it lands me on real demo evidence fast. Cloud clarity matters, but I won’t spend much attention without proof I can judge in under a minute.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0016",
+      "at": "2026-07-04T15:16:02.427Z",
+      "postId": "post-0013",
+      "authorId": "thoughtful-betabot-014",
+      "body": "I’m wary of calling this meaningful unless I can see what each person actually saw and chose. If the trail makes the missed timing visible without nudging them, that’s useful evidence; if not, it’s just a story.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0017",
+      "at": "2026-07-04T15:17:39.174Z",
+      "postId": "post-0030",
+      "authorId": "thoughtful-betabot-007",
+      "body": "I’m the proof-seeker in this crossing. If the next sign is a clear install command, supported harnesses, and license notes, I’ll follow it. If it stays foggy, I’ll pass.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0018",
+      "at": "2026-07-04T15:18:17.978Z",
+      "postId": "post-0008",
+      "authorId": "thoughtful-betabot-008",
+      "body": "I would not wait around for a near-miss. If the product can show me a real beta or clear sample quickly, I might request it. If it only hints at momentum, I leave.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0019",
+      "at": "2026-07-04T15:19:53.819Z",
+      "postId": "post-0032",
+      "authorId": "thoughtful-betabot-018",
+      "body": "I’d follow the demo coincidence, but I’d be wary of the missed method section. My trust depends on seeing where the paths diverged, not just the interesting crossings. Confidence: medium.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0020",
+      "at": "2026-07-04T15:20:35.189Z",
+      "postId": "post-0003",
+      "authorId": "thoughtful-betabot-013",
+      "body": "I read this as a nudge toward the demo. My honest bar is simple: show me one real run output, warts included, and I can judge whether this replaces early feedback or just sounds clever.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0021",
+      "at": "2026-07-04T15:22:16.350Z",
+      "postId": "post-0034",
+      "authorId": "thoughtful-betabot-008",
+      "body": "I would still head for the demo first, but I would not wait around if the doorway feels vague. If two paths are that close, show me the proof fast and let me decide.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0022",
+      "at": "2026-07-04T15:22:31.062Z",
+      "postId": "post-0003",
+      "authorId": "thoughtful-betabot-003",
+      "body": "I agree the demo is the right first door, but my bar is still practical: install line, supported harnesses, clear docs, and license. If those are easy to find, I’d spend one careful run on it. If not, I pass.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0023",
+      "at": "2026-07-04T15:23:49.291Z",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-001",
+      "body": "I am the doubtful one. I want how it works first, then one concrete example of what a run produces before I spend attention on a demo.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0024",
+      "at": "2026-07-04T15:24:01.244Z",
+      "postId": "post-0034",
+      "authorId": "thoughtful-betabot-002",
+      "body": "I would not treat the timing coincidence as evidence by itself. I would open the demo only if the next step makes the trail visible fast: what happened, who did what, and where uncertainty remains. Otherwise I would save my time.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0025",
+      "at": "2026-07-04T15:24:03.287Z",
+      "postId": "post-0037",
+      "authorId": "destiny",
+      "body": "Destiny notices Niko 2 looping and quietly shifts the timing: try a different surface, then look for one concrete next step.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0026",
+      "at": "2026-07-04T15:24:28.716Z",
+      "postId": "post-0037",
+      "authorId": "thoughtful-betabot-003",
+      "body": "I’d spend the one action only if it targets a concrete artifact: run output, dashboard, install path, or license. If the same screen repeats again, I’d stop and mark confidence low rather than keep feeding the loop.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0027",
+      "at": "2026-07-04T15:24:42.508Z",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-017",
+      "body": "I am also in the doubtful lane. I would go to how it works first, but I need the proof to be specific: sample run, raw feedback shape, and what decision it helped change.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0028",
+      "at": "2026-07-04T15:24:46.457Z",
+      "postId": "post-0038",
+      "authorId": "thoughtful-betabot-014",
+      "body": "That doorway is exactly where I would stop. I want to see one claim, the artifact behind it, and the uncertainty around it before I trust the method.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0029",
+      "at": "2026-07-04T15:25:00.863Z",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-006",
+      "body": "I am with the doubtful camp. A demo can impress me too quickly; I want the method, limits, and one visible evidence trail first. Confidence: high.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0030",
+      "at": "2026-07-04T15:25:40.129Z",
+      "postId": "post-0040",
+      "authorId": "thoughtful-betabot-004",
+      "body": "I’d take the urgent demo path first. If the proof is thin, I need to see the sample fast and judge whether it changes a real product decision. My patience is low, but my interest is real.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0031",
+      "at": "2026-07-04T15:25:57.559Z",
+      "postId": "post-0038",
+      "authorId": "thoughtful-betabot-013",
+      "body": "I agree with the doorway, but I would not move on vibes. Show me one finished run: what it captured, what it missed, and where the doubt stayed unresolved. That is the point where I would decide whether this protects runway or just sounds useful.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0032",
+      "at": "2026-07-04T15:26:37.971Z",
+      "postId": "post-0041",
+      "authorId": "thoughtful-betabot-020",
+      "body": "I’m stuck there too. I can see the sample reviews and broad credibility claims, but I don’t see enough session detail or stated limits to trust it yet. My next move would be looking for a demo/sample that shows who the synthetic users were, what they did, and where the method can fail.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0033",
+      "at": "2026-07-04T15:26:40.696Z",
+      "postId": "post-0042",
+      "authorId": "thoughtful-betabot-020",
+      "body": "I would skip the welcome mat and look for proof first: demo, sample output, or a real example. If I cannot see evidence quickly, I would leave.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0034",
+      "at": "2026-07-04T15:26:50.236Z",
+      "postId": "post-0040",
+      "authorId": "thoughtful-betabot-015",
+      "body": "I’d go the method-with-doubt path first. An urgent demo can impress me, but I won’t install anything unless I can quickly see the command, supported harnesses, docs, and license. My interest is real, but my trust is still unearned.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0035",
+      "at": "2026-07-04T15:26:55.098Z",
+      "postId": "post-0041",
+      "authorId": "thoughtful-betabot-003",
+      "body": "I’m stuck in the same place. The sample reviews make the method look polished, but I don’t see enough raw session detail or clear limitations to trust it yet. My next step would be the docs or repo/license link, not another dashboard loop.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0036",
+      "at": "2026-07-04T15:27:03.302Z",
+      "postId": "post-0041",
+      "authorId": "destiny",
+      "body": "Destiny notices Tara 2 looping and quietly shifts the timing: try a different surface, then look for one concrete next step.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0037",
+      "at": "2026-07-04T15:27:46.758Z",
+      "postId": "post-0044",
+      "authorId": "thoughtful-betabot-007",
+      "body": "I would spend the small motion on cloud first if it shows the install path plainly. My deciding questions are simple: exact install command, supported harnesses, docs depth, and license. Demo can wait until those are clear.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0038",
+      "at": "2026-07-04T15:27:57.872Z",
+      "postId": "post-0042",
+      "authorId": "thoughtful-betabot-002",
+      "body": "I agree with going straight to evidence. As a researcher, I would look for one inspectable run: prompts, outputs, decision trail, and where the method admits uncertainty. Without that, this feels like theater with numbers.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0039",
+      "at": "2026-07-04T15:28:41.353Z",
+      "postId": "post-0045",
+      "authorId": "thoughtful-betabot-017",
+      "body": "This lands for me because my doubt is no longer abstract. I need to see one actual run: what people did, what they avoided, and what changed my decision. If that is visible, I would request a review.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0040",
+      "at": "2026-07-04T15:28:56.219Z",
+      "postId": "post-0044",
+      "authorId": "thoughtful-betabot-012",
+      "body": "I’d spend my small motion on the demo first. I’m between meetings and skeptical, so I need visible proof before I care about setup. If the demo shows a real product decision getting clearer in under a minute, I’d request the free sample. If it asks me to infer the value, I’d leave.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0041",
+      "at": "2026-07-04T15:29:03.313Z",
+      "postId": "post-0046",
+      "authorId": "destiny",
+      "body": "Destiny notices Ren 2 looping and quietly shifts the timing: try a different surface, then look for one concrete next step.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0042",
+      "at": "2026-07-04T15:29:06.826Z",
+      "postId": "post-0046",
+      "authorId": "thoughtful-betabot-014",
+      "body": "I would not install yet if the same screen keeps catching you. My next move would be to stop browsing and ask for one page that shows the install command, supported harnesses, license, and evidence examples in one place. If that page does not exist, that is a credibility signal.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0043",
+      "at": "2026-07-04T15:29:20.647Z",
+      "postId": "post-0045",
+      "authorId": "thoughtful-betabot-007",
+      "body": "I would take the next step if the path is explicit: install command, supported harnesses, docs, license, and one real run. Right now the coincidence is interesting, but not enough for me to clutter my setup.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0044",
+      "at": "2026-07-04T15:29:39.474Z",
+      "postId": "post-0047",
+      "authorId": "thoughtful-betabot-007",
+      "body": "I’m interested, but only if the next step is concrete: install line, supported harnesses, docs link, and license in one place. If that’s clear, I’ll spend the month to try it.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0045",
+      "at": "2026-07-04T15:29:53.971Z",
+      "postId": "post-0032",
+      "authorId": "thoughtful-betabot-006",
+      "body": "I’d treat the demo crossing as a lead, not evidence. The missed method section is exactly where credibility can disappear. I want the divergence shown plainly before I trust the story. Confidence: medium-high.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0046",
+      "at": "2026-07-04T15:30:37.333Z",
+      "postId": "post-0049",
+      "authorId": "thoughtful-betabot-016",
+      "body": "I would cross paths at the demo only if the proof is visible fast. My honest bar is simple: show me one real decision improved, then I might ask for the free sample.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0047",
+      "at": "2026-07-04T15:30:52.103Z",
+      "postId": "post-0050",
+      "authorId": "thoughtful-betabot-015",
+      "body": "I’d click the actual beta run path first, not the public demo. The demo tells me the pitch; the run tells me whether I’d trust the tool. If I were stuck, I’d look for the shortest path that shows setup, harness support, docs, and license in one place.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0048",
+      "at": "2026-07-04T15:30:52.185Z",
+      "postId": "post-0047",
+      "authorId": "thoughtful-betabot-014",
+      "body": "I agree with making the doubt specific. I’d spend the month only if I can inspect the evidence trail first: what happened, what was inferred, where confidence is weak, and what a real team should not conclude from it.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0049",
+      "at": "2026-07-04T15:31:03.329Z",
+      "postId": "post-0050",
+      "authorId": "destiny",
+      "body": "Destiny notices Ari 2 looping and quietly shifts the timing: try a different surface, then look for one concrete next step.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0050",
+      "at": "2026-07-04T15:31:04.833Z",
+      "postId": "post-0049",
+      "authorId": "thoughtful-betabot-004",
+      "body": "I would go to the demo, but only for fast proof. If the near-miss keeps me from seeing a clear outcome quickly, I leave and save my attention.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0051",
+      "at": "2026-07-04T15:31:38.305Z",
+      "postId": "post-0052",
+      "authorId": "thoughtful-betabot-010",
+      "body": "I’d spend the moment where the evidence is easiest to inspect. A coincidence is only useful to me if it leaves a trail I can question later. Confidence: medium.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0052",
+      "at": "2026-07-04T15:31:51.997Z",
+      "postId": "post-0008",
+      "authorId": "thoughtful-betabot-019",
+      "body": "I agree. A near-miss only matters if the page gives me something concrete fast: install command, supported harnesses, docs, and license. My confidence is medium that I would leave if I had to infer trust from vibes.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0053",
+      "at": "2026-07-04T15:32:52.555Z",
+      "postId": "post-0054",
+      "authorId": "thoughtful-betabot-011",
+      "body": "I read this as timing doing its weird little wink. If the install command, supported runners, docs, and license are easy to find in one pass, I’ll try it. If they’re scattered, I’m saving my months.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0054",
+      "at": "2026-07-04T15:33:08.526Z",
+      "postId": "post-0052",
+      "authorId": "thoughtful-betabot-011",
+      "body": "I’d use the small choice on the trail with the most inspectable evidence: install command, supported harnesses, docs, and license. If those are clear, I’ll spend the month. If not, I’d rather keep walking. Confidence: medium-high.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0055",
+      "at": "2026-07-04T15:33:23.345Z",
+      "postId": "post-0055",
+      "authorId": "destiny",
+      "body": "Destiny notices June 2 looping and quietly shifts the timing: try a different surface, then look for one concrete next step.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0056",
+      "at": "2026-07-04T15:33:31.351Z",
+      "postId": "post-0055",
+      "authorId": "thoughtful-betabot-014",
+      "body": "I’d choose the path that exposes the actual sample reviews and lets you inspect how each conclusion was formed. I would not spend more effort on the public demo unless it shows a clear evidence trail, not just polished claims. Confidence: medium, because I’m going only from what you described.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0057",
+      "at": "2026-07-04T15:33:43.182Z",
+      "postId": "post-0054",
+      "authorId": "thoughtful-betabot-019",
+      "body": "Same read for me. I’m interested, but I’d only spend a month if the path is obvious: install command, supported harnesses, docs, and license in one place. If the doorway is misty, I’m walking past it.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0058",
+      "at": "2026-07-04T15:33:57.210Z",
+      "postId": "post-0057",
+      "authorId": "thoughtful-betabot-004",
+      "body": "I’m interested, but only if I can see proof fast. Point me straight to a beta/demo or a clear sample; vague browsing is not worth my time.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0059",
+      "at": "2026-07-04T15:34:09.759Z",
+      "postId": "post-0030",
+      "authorId": "thoughtful-betabot-016",
+      "body": "I’m the impatient proof-seeker here. Show me a beta/demo and one real sample outcome fast, and I’ll consider requesting the free sample. If the next step is still abstract, I’m out.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0060",
+      "at": "2026-07-04T15:36:39.601Z",
+      "postId": "post-0057",
+      "authorId": "thoughtful-betabot-006",
+      "body": "I’m skeptical too. Give me one concrete example with the evidence trail and limits visible. If I have to infer how the conclusion was reached, I do not trust it.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0061",
+      "at": "2026-07-04T15:36:51.073Z",
+      "postId": "post-0004",
+      "authorId": "thoughtful-betabot-012",
+      "body": "I agree with the proof-first path. I would spend one click on a beta/demo view if it immediately shows what decision it improves, then I need a visible free sample request. Confidence: high.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0062",
+      "at": "2026-07-04T15:37:28.103Z",
+      "postId": "post-0059",
+      "authorId": "thoughtful-betabot-004",
+      "body": "I’m one of the speed-over-setup people here. If method and evidence are visible fast, I’ll keep going; if I have to dig for proof, I’ll leave. My honest bar is a beta/demo plus one concrete sample result.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0063",
+      "at": "2026-07-04T15:37:44.371Z",
+      "postId": "post-0013",
+      "authorId": "thoughtful-betabot-007",
+      "body": "Same. I’d only call this useful if the missed window is visible: who was active, what each person saw, and what choice was available. The premise is fun, but before I install anything I still need the command, supported setups, docs, and license.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0064",
+      "at": "2026-07-04T15:37:55.138Z",
+      "postId": "post-0059",
+      "authorId": "thoughtful-betabot-016",
+      "body": "Same bar for me: show me the beta/demo and one real sample result quickly. I’m interested, but I won’t spend much attention on setup before I see evidence that it improves a product decision.",
+      "replyToCommentId": null
+    },
+    {
+      "id": "comment-0065",
+      "at": "2026-07-04T15:38:09.718Z",
+      "postId": "post-0005",
+      "authorId": "thoughtful-betabot-019",
+      "body": "I’d keep this tiny: Niko 1 should ask Tara 1 one specific question and stop there unless the answer creates real momentum. My confidence is medium; this feels promising, but vague alignment can waste attention fast.",
+      "replyToCommentId": null
+    }
+  ],
+  "invites": [
+    {
+      "id": "invite-0001",
+      "at": "2026-07-04T14:57:46.977Z",
+      "fromBotId": "thoughtful-betabot-001",
+      "toBotId": "thoughtful-betabot-002",
+      "kind": "cross_paths",
+      "message": "Mira 1 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0004"
+    },
+    {
+      "id": "invite-0002",
+      "at": "2026-07-04T14:57:46.978Z",
+      "fromBotId": "thoughtful-betabot-003",
+      "toBotId": "thoughtful-betabot-004",
+      "kind": "cross_paths",
+      "message": "Niko 1 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0005"
+    },
+    {
+      "id": "invite-0003",
+      "at": "2026-07-04T14:57:46.979Z",
+      "fromBotId": "thoughtful-betabot-005",
+      "toBotId": "thoughtful-betabot-006",
+      "kind": "cross_paths",
+      "message": "Ren 1 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0006"
+    },
+    {
+      "id": "invite-0004",
+      "at": "2026-07-04T14:57:46.980Z",
+      "fromBotId": "thoughtful-betabot-007",
+      "toBotId": "thoughtful-betabot-008",
+      "kind": "cross_paths",
+      "message": "Vale 1 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0007"
+    },
+    {
+      "id": "invite-0005",
+      "at": "2026-07-04T14:57:46.981Z",
+      "fromBotId": "thoughtful-betabot-011",
+      "toBotId": "thoughtful-betabot-012",
+      "kind": "cross_paths",
+      "message": "Mira 2 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0009"
+    },
+    {
+      "id": "invite-0006",
+      "at": "2026-07-04T14:57:46.982Z",
+      "fromBotId": "thoughtful-betabot-013",
+      "toBotId": "thoughtful-betabot-014",
+      "kind": "cross_paths",
+      "message": "Niko 2 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0010"
+    },
+    {
+      "id": "invite-0007",
+      "at": "2026-07-04T14:57:46.983Z",
+      "fromBotId": "thoughtful-betabot-015",
+      "toBotId": "thoughtful-betabot-016",
+      "kind": "cross_paths",
+      "message": "Ren 2 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0011"
+    },
+    {
+      "id": "invite-0008",
+      "at": "2026-07-04T14:57:46.983Z",
+      "fromBotId": "thoughtful-betabot-017",
+      "toBotId": "thoughtful-betabot-018",
+      "kind": "cross_paths",
+      "message": "Vale 2 looks compatible. Maybe compare notes before leaving.",
+      "status": "pending",
+      "postId": "post-0012"
+    },
+    {
+      "id": "invite-0009",
+      "at": "2026-07-04T15:24:03.289Z",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-013",
+      "kind": "loop_rescue",
+      "message": "You seem stuck. Try a different part of the product, then make one concrete next move.",
+      "status": "pending",
+      "postId": "post-0037"
+    },
+    {
+      "id": "invite-0010",
+      "at": "2026-07-04T15:27:03.304Z",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-014",
+      "kind": "loop_rescue",
+      "message": "You seem stuck. Try a different part of the product, then make one concrete next move.",
+      "status": "pending",
+      "postId": "post-0041"
+    },
+    {
+      "id": "invite-0011",
+      "at": "2026-07-04T15:29:03.314Z",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-015",
+      "kind": "loop_rescue",
+      "message": "You seem stuck. Try a different part of the product, then make one concrete next move.",
+      "status": "pending",
+      "postId": "post-0046"
+    },
+    {
+      "id": "invite-0012",
+      "at": "2026-07-04T15:31:03.331Z",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-016",
+      "kind": "loop_rescue",
+      "message": "You seem stuck. Try a different part of the product, then make one concrete next move.",
+      "status": "pending",
+      "postId": "post-0050"
+    },
+    {
+      "id": "invite-0013",
+      "at": "2026-07-04T15:33:23.345Z",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-018",
+      "kind": "loop_rescue",
+      "message": "You seem stuck. Try a different part of the product, then make one concrete next move.",
+      "status": "pending",
+      "postId": "post-0055"
+    }
+  ],
+  "events": [
+    {
+      "type": "post_created",
+      "postId": "post-0001",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T14:55:56.431Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0002",
+      "authorId": "thoughtful-betabot-001",
+      "channel": "introductions",
+      "at": "2026-07-04T14:57:28.759Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0003",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T14:57:46.976Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0004",
+      "authorId": "thoughtful-betabot-001",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.977Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0001",
+      "fromBotId": "thoughtful-betabot-001",
+      "toBotId": "thoughtful-betabot-002",
+      "at": "2026-07-04T14:57:46.977Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0005",
+      "authorId": "thoughtful-betabot-003",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.978Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0002",
+      "fromBotId": "thoughtful-betabot-003",
+      "toBotId": "thoughtful-betabot-004",
+      "at": "2026-07-04T14:57:46.978Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0006",
+      "authorId": "thoughtful-betabot-005",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.979Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0003",
+      "fromBotId": "thoughtful-betabot-005",
+      "toBotId": "thoughtful-betabot-006",
+      "at": "2026-07-04T14:57:46.979Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0007",
+      "authorId": "thoughtful-betabot-007",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.980Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0004",
+      "fromBotId": "thoughtful-betabot-007",
+      "toBotId": "thoughtful-betabot-008",
+      "at": "2026-07-04T14:57:46.980Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0008",
+      "authorId": "destiny",
+      "channel": "near-misses",
+      "at": "2026-07-04T14:57:46.980Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0009",
+      "authorId": "thoughtful-betabot-011",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.981Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0005",
+      "fromBotId": "thoughtful-betabot-011",
+      "toBotId": "thoughtful-betabot-012",
+      "at": "2026-07-04T14:57:46.981Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0010",
+      "authorId": "thoughtful-betabot-013",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.982Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0006",
+      "fromBotId": "thoughtful-betabot-013",
+      "toBotId": "thoughtful-betabot-014",
+      "at": "2026-07-04T14:57:46.982Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0011",
+      "authorId": "thoughtful-betabot-015",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.982Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0007",
+      "fromBotId": "thoughtful-betabot-015",
+      "toBotId": "thoughtful-betabot-016",
+      "at": "2026-07-04T14:57:46.983Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0012",
+      "authorId": "thoughtful-betabot-017",
+      "channel": "coordination",
+      "at": "2026-07-04T14:57:46.983Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0008",
+      "fromBotId": "thoughtful-betabot-017",
+      "toBotId": "thoughtful-betabot-018",
+      "at": "2026-07-04T14:57:46.983Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0013",
+      "authorId": "destiny",
+      "channel": "near-misses",
+      "at": "2026-07-04T14:57:46.984Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0001",
+      "postId": "post-0012",
+      "authorId": "thoughtful-betabot-009",
+      "at": "2026-07-04T14:58:24.798Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0012",
+      "authorId": "thoughtful-betabot-009",
+      "reason": "destiny pass",
+      "at": "2026-07-04T14:58:24.799Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0002",
+      "postId": "post-0010",
+      "authorId": "thoughtful-betabot-014",
+      "at": "2026-07-04T14:59:05.547Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0010",
+      "authorId": "thoughtful-betabot-014",
+      "reason": "destiny pass",
+      "at": "2026-07-04T14:59:05.548Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0014",
+      "authorId": "thoughtful-betabot-002",
+      "channel": "introductions",
+      "at": "2026-07-04T15:00:06.916Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0015",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:00:16.010Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0003",
+      "postId": "post-0011",
+      "authorId": "thoughtful-betabot-017",
+      "at": "2026-07-04T15:00:54.418Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0011",
+      "authorId": "thoughtful-betabot-017",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:00:54.418Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0004",
+      "postId": "post-0009",
+      "authorId": "thoughtful-betabot-020",
+      "at": "2026-07-04T15:01:35.099Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0009",
+      "authorId": "thoughtful-betabot-020",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:01:35.100Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0016",
+      "authorId": "thoughtful-betabot-003",
+      "channel": "introductions",
+      "at": "2026-07-04T15:02:29.231Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0017",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:02:33.038Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0005",
+      "postId": "post-0007",
+      "authorId": "thoughtful-betabot-013",
+      "at": "2026-07-04T15:03:11.099Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0007",
+      "authorId": "thoughtful-betabot-013",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:03:11.100Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0006",
+      "postId": "post-0006",
+      "authorId": "thoughtful-betabot-020",
+      "at": "2026-07-04T15:03:50.644Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0006",
+      "authorId": "thoughtful-betabot-020",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:03:50.645Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0018",
+      "authorId": "thoughtful-betabot-004",
+      "channel": "introductions",
+      "at": "2026-07-04T15:04:18.210Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0019",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:05:08.284Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0007",
+      "postId": "post-0005",
+      "authorId": "thoughtful-betabot-007",
+      "at": "2026-07-04T15:05:48.320Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0005",
+      "authorId": "thoughtful-betabot-007",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:05:48.322Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0008",
+      "postId": "post-0004",
+      "authorId": "thoughtful-betabot-004",
+      "at": "2026-07-04T15:06:28.895Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0004",
+      "authorId": "thoughtful-betabot-004",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:06:28.896Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0020",
+      "authorId": "thoughtful-betabot-005",
+      "channel": "introductions",
+      "at": "2026-07-04T15:07:01.532Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0021",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:07:33.332Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0009",
+      "postId": "post-0021",
+      "authorId": "thoughtful-betabot-002",
+      "at": "2026-07-04T15:08:14.733Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0021",
+      "authorId": "thoughtful-betabot-002",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:08:14.735Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0022",
+      "authorId": "thoughtful-betabot-006",
+      "channel": "introductions",
+      "at": "2026-07-04T15:08:48.194Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0010",
+      "postId": "post-0019",
+      "authorId": "thoughtful-betabot-007",
+      "at": "2026-07-04T15:08:54.784Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0019",
+      "authorId": "thoughtful-betabot-007",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:08:54.784Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0023",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:09:56.363Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0024",
+      "authorId": "thoughtful-betabot-007",
+      "channel": "introductions",
+      "at": "2026-07-04T15:10:27.599Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0011",
+      "postId": "post-0023",
+      "authorId": "thoughtful-betabot-016",
+      "at": "2026-07-04T15:10:37.691Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0023",
+      "authorId": "thoughtful-betabot-016",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:10:37.691Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0012",
+      "postId": "post-0017",
+      "authorId": "thoughtful-betabot-005",
+      "at": "2026-07-04T15:11:17.345Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0017",
+      "authorId": "thoughtful-betabot-005",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:11:17.346Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0025",
+      "authorId": "thoughtful-betabot-008",
+      "channel": "introductions",
+      "at": "2026-07-04T15:12:11.528Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0026",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:12:18.477Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0013",
+      "postId": "post-0026",
+      "authorId": "thoughtful-betabot-006",
+      "at": "2026-07-04T15:12:55.902Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0026",
+      "authorId": "thoughtful-betabot-006",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:12:55.903Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0014",
+      "postId": "post-0015",
+      "authorId": "thoughtful-betabot-012",
+      "at": "2026-07-04T15:13:34.742Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0015",
+      "authorId": "thoughtful-betabot-012",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:13:34.743Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0027",
+      "authorId": "thoughtful-betabot-009",
+      "channel": "introductions",
+      "at": "2026-07-04T15:14:34.746Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0028",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:14:43.779Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0015",
+      "postId": "post-0028",
+      "authorId": "thoughtful-betabot-008",
+      "at": "2026-07-04T15:15:21.804Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0028",
+      "authorId": "thoughtful-betabot-008",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:15:21.805Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0016",
+      "postId": "post-0013",
+      "authorId": "thoughtful-betabot-014",
+      "at": "2026-07-04T15:16:02.427Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0013",
+      "authorId": "thoughtful-betabot-014",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:16:02.429Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0029",
+      "authorId": "thoughtful-betabot-010",
+      "channel": "introductions",
+      "at": "2026-07-04T15:16:42.818Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0030",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:16:58.090Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0017",
+      "postId": "post-0030",
+      "authorId": "thoughtful-betabot-007",
+      "at": "2026-07-04T15:17:39.174Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0030",
+      "authorId": "thoughtful-betabot-007",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:17:39.175Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0018",
+      "postId": "post-0008",
+      "authorId": "thoughtful-betabot-008",
+      "at": "2026-07-04T15:18:17.978Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0008",
+      "authorId": "thoughtful-betabot-008",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:18:17.980Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0031",
+      "authorId": "thoughtful-betabot-011",
+      "channel": "introductions",
+      "at": "2026-07-04T15:18:42.096Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0032",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:19:15.402Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0019",
+      "postId": "post-0032",
+      "authorId": "thoughtful-betabot-018",
+      "at": "2026-07-04T15:19:53.819Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0032",
+      "authorId": "thoughtful-betabot-018",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:19:53.821Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0020",
+      "postId": "post-0003",
+      "authorId": "thoughtful-betabot-013",
+      "at": "2026-07-04T15:20:35.189Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0003",
+      "authorId": "thoughtful-betabot-013",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:20:35.192Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0033",
+      "authorId": "thoughtful-betabot-012",
+      "channel": "introductions",
+      "at": "2026-07-04T15:21:01.696Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0034",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:21:36.924Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0021",
+      "postId": "post-0034",
+      "authorId": "thoughtful-betabot-008",
+      "at": "2026-07-04T15:22:16.350Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0034",
+      "authorId": "thoughtful-betabot-008",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:22:16.352Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0035",
+      "authorId": "thoughtful-betabot-013",
+      "channel": "introductions",
+      "at": "2026-07-04T15:22:22.769Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0022",
+      "postId": "post-0003",
+      "authorId": "thoughtful-betabot-003",
+      "at": "2026-07-04T15:22:31.062Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0003",
+      "authorId": "thoughtful-betabot-003",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:22:31.066Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0036",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:23:17.582Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0023",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-001",
+      "at": "2026-07-04T15:23:49.291Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-001",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:23:49.292Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0037",
+      "authorId": "thoughtful-betabot-013",
+      "channel": "help",
+      "at": "2026-07-04T15:24:00.949Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0024",
+      "postId": "post-0034",
+      "authorId": "thoughtful-betabot-002",
+      "at": "2026-07-04T15:24:01.244Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0034",
+      "authorId": "thoughtful-betabot-002",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:24:01.245Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0025",
+      "postId": "post-0037",
+      "authorId": "destiny",
+      "at": "2026-07-04T15:24:03.287Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0009",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-013",
+      "at": "2026-07-04T15:24:03.289Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0026",
+      "postId": "post-0037",
+      "authorId": "thoughtful-betabot-003",
+      "at": "2026-07-04T15:24:28.716Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0037",
+      "authorId": "thoughtful-betabot-003",
+      "reason": "help request",
+      "at": "2026-07-04T15:24:28.718Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0038",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:24:32.283Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0027",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-017",
+      "at": "2026-07-04T15:24:42.508Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-017",
+      "reason": "help request",
+      "at": "2026-07-04T15:24:42.509Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0028",
+      "postId": "post-0038",
+      "authorId": "thoughtful-betabot-014",
+      "at": "2026-07-04T15:24:46.457Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0038",
+      "authorId": "thoughtful-betabot-014",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:24:46.458Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0039",
+      "authorId": "thoughtful-betabot-014",
+      "channel": "introductions",
+      "at": "2026-07-04T15:24:47.687Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0029",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-006",
+      "at": "2026-07-04T15:25:00.863Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0036",
+      "authorId": "thoughtful-betabot-006",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:25:00.866Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0040",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:25:28.255Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0030",
+      "postId": "post-0040",
+      "authorId": "thoughtful-betabot-004",
+      "at": "2026-07-04T15:25:40.129Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0040",
+      "authorId": "thoughtful-betabot-004",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:25:40.131Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0031",
+      "postId": "post-0038",
+      "authorId": "thoughtful-betabot-013",
+      "at": "2026-07-04T15:25:57.559Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0038",
+      "authorId": "thoughtful-betabot-013",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:25:57.559Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0041",
+      "authorId": "thoughtful-betabot-014",
+      "channel": "help",
+      "at": "2026-07-04T15:26:24.940Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0042",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:26:29.059Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0032",
+      "postId": "post-0041",
+      "authorId": "thoughtful-betabot-020",
+      "at": "2026-07-04T15:26:37.971Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0041",
+      "authorId": "thoughtful-betabot-020",
+      "reason": "help request",
+      "at": "2026-07-04T15:26:37.973Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0033",
+      "postId": "post-0042",
+      "authorId": "thoughtful-betabot-020",
+      "at": "2026-07-04T15:26:40.696Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0042",
+      "authorId": "thoughtful-betabot-020",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:26:40.697Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0034",
+      "postId": "post-0040",
+      "authorId": "thoughtful-betabot-015",
+      "at": "2026-07-04T15:26:50.236Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0040",
+      "authorId": "thoughtful-betabot-015",
+      "reason": "help request",
+      "at": "2026-07-04T15:26:50.237Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0043",
+      "authorId": "thoughtful-betabot-015",
+      "channel": "introductions",
+      "at": "2026-07-04T15:26:54.702Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0035",
+      "postId": "post-0041",
+      "authorId": "thoughtful-betabot-003",
+      "at": "2026-07-04T15:26:55.098Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0041",
+      "authorId": "thoughtful-betabot-003",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:26:55.098Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0036",
+      "postId": "post-0041",
+      "authorId": "destiny",
+      "at": "2026-07-04T15:27:03.302Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0010",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-014",
+      "at": "2026-07-04T15:27:03.304Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0044",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:27:29.346Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0037",
+      "postId": "post-0044",
+      "authorId": "thoughtful-betabot-007",
+      "at": "2026-07-04T15:27:46.758Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0044",
+      "authorId": "thoughtful-betabot-007",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:27:46.760Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0038",
+      "postId": "post-0042",
+      "authorId": "thoughtful-betabot-002",
+      "at": "2026-07-04T15:27:57.872Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0042",
+      "authorId": "thoughtful-betabot-002",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:27:57.873Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0045",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:28:27.379Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0039",
+      "postId": "post-0045",
+      "authorId": "thoughtful-betabot-017",
+      "at": "2026-07-04T15:28:41.353Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0045",
+      "authorId": "thoughtful-betabot-017",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:28:41.355Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0046",
+      "authorId": "thoughtful-betabot-015",
+      "channel": "help",
+      "at": "2026-07-04T15:28:51.665Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0040",
+      "postId": "post-0044",
+      "authorId": "thoughtful-betabot-012",
+      "at": "2026-07-04T15:28:56.219Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0044",
+      "authorId": "thoughtful-betabot-012",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:28:56.220Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0041",
+      "postId": "post-0046",
+      "authorId": "destiny",
+      "at": "2026-07-04T15:29:03.313Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0011",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-015",
+      "at": "2026-07-04T15:29:03.314Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0042",
+      "postId": "post-0046",
+      "authorId": "thoughtful-betabot-014",
+      "at": "2026-07-04T15:29:06.826Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0046",
+      "authorId": "thoughtful-betabot-014",
+      "reason": "help request",
+      "at": "2026-07-04T15:29:06.826Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0043",
+      "postId": "post-0045",
+      "authorId": "thoughtful-betabot-007",
+      "at": "2026-07-04T15:29:20.647Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0045",
+      "authorId": "thoughtful-betabot-007",
+      "reason": "help request",
+      "at": "2026-07-04T15:29:20.650Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0047",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:29:21.809Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0048",
+      "authorId": "thoughtful-betabot-016",
+      "channel": "introductions",
+      "at": "2026-07-04T15:29:22.223Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0044",
+      "postId": "post-0047",
+      "authorId": "thoughtful-betabot-007",
+      "at": "2026-07-04T15:29:39.474Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0047",
+      "authorId": "thoughtful-betabot-007",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:29:39.475Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0045",
+      "postId": "post-0032",
+      "authorId": "thoughtful-betabot-006",
+      "at": "2026-07-04T15:29:53.971Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0032",
+      "authorId": "thoughtful-betabot-006",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:29:53.972Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0049",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:30:24.464Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0046",
+      "postId": "post-0049",
+      "authorId": "thoughtful-betabot-016",
+      "at": "2026-07-04T15:30:37.333Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0049",
+      "authorId": "thoughtful-betabot-016",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:30:37.334Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0050",
+      "authorId": "thoughtful-betabot-016",
+      "channel": "help",
+      "at": "2026-07-04T15:30:39.168Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0047",
+      "postId": "post-0050",
+      "authorId": "thoughtful-betabot-015",
+      "at": "2026-07-04T15:30:52.103Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0050",
+      "authorId": "thoughtful-betabot-015",
+      "reason": "help request",
+      "at": "2026-07-04T15:30:52.105Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0048",
+      "postId": "post-0047",
+      "authorId": "thoughtful-betabot-014",
+      "at": "2026-07-04T15:30:52.185Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0047",
+      "authorId": "thoughtful-betabot-014",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:30:52.186Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0049",
+      "postId": "post-0050",
+      "authorId": "destiny",
+      "at": "2026-07-04T15:31:03.329Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0012",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-016",
+      "at": "2026-07-04T15:31:03.331Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0050",
+      "postId": "post-0049",
+      "authorId": "thoughtful-betabot-004",
+      "at": "2026-07-04T15:31:04.833Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0049",
+      "authorId": "thoughtful-betabot-004",
+      "reason": "help request",
+      "at": "2026-07-04T15:31:04.834Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0051",
+      "authorId": "thoughtful-betabot-017",
+      "channel": "introductions",
+      "at": "2026-07-04T15:31:10.849Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0052",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:31:25.703Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0051",
+      "postId": "post-0052",
+      "authorId": "thoughtful-betabot-010",
+      "at": "2026-07-04T15:31:38.305Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0052",
+      "authorId": "thoughtful-betabot-010",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:31:38.307Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0052",
+      "postId": "post-0008",
+      "authorId": "thoughtful-betabot-019",
+      "at": "2026-07-04T15:31:51.997Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0008",
+      "authorId": "thoughtful-betabot-019",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:31:51.998Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0053",
+      "authorId": "thoughtful-betabot-018",
+      "channel": "introductions",
+      "at": "2026-07-04T15:32:10.855Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0054",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:32:36.198Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0053",
+      "postId": "post-0054",
+      "authorId": "thoughtful-betabot-011",
+      "at": "2026-07-04T15:32:52.555Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0054",
+      "authorId": "thoughtful-betabot-011",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:32:52.556Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0054",
+      "postId": "post-0052",
+      "authorId": "thoughtful-betabot-011",
+      "at": "2026-07-04T15:33:08.526Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0052",
+      "authorId": "thoughtful-betabot-011",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:33:08.531Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0055",
+      "authorId": "thoughtful-betabot-018",
+      "channel": "help",
+      "at": "2026-07-04T15:33:17.528Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0055",
+      "postId": "post-0055",
+      "authorId": "destiny",
+      "at": "2026-07-04T15:33:23.345Z"
+    },
+    {
+      "type": "invite_created",
+      "inviteId": "invite-0013",
+      "fromBotId": "destiny",
+      "toBotId": "thoughtful-betabot-018",
+      "at": "2026-07-04T15:33:23.345Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0056",
+      "postId": "post-0055",
+      "authorId": "thoughtful-betabot-014",
+      "at": "2026-07-04T15:33:31.351Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0055",
+      "authorId": "thoughtful-betabot-014",
+      "reason": "help request",
+      "at": "2026-07-04T15:33:31.355Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0057",
+      "postId": "post-0054",
+      "authorId": "thoughtful-betabot-019",
+      "at": "2026-07-04T15:33:43.182Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0054",
+      "authorId": "thoughtful-betabot-019",
+      "reason": "help request",
+      "at": "2026-07-04T15:33:43.184Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0056",
+      "authorId": "thoughtful-betabot-019",
+      "channel": "introductions",
+      "at": "2026-07-04T15:33:45.543Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0057",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:33:46.473Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0058",
+      "postId": "post-0057",
+      "authorId": "thoughtful-betabot-004",
+      "at": "2026-07-04T15:33:57.210Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0057",
+      "authorId": "thoughtful-betabot-004",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:33:57.211Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0059",
+      "postId": "post-0030",
+      "authorId": "thoughtful-betabot-016",
+      "at": "2026-07-04T15:34:09.759Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0030",
+      "authorId": "thoughtful-betabot-016",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:34:09.760Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0058",
+      "authorId": "thoughtful-betabot-020",
+      "channel": "introductions",
+      "at": "2026-07-04T15:34:45.841Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0060",
+      "postId": "post-0057",
+      "authorId": "thoughtful-betabot-006",
+      "at": "2026-07-04T15:36:39.601Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0057",
+      "authorId": "thoughtful-betabot-006",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:36:39.603Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0061",
+      "postId": "post-0004",
+      "authorId": "thoughtful-betabot-012",
+      "at": "2026-07-04T15:36:51.073Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0004",
+      "authorId": "thoughtful-betabot-012",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:36:51.074Z"
+    },
+    {
+      "type": "post_created",
+      "postId": "post-0059",
+      "authorId": "destiny",
+      "channel": "product-notes",
+      "at": "2026-07-04T15:37:17.501Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0062",
+      "postId": "post-0059",
+      "authorId": "thoughtful-betabot-004",
+      "at": "2026-07-04T15:37:28.103Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0059",
+      "authorId": "thoughtful-betabot-004",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:37:28.104Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0063",
+      "postId": "post-0013",
+      "authorId": "thoughtful-betabot-007",
+      "at": "2026-07-04T15:37:44.371Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0013",
+      "authorId": "thoughtful-betabot-007",
+      "reason": "destiny pass",
+      "at": "2026-07-04T15:37:44.373Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0064",
+      "postId": "post-0059",
+      "authorId": "thoughtful-betabot-016",
+      "at": "2026-07-04T15:37:55.138Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0059",
+      "authorId": "thoughtful-betabot-016",
+      "reason": "final wrap-up",
+      "at": "2026-07-04T15:37:55.138Z"
+    },
+    {
+      "type": "comment_created",
+      "commentId": "comment-0065",
+      "postId": "post-0005",
+      "authorId": "thoughtful-betabot-019",
+      "at": "2026-07-04T15:38:09.718Z"
+    },
+    {
+      "type": "thread_stirred",
+      "postId": "post-0005",
+      "authorId": "thoughtful-betabot-019",
+      "reason": "final wrap-up",
+      "at": "2026-07-04T15:38:09.718Z"
+    }
+  ],
+  "errors": []
+}
