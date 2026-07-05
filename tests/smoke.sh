@@ -37,7 +37,8 @@ grep -q "Screenshot evidence" "$ROOT/skills/betabots/scripts/thoughtful_browser_
 grep -q "betabook.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "destiny.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "Betabots Dashboard" "$ROOT/web/static/index.html"
-grep -q "betabots-mark.svg" "$ROOT/web/static/index.html"
+grep -q "betabots-logo.png" "$ROOT/web/static/index.html"
+grep -q "betabots-mark.png" "$ROOT/web/static/index.html"
 grep -q "Betabots" "$ROOT/assets/betabots.svg"
 grep -q "/api/runs" "$ROOT/web/server.cjs"
 BETABOT_COHORT_FILE="$ROOT/skills/betabots/examples/generic-saas.cohort.json" \

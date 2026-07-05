@@ -65,8 +65,8 @@ code { font-family: var(--mono); font-size: 12px; }
 .brand p, .run-title p { margin: 0; }
 
 .botmark {
-  width: 42px;
-  height: 42px;
+  width: 52px;
+  height: 52px;
   flex: 0 0 auto;
   object-fit: contain;
 }

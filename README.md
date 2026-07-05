@@ -1,7 +1,7 @@
 # Betabots
 
 <p align="center">
-  <img src="assets/betabots-logo.svg" alt="Betabots" width="420">
+  <img src="assets/betabots-logo.png" alt="Betabots" width="180">
 </p>
 
 Betabots is a plugin and skill bundle for filling a product with truthful synthetic beta users: human-like personas with defined pasts, life goals, attention spans, emotions, and real preferences that do not default to fake politeness.

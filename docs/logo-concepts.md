@@ -1,14 +1,14 @@
 # Betabots Logo
 
-Betabots uses the stack-of-cards mark: simulated people as inspectable evidence cards. The white persona cutout represents a synthetic user, the short lines represent recorded action evidence, and the yellow dot represents a truth/action signal inside the run artifact.
+Betabots uses the Product Hunt thumbnail as the canonical logo: a square, playful robot mark with the Betabots name inside the icon.
 
 Primary assets:
 
-- `assets/betabots.svg` - square plugin/app mark.
-- `assets/betabots-mark.svg` - square standalone mark.
-- `assets/betabots-logo.svg` - horizontal lockup for README/docs surfaces.
+- `assets/betabots-logo.png` - canonical logo for README/docs and product surfaces.
+- `assets/betabots-mark.png` - canonical app/favicon mark.
+- `assets/betabots.svg`, `assets/betabots-mark.svg`, and `assets/betabots-logo.svg` - legacy SVG assets kept for compatibility.
 - `assets/betabots-github-banner-variation-1.png` - wide README/social preview banner.
 
-![Betabots logo](../assets/betabots-logo.svg)
+![Betabots logo](../assets/betabots-logo.png)
 
 ![Betabots banner](../assets/betabots-github-banner-variation-1.png)
