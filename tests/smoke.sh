@@ -36,6 +36,8 @@ grep -q "continuityInstruction" "$ROOT/skills/betabots/scripts/thoughtful_browse
 grep -q "seenScreens: seenScreens.slice" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "fallbackActionAttempts" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "visitedRoutes" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "rememberCurrentRoute" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "After the curiosity action" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "cohort.requiresSocialAction && stats.fallbackActionAttempts" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "intersectsViewport" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callCodex" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"

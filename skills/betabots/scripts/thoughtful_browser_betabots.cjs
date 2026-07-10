@@ -1998,6 +1998,27 @@ async function runBot(browser, bot, runtime = {}) {
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
     const routes = cohort.routes
     const visitedRoutes = new Set()
+    const rememberCurrentRoute = () => {
+      let currentUrl
+      try {
+        currentUrl = new URL(page.url())
+      } catch {
+        return
+      }
+      for (const route of routes) {
+        let targetUrl
+        try {
+          targetUrl = new URL(`${config.appUrl}${route.fallback}`)
+        } catch {
+          continue
+        }
+        const currentPath = currentUrl.pathname.replace(/\/$/, '')
+        const targetPath = targetUrl.pathname.replace(/\/$/, '')
+        const samePath = currentUrl.origin === targetUrl.origin && currentPath === targetPath
+        const sameAnchor = !targetUrl.hash || currentUrl.hash === targetUrl.hash
+        if (samePath && sameAnchor) visitedRoutes.add(route.fallback)
+      }
+    }
 
     for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs && !shouldEndSession; move += 1) {
       const remainingMs = sessionMs - (Date.now() - startedAt)
@@ -2005,6 +2026,7 @@ async function runBot(browser, bot, runtime = {}) {
       if (Date.now() - startedAt >= sessionMs) break
       await runStep('follow destiny', followDestiny)
       if (move > 0 && move % 3 === 0) await runStep('check Betabook', () => useBetabook('between actions'))
+      rememberCurrentRoute()
       const route = routes.find((candidate) => !visitedRoutes.has(candidate.fallback))
       if (!route) {
         log(`I have inspected each main path once, so I end the session instead of retracing the same navigation.`)
@@ -2052,12 +2074,12 @@ async function runBot(browser, bot, runtime = {}) {
       if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.risk)) trust -= 20
-      const actedSocially = await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
-      if (actedSocially) {
+      const actedCuriously = await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
+      if (actedCuriously) {
         observation = await observe(page)
         recordScreenQuality(observation)
-        await captureScreenshot('post-social-action', observation)
-        log(`After the social action, I see: ${observation.text}`)
+        await captureScreenshot('post-curiosity-action', observation)
+        log(`After the curiosity action, I see: ${observation.text}`)
       } else if (cohort.requiresSocialAction && stats.fallbackActionAttempts === 0) {
         stats.fallbackActionAttempts += 1
         const fallbackLabels = [/^save$/i, /^message$/i, /contact/i]

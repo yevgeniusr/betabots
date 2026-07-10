@@ -226,7 +226,9 @@ Good truth-pressure output is direct, role-grounded, and sometimes negative. Wea
 
 Thoughtful bots attempt each configured route once per session. They end the
 planned journey after those paths are exhausted instead of cycling routes to fill
-the full attention window. When a screen still repeats past
+the full attention window. Route memory reconciles the actual browser URL so a
+page reached through curiosity or Destiny is not revisited as a planned route.
+When a screen still repeats past
 `BETABOT_LOOP_REPEAT_THRESHOLD`, the bot posts a `loop-help` request in Betabook
 instead of pretending the loop is fine.
 
