@@ -1760,6 +1760,7 @@ async function runBot(browser, bot, runtime = {}) {
   let lastScreenshot = ''
   let lastObservation = null
   let shouldEndSession = false
+  const reflectionTimeoutMs = config.llmTimeoutMs + 5000
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
   fs.writeFileSync(liveRawFile, `# ${bot.id} — Live Thoughtful Browser Storyline\n\n## Raw Journey\n`)
@@ -1973,7 +1974,12 @@ async function runBot(browser, bot, runtime = {}) {
     recordScreenQuality(observation)
     await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
-    await runStep('reflect on arrival', () => recordReflection(observation, 'arrival'))
+    await runStep(
+      'reflect on arrival',
+      () => recordReflection(observation, 'arrival'),
+      undefined,
+      reflectionTimeoutMs
+    )
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
@@ -2007,7 +2013,12 @@ async function runBot(browser, bot, runtime = {}) {
       recordScreenQuality(observation)
       await captureScreenshot('exploration', observation)
       log(`I now see: ${observation.text}`)
-      await runStep('reflect on exploration', () => recordReflection(observation, 'exploration'))
+      await runStep(
+        'reflect on exploration',
+        () => recordReflection(observation, 'exploration'),
+        undefined,
+        reflectionTimeoutMs
+      )
       if (shouldEndSession) break
 
       const lower = observation.text.toLowerCase()

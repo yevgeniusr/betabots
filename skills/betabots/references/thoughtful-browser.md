@@ -176,7 +176,9 @@ Thoughtful mode defaults to `BETABOT_STRICT_SCORING=true`. Strict scoring preven
 LLM decisions to leave, stop, end, abandon, or exit are honored as real session
 endings. The runner only attempts its generic fallback social action when the
 cohort requires social behavior, and limits that fallback to one attempt per
-session.
+session. Reflection steps use `BETABOT_LLM_TIMEOUT_MS` rather than the shorter
+browser-action timeout, and provider failures fall back without being scored as
+product dead ends.
 
 Disable strict scoring only for low-level runner debugging:
 
