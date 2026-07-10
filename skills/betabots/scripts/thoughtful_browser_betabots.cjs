@@ -16,6 +16,7 @@ const config = {
   maxMinutes: Number(process.env.BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES || Math.max(Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8) + 4, 180)),
   concurrency: Number(process.env.BETABOT_THOUGHTFUL_CONCURRENCY || 1),
   headless: String(process.env.BETABOT_HEADLESS || 'false') === 'true',
+  browserExecutablePath: process.env.BETABOT_BROWSER_EXECUTABLE_PATH || '',
   requestedTimeScale: Number(process.env.BETABOT_TIME_SCALE || 1),
   timeScale: Math.max(1, Number(process.env.BETABOT_TIME_SCALE || 1)),
   seed: Number(process.env.BETABOT_SEED || 20260630),
@@ -2320,7 +2321,10 @@ async function main() {
     return
   }
   const playwright = await requirePlaywright()
-  const browser = await playwright.chromium.launch({ headless: config.headless })
+  const browser = await playwright.chromium.launch({
+    headless: config.headless,
+    ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
+  })
   const results = []
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)

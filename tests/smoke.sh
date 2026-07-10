@@ -27,6 +27,8 @@ grep -q "BETABOT_DESTINY" "$ROOT/skills/betabots/scripts/thoughtful_browser_beta
 grep -q "BETABOT_AVATAR_STYLE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "bottts-neutral" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_LLM_PROVIDER" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_BROWSER_EXECUTABLE_PATH" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "browserExecutablePath" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callCodex" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callOpenRouter" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 ! grep -R -E 'BETABOT_MORTAL_TRUTH|mortalTruth|config\.mortalTruthEnabled|Mortal truth mode|mortal-truth mode|non-mortal-truth|Mortal Truth|Truth Notes' "$ROOT/README.md" "$ROOT/docs" "$ROOT/skills/betabots" "$ROOT/web" >/dev/null

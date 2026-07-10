@@ -255,6 +255,9 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
 Browser sessions require Playwright to be available in the target project or globally.
+If Playwright is installed but its expected bundled browser revision is not,
+set `BETABOT_BROWSER_EXECUTABLE_PATH` to an existing Chromium or Chrome
+executable.
 
 Open the read-only local dashboard for run artifacts:
 

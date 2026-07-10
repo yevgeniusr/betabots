@@ -49,6 +49,18 @@ BETABOT_LLM_MODEL=gpt-5 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+If the Playwright package available to the runner does not match the browser
+revision installed on the machine, point the runner at an existing Chromium or
+Chrome executable instead of downloading another browser:
+
+```bash
+BETABOT_BROWSER_EXECUTABLE_PATH=/absolute/path/to/chrome \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The override changes only the browser binary. The session still uses Playwright
+and the same human-paced rules.
+
 The `codex` provider calls local Codex CLI in non-interactive exec mode and uses the currently signed-in ChatGPT/Codex account. Override the executable with `BETABOT_CODEX_COMMAND` when `codex` is not on `PATH`.
 
 OpenRouter provider:
