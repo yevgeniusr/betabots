@@ -891,7 +891,7 @@ function elapsed(startedAt) {
 }
 
 function firstVisibleText(text) {
-  return text.replace(/\s+/g, ' ').trim().slice(0, 700)
+  return text.replace(/\s+/g, ' ').trim().slice(0, 1200)
 }
 
 function safeTokenPart(value) {
@@ -1333,8 +1333,36 @@ function locatorForRole(page, label) {
 
 async function observe(page) {
   const title = await page.title().catch(() => '')
-  const text = await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
-  return { title, text: firstVisibleText(text) }
+  const text = await page.evaluate(() => {
+    const selector = 'h1, h2, h3, h4, p, a, button, label, li, [role="status"], [role="alert"]'
+    const seen = new Set()
+    const visible = []
+
+    for (const element of document.querySelectorAll(selector)) {
+      const rect = element.getBoundingClientRect()
+      const style = window.getComputedStyle(element)
+      const intersectsViewport =
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.bottom >= 0 &&
+        rect.right >= 0 &&
+        rect.top <= window.innerHeight &&
+        rect.left <= window.innerWidth
+
+      if (!intersectsViewport || style.visibility === 'hidden' || style.display === 'none') continue
+
+      const value = String(element.getAttribute('aria-label') || element.textContent || '')
+        .replace(/\s+/g, ' ')
+        .trim()
+      if (!value || seen.has(value)) continue
+      seen.add(value)
+      visible.push(value)
+    }
+
+    return visible.join(' ')
+  }).catch(() => '')
+  const fallbackText = text || await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
+  return { title, text: firstVisibleText(fallbackText) }
 }
 
 async function clickFirst(page, labels) {
