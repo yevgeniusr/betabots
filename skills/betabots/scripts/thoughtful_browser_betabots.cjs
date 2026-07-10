@@ -11,6 +11,8 @@ const {
   probeEnvironmentIntegrity,
   resolveStorageStatePath,
 } = require('./environment_integrity.cjs')
+const { screenFingerprint } = require('./screen_identity.cjs')
+const { newKeywordMatches } = require('./keyword_scoring.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -1344,6 +1346,7 @@ function locatorForRole(page, label) {
 }
 
 async function observe(page) {
+  const url = page.url()
   const title = await page.title().catch(() => '')
   const text = await page.evaluate(() => {
     const selector = 'h1, h2, h3, h4, p, a, button, label, li, dt, dd, th, td, [role="cell"], [role="gridcell"], [role="status"], [role="alert"]'
@@ -1374,7 +1377,7 @@ async function observe(page) {
     return visible.join(' ')
   }).catch(() => '')
   const fallbackText = text || await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
-  return { title, text: firstVisibleText(fallbackText) }
+  return { url, title, text: firstVisibleText(fallbackText) }
 }
 
 async function clickFirst(page, labels) {
@@ -1653,15 +1656,6 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
   }, fallback)
 }
 
-function screenFingerprint(observation) {
-  return observation.text
-    .toLowerCase()
-    .replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/g, '<id>')
-    .replace(/\d+/g, '#')
-    .replace(/\s+/g, ' ')
-    .slice(0, 260)
-}
-
 async function tryCuriosityAction(page, bot, log, actions, stats, force = false, captureEvidence = null) {
   if (!force && random() > config.curiosityChance) return false
   if (stats.curiosityActions >= config.maxCuriosityActions) return false
@@ -1764,6 +1758,7 @@ async function runBot(browser, bot, runtime = {}) {
   const betabookMoments = []
   const destinyMoments = []
   const screenCounts = new Map()
+  const seenRiskKeywords = new Set()
   const evidenceFile = path.join(config.runDir, 'evidence', `${bot.id}.jsonl`)
   const liveRawFile = path.join(config.runDir, 'live', `${bot.id}.md`)
   const stats = {
@@ -2098,7 +2093,7 @@ async function runBot(browser, bot, runtime = {}) {
       const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
       if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
-      if (hasAny(lower, cohort.keywords.risk)) trust -= 20
+      if (newKeywordMatches(lower, cohort.keywords.risk, seenRiskKeywords).length > 0) trust -= 20
       const actedCuriously = await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
       if (actedCuriously) {
         observation = await observe(page)
