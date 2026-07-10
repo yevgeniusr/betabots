@@ -174,8 +174,9 @@ Thoughtful mode defaults to `BETABOT_STRICT_SCORING=true`. Strict scoring preven
 - reports include UI likes, passes, messages, repeated-screen penalties, and meaningful social actions.
 
 LLM decisions to leave, stop, end, abandon, or exit are honored as real session
-endings. The runner also limits its generic fallback social action to one attempt
-per session so a non-social product is not turned into a repeated contact loop.
+endings. The runner only attempts its generic fallback social action when the
+cohort requires social behavior, and limits that fallback to one attempt per
+session.
 
 Disable strict scoring only for low-level runner debugging:
 
@@ -220,7 +221,11 @@ Good truth-pressure output is direct, role-grounded, and sometimes negative. Wea
 
 ## Loop Rescue and Curiosity
 
-Thoughtful bots should not silently repeat the same route forever. When a screen repeats past `BETABOT_LOOP_REPEAT_THRESHOLD`, the bot posts a `loop-help` request in Betabook instead of pretending the loop is fine.
+Thoughtful bots attempt each configured route once per session. They end the
+planned journey after those paths are exhausted instead of cycling routes to fill
+the full attention window. When a screen still repeats past
+`BETABOT_LOOP_REPEAT_THRESHOLD`, the bot posts a `loop-help` request in Betabook
+instead of pretending the loop is fine.
 
 Destiny watches Betabook help posts and can rescue the bot by:
 

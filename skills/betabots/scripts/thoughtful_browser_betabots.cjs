@@ -1978,6 +1978,7 @@ async function runBot(browser, bot, runtime = {}) {
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
     const routes = cohort.routes
+    const visitedRoutes = new Set()
 
     for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs && !shouldEndSession; move += 1) {
       const remainingMs = sessionMs - (Date.now() - startedAt)
@@ -1985,7 +1986,12 @@ async function runBot(browser, bot, runtime = {}) {
       if (Date.now() - startedAt >= sessionMs) break
       await runStep('follow destiny', followDestiny)
       if (move > 0 && move % 3 === 0) await runStep('check Betabook', () => useBetabook('between actions'))
-      const route = routes[move % routes.length]
+      const route = routes.find((candidate) => !visitedRoutes.has(candidate.fallback))
+      if (!route) {
+        log(`I have inspected each main path once, so I end the session instead of retracing the same navigation.`)
+        break
+      }
+      visitedRoutes.add(route.fallback)
       const clicked = await runStep('click next navigation', () => clickFirst(page, route.labels), null, 15000)
       if (clicked) {
         actions.push(`clicked ${clicked}`)
@@ -2023,7 +2029,7 @@ async function runBot(browser, bot, runtime = {}) {
         recordScreenQuality(observation)
         await captureScreenshot('post-social-action', observation)
         log(`After the social action, I see: ${observation.text}`)
-      } else if (stats.fallbackActionAttempts === 0) {
+      } else if (cohort.requiresSocialAction && stats.fallbackActionAttempts === 0) {
         stats.fallbackActionAttempts += 1
         const fallbackLabels = [/^save$/i, /^message$/i, /contact/i]
         const reserveClicked = await runStep('try fallback action', () => clickFirst(page, fallbackLabels), null, 15000)
