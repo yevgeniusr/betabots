@@ -1335,7 +1335,7 @@ function locatorForRole(page, label) {
 async function observe(page) {
   const title = await page.title().catch(() => '')
   const text = await page.evaluate(() => {
-    const selector = 'h1, h2, h3, h4, p, a, button, label, li, [role="status"], [role="alert"]'
+    const selector = 'h1, h2, h3, h4, p, a, button, label, li, dt, dd, th, td, [role="cell"], [role="gridcell"], [role="status"], [role="alert"]'
     const seen = new Set()
     const visible = []
 
