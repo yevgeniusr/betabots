@@ -1905,8 +1905,13 @@ async function runBot(browser, bot, runtime = {}) {
     recordLifeDecision(reflection.lifeCostJustification || reflection.lifeDecision || '')
     recordTruthAssessment(reflection.truthfulAssessment || reflection.truthAssessment || '')
     if (reflection.desiredAction) {
+      const desiredAction = String(reflection.desiredAction).toLowerCase()
       log(`My impulse is to ${reflection.desiredAction}.`)
-      if (/\b(leave|stop|end|abandon|exit)\b/i.test(reflection.desiredAction)) {
+      if (/\bpass\b/i.test(desiredAction)) {
+        stats.passes += 1
+        trust -= 25
+      }
+      if (/\b(pass|leave|stop|end|abandon|exit)\b/i.test(desiredAction)) {
         shouldEndSession = true
         log(`I follow that impulse and end this session instead of continuing a forced loop.`)
       }
@@ -2106,6 +2111,7 @@ async function runBot(browser, bot, runtime = {}) {
   let score = clamp(value + trust - errors.length * 20, 0, 100)
   if (config.strictScoring) {
     score -= Math.min(35, stats.repeatedScreens * 2)
+    if (stats.passes > 0) score -= Math.min(50, stats.passes * 35)
     if (stats.passes > stats.likes + 3) score -= Math.min(20, (stats.passes - stats.likes - 3) * 2)
     if (cohort.requiresSocialAction && stats.meaningfulSocialActions === 0) score -= 25
     if (stats.loopHelpRequests > 0 && stats.loopRescuesFollowed === 0) score -= Math.min(18, stats.loopHelpRequests * 6)

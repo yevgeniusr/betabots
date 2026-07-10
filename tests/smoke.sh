@@ -31,6 +31,8 @@ grep -q "BETABOT_BROWSER_EXECUTABLE_PATH" "$ROOT/skills/betabots/scripts/thought
 grep -q "browserExecutablePath" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "requiresSocialAction" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "shouldEndSession" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -Fq "stats.passes += 1" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -Fq "stats.passes * 35" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "reflectionTimeoutMs" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "continuityInstruction" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "seenScreens: seenScreens.slice" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"

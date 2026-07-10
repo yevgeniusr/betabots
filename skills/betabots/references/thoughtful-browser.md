@@ -171,6 +171,7 @@ Thoughtful mode defaults to `BETABOT_STRICT_SCORING=true`. Strict scoring preven
 
 - repeated screens stop adding full value/trust credit;
 - repeated pass-heavy discovery behavior lowers happiness;
+- an LLM decision to pass ends the session and applies a strict negative-intent penalty;
 - high happiness requires at least one meaningful social action only when the cohort sets `requiresSocialAction: true`;
 - reports include UI likes, passes, messages, repeated-screen penalties, and meaningful social actions.
 
