@@ -1505,7 +1505,7 @@ function ideaFrom(bot, observation) {
   return 'Idea: keep the next best action visually obvious after every page transition.'
 }
 
-async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
+async function llmBotReflection(bot, observation, phase, fallback, stats = {}, sessionMemory = {}) {
   const truthPressurePayload = {
     enabled: true,
     lifeGoal: bot.lifeGoal,
@@ -1531,6 +1531,8 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}) {
     phase,
     visibleScreen: observation.text.slice(0, 1600),
     title: observation.title,
+    sessionMemory,
+    continuityInstruction: 'Use session memory as the bot\'s actual prior experience. Do not claim information was never shown when it appeared on an earlier screen; instead distinguish whether it was clear, credible, and available at the moment it was needed.',
     truthPressure: truthPressurePayload,
     sessionStats: {
       likes: stats.likes || 0,
@@ -1738,6 +1740,7 @@ async function runBot(browser, bot, runtime = {}) {
   const ideas = []
   const thoughts = []
   const opinions = []
+  const seenScreens = []
   const betabookMoments = []
   const destinyMoments = []
   const screenCounts = new Map()
@@ -1890,7 +1893,12 @@ async function runBot(browser, bot, runtime = {}) {
     stats.yearsRemaining = Number(mortality.yearsRemaining.toFixed(4))
     stats.actionsCharged = mortality.actionsCharged
     stats.dollarsCommitted = mortality.dollarsCommitted
-    const reflection = await llmBotReflection(bot, observation, phase, fallback, stats)
+    const reflection = await llmBotReflection(bot, observation, phase, fallback, stats, {
+      seenScreens: seenScreens.slice(-6),
+      recentThoughts: thoughts.slice(-4),
+      recentOpinions: opinions.slice(-4),
+      recentActions: actions.slice(-8),
+    })
     recordThought(reflection.thought || fallback.thought)
     recordOpinion(reflection.opinion || fallback.opinion)
     recordIdea(reflection.idea || fallback.idea)
@@ -1974,6 +1982,11 @@ async function runBot(browser, bot, runtime = {}) {
     recordScreenQuality(observation)
     await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
+    seenScreens.push({
+      phase: 'arrival',
+      title: observation.title,
+      visibleText: observation.text.slice(0, 800),
+    })
     await runStep(
       'reflect on arrival',
       () => recordReflection(observation, 'arrival'),
@@ -2013,6 +2026,11 @@ async function runBot(browser, bot, runtime = {}) {
       recordScreenQuality(observation)
       await captureScreenshot('exploration', observation)
       log(`I now see: ${observation.text}`)
+      seenScreens.push({
+        phase: 'exploration',
+        title: observation.title,
+        visibleText: observation.text.slice(0, 800),
+      })
       await runStep(
         'reflect on exploration',
         () => recordReflection(observation, 'exploration'),

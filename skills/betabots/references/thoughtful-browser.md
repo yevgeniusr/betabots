@@ -18,6 +18,7 @@ Use Betabots when you need to know how simulated people experience the product s
 - Launch actual browser contexts.
 - Move at human speed with real pauses.
 - Feed the LLM mind text from the current visible viewport, including the destination of in-page anchor navigation.
+- Preserve bounded session memory of prior screens, reactions, and actions so later reflections remain continuous without replacing current-viewport evidence.
 - Keep first-person thoughts in the raw log.
 - Do not inspect source code, APIs, devtools, DB, or hidden implementation details during a bot session.
 - Prefer visible UI affordances over direct route jumps.
