@@ -1328,6 +1328,7 @@ function startDestiny(bots, state, betabookState) {
 function locatorForRole(page, label) {
   return page.getByRole('link', { name: label })
     .or(page.getByRole('button', { name: label }))
+    .or(page.getByRole('tab', { name: label }))
     .first()
 }
 
