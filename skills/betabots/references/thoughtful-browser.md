@@ -112,7 +112,7 @@ The runner has generic defaults, but serious product testing must provide a coho
 
 ## Auth Isolation
 
-When the target app supports local E2E auth, use per-bot browser storage so one bot does not inherit another bot's account:
+Injected local-storage auth is only for mock-backed UI smoke tests:
 
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before app JavaScript runs.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template with `{id}`, `{name}`, or `{role}` placeholders.
@@ -124,6 +124,36 @@ BETABOT_AUTH_LOCAL_STORAGE_KEY=myapp.e2eAuthToken \
 BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
+
+Injected auth is classified as synthetic and caps the run at `0`. For a
+real-backend cohort, authenticate through the visible product UI first, save a
+Playwright storage-state file per bot, and configure:
+
+```bash
+BETABOT_REQUIRE_REAL_BACKEND=true \
+BETABOT_ENVIRONMENT_ATTESTATION_URL=http://localhost:8080/health/integrity \
+BETABOT_STORAGE_STATE_TEMPLATE='/tmp/product-auth/{id}.json' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The integrity endpoint must return JSON equivalent to:
+
+```json
+{
+  "mode": "real",
+  "auth": { "mode": "real" },
+  "database": {
+    "connected": true,
+    "driver": "postgres",
+    "persistent": true
+  },
+  "mocksDetected": false
+}
+```
+
+The runner also watches for `x-betabots-mock`, `x-mock-response`, and
+`x-mock-server`. Any detected mock or failed required attestation invalidates
+the run and forces every score to `0`.
 
 ## Betabook
 
