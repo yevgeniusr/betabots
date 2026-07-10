@@ -99,7 +99,7 @@ OPENROUTER_API_KEY=... \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-For apps with local E2E auth, seed a separate browser account per bot:
+For mock-backed UI smoke tests, synthetic local-storage auth is still available:
 
 ```bash
 BETABOT_AUTH_LOCAL_STORAGE_KEY=your.auth.storage.key \
@@ -108,6 +108,24 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
 `{id}`, `{name}`, and `{role}` are replaced per bot so sessions do not accidentally share user state.
+Because this bypasses the product's authentication flow, Betabots marks the
+environment invalid and caps scores at `0`. Never use injected auth for a report
+that claims a working product.
+
+For a real-backend run, create Playwright storage state through the product's
+actual login UI and require a runtime attestation:
+
+```bash
+BETABOT_REQUIRE_REAL_BACKEND=true \
+BETABOT_ENVIRONMENT_ATTESTATION_URL=http://localhost:8080/health/integrity \
+BETABOT_STORAGE_STATE_TEMPLATE='/tmp/product-auth/{id}.json' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The attestation must report real authentication and connected, persistent
+PostgreSQL storage. Missing or failed attestations, injected auth, explicit mock
+headers, mock/fixture modes, volatile storage, and missing storage-state files
+invalidate the run and force every happiness score to `0`.
 
 For social products, enable **Betabook** and **Destiny** as separate layers.
 
@@ -271,6 +289,10 @@ Optional auth isolation:
 
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
+- `BETABOT_STORAGE_STATE_TEMPLATE`: Playwright storage-state path template produced by real UI login; supports `{id}`, `{name}`, and `{role}`.
+- `BETABOT_REQUIRE_REAL_BACKEND`: fail closed unless runtime integrity is verified.
+- `BETABOT_ENVIRONMENT_ATTESTATION_URL`: JSON endpoint proving real auth and persistent PostgreSQL connectivity.
+- `BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS`: attestation timeout; defaults to `5000`.
 - `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, screen-size distribution, keywords, and idea rules.
 - `BETABOT_SCREEN_SIZE_DISTRIBUTION`: optional JSON array of weighted device buckets for thoughtful browser runs. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Legacy alias: `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `BETABOT_AVATAR_STYLE=bottts-neutral`: DiceBear avatar style slug or style URL for generated bot avatars.

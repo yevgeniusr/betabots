@@ -40,7 +40,7 @@ To make betabots replace as much early user research as possible, build every se
 
 ## Workflow
 
-1. Define boundaries: local or staging URL, allowed accounts, fake-payment rule, data cleanup rule, and external-web allowance.
+1. Define boundaries: local or staging URL, allowed accounts, fake-payment rule, data cleanup rule, external-web allowance, and whether the run requires a real backend.
 2. Research the real or likely audience and save the evidence before cohort generation.
 3. Generate a research-weighted cohort with varied roles, pasts, discovery circumstances, goals, technical comfort, emotional baseline, and attention span.
 4. Run multiple human-paced sessions per bot. Separate sessions with waits or phases so bots can react to each other.
@@ -48,6 +48,20 @@ To make betabots replace as much early user research as possible, build every se
 6. Analyze happiness, return likelihood, trust, value understood, abandonment reasons, social graph health, product defects, and confidence tiers.
 7. Patch only repeated or high-severity issues.
 8. Rerun a fresh cohort until critical flows complete and unhappy endings are explainable product choices, not defects.
+
+## Environment Integrity
+
+A real-browser session is not proof of a real product when authentication or
+API data is mocked. Product-quality runs should set
+`BETABOT_REQUIRE_REAL_BACKEND=true`, provide
+`BETABOT_ENVIRONMENT_ATTESTATION_URL`, and use Playwright storage state created
+through actual UI login via `BETABOT_STORAGE_STATE_TEMPLATE`.
+
+Detected injected auth, mock response headers, mock/fixture attestation,
+disconnected or non-persistent storage, missing storage state, and failed or
+missing required attestation invalidate the run and force all scores to `0`.
+Mock-backed browser sessions may still be useful for layout smoke testing, but
+their happiness score is intentionally unusable as product evidence.
 
 ## Session Rules
 

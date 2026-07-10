@@ -4,6 +4,15 @@ const path = require('node:path')
 const { createRequire } = require('node:module')
 const { spawn } = require('node:child_process')
 const os = require('node:os')
+const {
+  applyIntegrityToResults,
+  detectedMockHeaders,
+  evaluateEnvironmentIntegrity,
+  probeEnvironmentIntegrity,
+  resolveStorageStatePath,
+} = require('./environment_integrity.cjs')
+const { screenFingerprint } = require('./screen_identity.cjs')
+const { newKeywordMatches } = require('./keyword_scoring.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -22,6 +31,10 @@ const config = {
   seed: Number(process.env.BETABOT_SEED || 20260630),
   authLocalStorageKey: process.env.BETABOT_AUTH_LOCAL_STORAGE_KEY || '',
   authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
+  storageStateTemplate: process.env.BETABOT_STORAGE_STATE_TEMPLATE || '',
+  requireRealBackend: String(process.env.BETABOT_REQUIRE_REAL_BACKEND || 'false') === 'true',
+  environmentAttestationUrl: process.env.BETABOT_ENVIRONMENT_ATTESTATION_URL || '',
+  environmentAttestationTimeoutMs: Number(process.env.BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS || 5000),
   cohortFile: process.env.BETABOT_COHORT_FILE || '',
   audienceResearchFile: process.env.BETABOT_AUDIENCE_RESEARCH_FILE || '',
   cohortOnly: String(process.env.BETABOT_COHORT_ONLY || 'false') === 'true',
@@ -1333,6 +1346,7 @@ function locatorForRole(page, label) {
 }
 
 async function observe(page) {
+  const url = page.url()
   const title = await page.title().catch(() => '')
   const text = await page.evaluate(() => {
     const selector = 'h1, h2, h3, h4, p, a, button, label, li, dt, dd, th, td, [role="cell"], [role="gridcell"], [role="status"], [role="alert"]'
@@ -1363,7 +1377,7 @@ async function observe(page) {
     return visible.join(' ')
   }).catch(() => '')
   const fallbackText = text || await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
-  return { title, text: firstVisibleText(fallbackText) }
+  return { url, title, text: firstVisibleText(fallbackText) }
 }
 
 async function clickFirst(page, labels) {
@@ -1642,15 +1656,6 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
   }, fallback)
 }
 
-function screenFingerprint(observation) {
-  return observation.text
-    .toLowerCase()
-    .replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/g, '<id>')
-    .replace(/\d+/g, '#')
-    .replace(/\s+/g, ' ')
-    .slice(0, 260)
-}
-
 async function tryCuriosityAction(page, bot, log, actions, stats, force = false, captureEvidence = null) {
   if (!force && random() > config.curiosityChance) return false
   if (stats.curiosityActions >= config.maxCuriosityActions) return false
@@ -1711,12 +1716,14 @@ async function tryCuriosityAction(page, bot, log, actions, stats, force = false,
 async function runBot(browser, bot, runtime = {}) {
   const startedAt = Date.now()
   const screenSize = bot.screenSize || selectScreenSize(bot.viewport)
+  const storageStatePath = resolveStorageStatePath(config.storageStateTemplate, bot)
   const context = await browser.newContext({
     viewport: screenSize.viewport || { width: screenSize.width, height: screenSize.height },
     deviceScaleFactor: screenSize.deviceScaleFactor || 1,
     isMobile: typeof screenSize.isMobile === 'boolean' ? screenSize.isMobile : screenSize.category === 'mobile',
     hasTouch: typeof screenSize.hasTouch === 'boolean' ? screenSize.hasTouch : ['mobile', 'tablet'].includes(screenSize.category),
     userAgent: userAgentForScreen(screenSize),
+    ...(storageStatePath && fs.existsSync(storageStatePath) ? { storageState: storageStatePath } : {}),
   })
   const authToken = authTokenFor(bot)
   if (config.authLocalStorageKey && authToken) {
@@ -1725,6 +1732,12 @@ async function runBot(browser, bot, runtime = {}) {
     }, [config.authLocalStorageKey, authToken])
   }
   const page = await context.newPage()
+  page.on('response', async (response) => {
+    const headers = await response.allHeaders().catch(() => ({}))
+    for (const header of detectedMockHeaders(headers)) {
+      runtime.detectedMockHeaders?.add(header)
+    }
+  })
   const notes = []
   const actions = []
   const mortality = createMortalityLedger(bot)
@@ -1745,6 +1758,7 @@ async function runBot(browser, bot, runtime = {}) {
   const betabookMoments = []
   const destinyMoments = []
   const screenCounts = new Map()
+  const seenRiskKeywords = new Set()
   const evidenceFile = path.join(config.runDir, 'evidence', `${bot.id}.jsonl`)
   const liveRawFile = path.join(config.runDir, 'live', `${bot.id}.md`)
   const stats = {
@@ -2079,7 +2093,7 @@ async function runBot(browser, bot, runtime = {}) {
       const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
       if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
-      if (hasAny(lower, cohort.keywords.risk)) trust -= 20
+      if (newKeywordMatches(lower, cohort.keywords.risk, seenRiskKeywords).length > 0) trust -= 20
       const actedCuriously = await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
       if (actedCuriously) {
         observation = await observe(page)
@@ -2119,6 +2133,15 @@ async function runBot(browser, bot, runtime = {}) {
     if (runtime.destinyState?.enabled && destinyMoments.length === 0) score -= 8
     if (runtime.betabookState?.enabled && betabookMoments.length === 0) score -= 8
     score = clamp(score, 0, 100)
+  }
+  const botIntegrity = evaluateEnvironmentIntegrity({
+    ...(runtime.environmentIntegrityInput || {}),
+    detectedMockHeaders: [...(runtime.detectedMockHeaders || [])],
+  })
+  if (!botIntegrity.valid) {
+    const message = `Environment integrity invalid: ${botIntegrity.reasons.join(', ')}`
+    score = Math.min(score, botIntegrity.scoreCap)
+    if (!errors.includes(message)) errors.push(message)
   }
   const endReason = errors.length
     ? 'hit a bug or dead end'
@@ -2205,7 +2228,7 @@ async function runPool(items, worker, concurrency) {
   await Promise.all(workers)
 }
 
-function writeAnalysis(results, startedAt, betabookState, destinyState) {
+function writeAnalysis(results, startedAt, betabookState, destinyState, environmentIntegrity) {
   const scores = results.map((result) => result.score).sort((a, b) => a - b)
   const happy = scores.filter((score) => score >= 70).length
   const unhappy = scores.filter((score) => score < 50).length
@@ -2236,6 +2259,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
   }
   const summary = {
     config: publicConfig(),
+    environmentIntegrity,
     cohort: {
       appName: cohort.appName,
       source: cohort.source,
@@ -2278,6 +2302,16 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
   }
   fs.writeFileSync(path.join(config.runDir, 'summary.json'), JSON.stringify(summary, null, 2))
   fs.writeFileSync(path.join(config.runDir, 'analysis.md'), `# Thoughtful Browser Betabot Analysis
+
+## Environment Integrity
+- Status: ${environmentIntegrity.valid ? (environmentIntegrity.verified ? 'VERIFIED REAL BACKEND' : 'UNVERIFIED') : 'INVALID — SCORES FORCED TO ZERO'}
+- Real backend required: ${config.requireRealBackend}
+- Attestation URL: ${environmentIntegrity.attestationUrl || 'not configured'}
+- Persistent PostgreSQL verified: ${environmentIntegrity.verified}
+- Synthetic auth detected: ${environmentIntegrity.reasons.includes('synthetic_auth')}
+- Mock response headers: ${environmentIntegrity.detectedMockHeaders?.length ? environmentIntegrity.detectedMockHeaders.join(', ') : 'none'}
+- Reasons: ${environmentIntegrity.reasons.length ? environmentIntegrity.reasons.join(', ') : 'none'}
+- Score cap: ${environmentIntegrity.scoreCap}
 
 ## Run Configuration
 - App name: ${cohort.appName}
@@ -2399,11 +2433,36 @@ async function main() {
   validateRunConfig()
   mkdirs()
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
+  const storageStateErrors = config.storageStateTemplate
+    ? bots
+      .map((bot) => resolveStorageStatePath(config.storageStateTemplate, bot))
+      .filter((file) => !fs.existsSync(file))
+      .map((file) => `missing ${file}`)
+    : []
+  const integrityProbe = await probeEnvironmentIntegrity({
+    requireRealBackend: config.requireRealBackend,
+    attestationUrl: config.environmentAttestationUrl,
+    timeoutMs: config.environmentAttestationTimeoutMs,
+    authTokenTemplate: config.authTokenTemplate,
+  })
+  const integrityInput = {
+    requireRealBackend: config.requireRealBackend,
+    authTokenTemplate: config.authTokenTemplate,
+    attestation: integrityProbe.attestation,
+    probeError: integrityProbe.probeError,
+    storageStateErrors,
+  }
+  let environmentIntegrity = {
+    ...integrityProbe,
+    ...evaluateEnvironmentIntegrity(integrityInput),
+    storageStateErrors,
+  }
   const betabookState = createBetabookState(bots)
   const destinyState = createDestinyState(bots)
   await initializeDestinyMasterPlan(bots, destinyState, betabookState)
   fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
     config: publicConfig(),
+    environmentIntegrity,
     cohort: {
       appName: cohort.appName,
       source: cohort.source,
@@ -2434,12 +2493,19 @@ async function main() {
     ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
   })
   const results = []
+  const runtimeMockHeaders = new Set(environmentIntegrity.detectedMockHeaders || [])
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)
   const stopDestiny = startDestiny(bots, destinyState, betabookState)
   try {
     await runPool(bots, async (bot) => {
-      results.push(await runBot(browser, bot, { betabookState, destinyState, bots }))
+      results.push(await runBot(browser, bot, {
+        betabookState,
+        destinyState,
+        bots,
+        detectedMockHeaders: runtimeMockHeaders,
+        environmentIntegrityInput: integrityInput,
+      }))
     }, config.concurrency)
   } finally {
     await stopDestiny()
@@ -2448,20 +2514,30 @@ async function main() {
   await stirBetabook(bots, betabookState, 'final wrap-up')
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)
-  writeAnalysis(results, startedAt, betabookState, destinyState)
+  environmentIntegrity = {
+    ...environmentIntegrity,
+    ...evaluateEnvironmentIntegrity({
+      ...integrityInput,
+      detectedMockHeaders: [...runtimeMockHeaders],
+    }),
+    detectedMockHeaders: [...runtimeMockHeaders],
+  }
+  const finalResults = applyIntegrityToResults(results, environmentIntegrity)
+  writeAnalysis(finalResults, startedAt, betabookState, destinyState, environmentIntegrity)
   console.log(JSON.stringify({
     runDir: config.runDir,
-    bots: results.length,
-    happy: results.filter((result) => result.score >= 70).length,
-    unhappy: results.filter((result) => result.score < 50).length,
-    errors: results.filter((result) => result.errors.length > 0).length,
-    median: results.map((result) => result.score).sort((a, b) => a - b)[Math.floor(results.length * 0.5)] || 0,
+    bots: finalResults.length,
+    happy: finalResults.filter((result) => result.score >= 70).length,
+    unhappy: finalResults.filter((result) => result.score < 50).length,
+    errors: finalResults.filter((result) => result.errors.length > 0).length,
+    median: finalResults.map((result) => result.score).sort((a, b) => a - b)[Math.floor(finalResults.length * 0.5)] || 0,
+    environmentIntegrity,
     truthPressure: {
       enabled: true,
-      actionsCharged: results.reduce((sum, result) => sum + (result.mortality?.actionsCharged || 0), 0),
-      yearsSpentOnActions: Number(results.reduce((sum, result) => sum + (result.mortality?.yearsSpentOnActions || 0), 0).toFixed(4)),
-      dollarsCommitted: results.reduce((sum, result) => sum + (result.mortality?.dollarsCommitted || 0), 0),
-      deaths: results.filter((result) => result.mortality?.death).length,
+      actionsCharged: finalResults.reduce((sum, result) => sum + (result.mortality?.actionsCharged || 0), 0),
+      yearsSpentOnActions: Number(finalResults.reduce((sum, result) => sum + (result.mortality?.yearsSpentOnActions || 0), 0).toFixed(4)),
+      dollarsCommitted: finalResults.reduce((sum, result) => sum + (result.mortality?.dollarsCommitted || 0), 0),
+      deaths: finalResults.filter((result) => result.mortality?.death).length,
     },
     llm: {
       provider: llmStats.provider,
