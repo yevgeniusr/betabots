@@ -169,8 +169,12 @@ Thoughtful mode defaults to `BETABOT_STRICT_SCORING=true`. Strict scoring preven
 
 - repeated screens stop adding full value/trust credit;
 - repeated pass-heavy discovery behavior lowers happiness;
-- high happiness requires at least one meaningful social action when the product is social;
+- high happiness requires at least one meaningful social action only when the cohort sets `requiresSocialAction: true`;
 - reports include UI likes, passes, messages, repeated-screen penalties, and meaningful social actions.
+
+LLM decisions to leave, stop, end, abandon, or exit are honored as real session
+endings. The runner also limits its generic fallback social action to one attempt
+per session so a non-social product is not turned into a repeated contact loop.
 
 Disable strict scoring only for low-level runner debugging:
 

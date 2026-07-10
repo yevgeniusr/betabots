@@ -118,6 +118,7 @@ const defaultCohort = {
       goal: 'Verify whether the product makes constraints and accommodations visible before commitment.',
     },
   ],
+  requiresSocialAction: false,
   screenSizeDistribution: [
     { category: 'mobile', weight: 50, devices: [
       { name: 'iPhone SE', width: 375, height: 667, deviceScaleFactor: 2 },
@@ -282,6 +283,7 @@ function loadCohortConfig() {
     baselines: normalizeList(override.baselines, defaultCohort.baselines),
     discoveries: normalizeList(override.discoveries, defaultCohort.discoveries),
     roles: normalizeList(override.roles || override.personas, defaultCohort.roles),
+    requiresSocialAction: Boolean(override.requiresSocialAction ?? defaultCohort.requiresSocialAction),
     routes: normalizeRoutes(override.routes || defaultCohort.routes),
     screenSizeDistribution: screenDistributionFromEnv() || normalizeScreenSizeDistribution(override.screenSizeDistribution || override.screen_size_distribution || override.screenSizes || override.screen_sizes || override.viewports, defaultCohort.screenSizeDistribution),
     keywords: { ...defaultCohort.keywords, ...(override.keywords || {}) },
@@ -1722,12 +1724,14 @@ async function runBot(browser, bot, runtime = {}) {
     passes: 0,
     messages: 0,
     meaningfulSocialActions: 0,
+    fallbackActionAttempts: 0,
   }
   let step = 1
   let value = 0
   let trust = 45
   let lastScreenshot = ''
   let lastObservation = null
+  let shouldEndSession = false
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
   fs.writeFileSync(liveRawFile, `# ${bot.id} — Live Thoughtful Browser Storyline\n\n## Raw Journey\n`)
@@ -1865,7 +1869,12 @@ async function runBot(browser, bot, runtime = {}) {
     recordTruthAssessment(reflection.truthfulAssessment || reflection.truthAssessment || '')
     if (reflection.desiredAction) {
       log(`My impulse is to ${reflection.desiredAction}.`)
+      if (/\b(leave|stop|end|abandon|exit)\b/i.test(reflection.desiredAction)) {
+        shouldEndSession = true
+        log(`I follow that impulse and end this session instead of continuing a forced loop.`)
+      }
     }
+    return reflection
   }
   const useBetabook = async (reason) => {
     const betabookState = runtime.betabookState
@@ -1942,7 +1951,7 @@ async function runBot(browser, bot, runtime = {}) {
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
     const routes = cohort.routes
 
-    for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs; move += 1) {
+    for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs && !shouldEndSession; move += 1) {
       const remainingMs = sessionMs - (Date.now() - startedAt)
       await wait(Math.min(remainingMs, 6000 + random() * 12000))
       if (Date.now() - startedAt >= sessionMs) break
@@ -1965,6 +1974,7 @@ async function runBot(browser, bot, runtime = {}) {
       await captureScreenshot('exploration', observation)
       log(`I now see: ${observation.text}`)
       await runStep('reflect on exploration', () => recordReflection(observation, 'exploration'))
+      if (shouldEndSession) break
 
       const lower = observation.text.toLowerCase()
       const currentFingerprintCount = screenCounts.get(screenFingerprint(observation)) || 1
@@ -1985,7 +1995,8 @@ async function runBot(browser, bot, runtime = {}) {
         recordScreenQuality(observation)
         await captureScreenshot('post-social-action', observation)
         log(`After the social action, I see: ${observation.text}`)
-      } else {
+      } else if (stats.fallbackActionAttempts === 0) {
+        stats.fallbackActionAttempts += 1
         const fallbackLabels = [/^save$/i, /^message$/i, /contact/i]
         const reserveClicked = await runStep('try fallback action', () => clickFirst(page, fallbackLabels), null, 15000)
         if (reserveClicked) {
@@ -2011,7 +2022,7 @@ async function runBot(browser, bot, runtime = {}) {
   if (config.strictScoring) {
     score -= Math.min(35, stats.repeatedScreens * 2)
     if (stats.passes > stats.likes + 3) score -= Math.min(20, (stats.passes - stats.likes - 3) * 2)
-    if (stats.meaningfulSocialActions === 0) score -= 25
+    if (cohort.requiresSocialAction && stats.meaningfulSocialActions === 0) score -= 25
     if (stats.loopHelpRequests > 0 && stats.loopRescuesFollowed === 0) score -= Math.min(18, stats.loopHelpRequests * 6)
     if (runtime.destinyState?.enabled && destinyMoments.length === 0) score -= 8
     if (runtime.betabookState?.enabled && betabookMoments.length === 0) score -= 8
@@ -2019,6 +2030,8 @@ async function runBot(browser, bot, runtime = {}) {
   }
   const endReason = errors.length
     ? 'hit a bug or dead end'
+    : shouldEndSession
+      ? 'chose to leave based on the product experience'
     : score >= 75
       ? 'completed session and will come back later'
       : score >= 55
@@ -2062,6 +2075,7 @@ ${notes.join('\n')}
 - Messages sent through UI: ${stats.messages}
 - Repeated screen penalty events: ${stats.repeatedScreens}
 - Meaningful social actions: ${stats.meaningfulSocialActions}
+- Fallback actions attempted: ${stats.fallbackActionAttempts}
 - Betabook help requests: ${stats.loopHelpRequests}
 - Destiny loop rescues followed: ${stats.loopRescuesFollowed}
 - Curiosity actions: ${stats.curiosityActions}
@@ -2139,6 +2153,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState) {
       confidenceRules: cohort.confidenceRules,
       roleCount: cohort.roles.length,
       routeCount: cohort.routes.length,
+      requiresSocialAction: cohort.requiresSocialAction,
       screenSizeDistribution: cohort.screenSizeDistribution,
     },
     betabook: betabookState?.enabled ? {
@@ -2306,6 +2321,7 @@ async function main() {
       audienceSegments: cohort.audienceSegments,
       confidenceRules: cohort.confidenceRules,
       roles: cohort.roles,
+      requiresSocialAction: cohort.requiresSocialAction,
       routes: cohort.routes.map((route) => ({
         labels: route.labels.map((label) => label.toString()),
         fallback: route.fallback,

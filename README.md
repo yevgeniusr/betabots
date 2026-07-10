@@ -279,7 +279,7 @@ Optional auth isolation:
 - `BETABOT_BETABOOK=true`: enables the run-scoped Reddit-like social board for bot-to-bot posts, comments, and invites.
 - `BETABOT_DESTINY=true`: enables the master-plan layer that makes paths cross, not cross, or almost cross.
 - `BETABOT_DESTINY_INTERVAL_MS`: interval for Destiny to inspect the cohort and apply interventions.
-- `BETABOT_STRICT_SCORING=true`: default; discounts repeated screens, penalizes pass-heavy behavior, and requires meaningful social actions before declaring high happiness.
+- `BETABOT_STRICT_SCORING=true`: default; discounts repeated screens and penalizes pass-heavy behavior. Social-action scoring applies only when the cohort sets `requiresSocialAction: true`.
 - `BETABOT_TRUTH_YEARS=100`: starting life-years per bot for always-on truth pressure.
 - `BETABOT_TRUTH_ACTION_MONTHS=1`: life-months charged per meaningful website action.
 - `BETABOT_TRUTH_DOLLAR_YEARS=1`: life-years charged per committed dollar.
