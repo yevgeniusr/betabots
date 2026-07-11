@@ -13,6 +13,7 @@ const {
 } = require('./environment_integrity.cjs')
 const { screenFingerprint } = require('./screen_identity.cjs')
 const { newKeywordMatches } = require('./keyword_scoring.cjs')
+const { scoreSession } = require('./session_scoring.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -775,6 +776,8 @@ function personaAt(index) {
     emotionalBaseline: roleObject.emotionalBaseline || pick(baselines),
     technicalComfort,
     traits: roleObject.traits || [],
+    successSignals: normalizeList(roleObject.successSignals || roleObject.success_signals, []),
+    routes: normalizeRoutes(roleObject.routes || roleObject.journey || cohort.routes),
     viewport: roleObject.viewport || screenSize.category || (role.toLowerCase().includes('mobile') ? 'mobile' : 'desktop'),
     screenSize,
     attentionSpanMinutes: configuredMinutes || clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
@@ -1771,6 +1774,8 @@ async function runBot(browser, bot, runtime = {}) {
     messages: 0,
     meaningfulSocialActions: 0,
     fallbackActionAttempts: 0,
+    navigationFallbacks: 0,
+    browserIssues: 0,
   }
   let step = 1
   let value = 0
@@ -1778,6 +1783,7 @@ async function runBot(browser, bot, runtime = {}) {
   let lastScreenshot = ''
   let lastObservation = null
   let shouldEndSession = false
+  let goalAssessment = null
   const reflectionTimeoutMs = config.llmTimeoutMs + 5000
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
@@ -1798,6 +1804,32 @@ async function runBot(browser, bot, runtime = {}) {
       screenHash: lastObservation ? textHash(lastObservation.text) : null,
     })
   }
+  const browserIssueKeys = new Set()
+  const recordBrowserIssue = (kind, detail) => {
+    const message = `${kind}: ${String(detail || '').trim()}`
+    if (!detail || browserIssueKeys.has(message)) return
+    browserIssueKeys.add(message)
+    stats.browserIssues += 1
+    errors.push(message)
+    log(`The product reports a browser problem: ${message}`, {
+      type: 'browser-error',
+    })
+  }
+  page.on('console', (message) => {
+    if (message.type() === 'error') recordBrowserIssue('console error', message.text())
+  })
+  page.on('pageerror', (error) => recordBrowserIssue('page error', error.message))
+  page.on('requestfailed', (request) => {
+    recordBrowserIssue(
+      'request failed',
+      `${request.method()} ${request.url()} ${request.failure()?.errorText || ''}`,
+    )
+  })
+  page.on('response', (response) => {
+    if (response.status() >= 500) {
+      recordBrowserIssue('HTTP failure', `${response.status()} ${response.url()}`)
+    }
+  })
   const captureScreenshot = async (label, observation = lastObservation) => {
     if (config.visualEvidenceMode === 'off') return ''
     const file = await screenshot(page, bot, step++, label)
@@ -1933,6 +1965,47 @@ async function runBot(browser, bot, runtime = {}) {
     }
     return reflection
   }
+  const assessGoalCompletion = async (observation) => {
+    const evidenceText = [
+      ...seenScreens.map((screen) => screen.visibleText),
+      ...actions,
+    ].join('\n').toLowerCase()
+    const signalResults = bot.successSignals.map((signal) => ({
+      signal,
+      observed: evidenceText.includes(String(signal).toLowerCase()),
+    }))
+    const fallback = {
+      achieved: false,
+      confidence: 0,
+      reason: 'The recorded UI journey does not prove that the stated goal was completed.',
+    }
+    const assessment = await llmJson('betabot_goal_assessment', {
+      bot: {
+        id: bot.id,
+        role: bot.role,
+        goal: bot.goal,
+        lifeGoal: bot.lifeGoal,
+      },
+      recordedActions: actions,
+      recentScreens: seenScreens.slice(-10),
+      recentThoughts: thoughts.slice(-6),
+      recentOpinions: opinions.slice(-6),
+      requiredSuccessSignals: signalResults,
+      instruction: 'Mark achieved true only when the recorded visible UI and actions prove the stated goal was completed. Browsing related pages, seeing summary counts, or intending to act is not completion.',
+      requestedShape: {
+        achieved: 'boolean',
+        confidence: 'number from 0 to 1',
+        reason: 'one direct sentence grounded in recorded UI evidence',
+      },
+    }, fallback)
+    const allSignalsObserved = signalResults.length === 0 || signalResults.every((entry) => entry.observed)
+    return {
+      achieved: assessment.achieved === true && allSignalsObserved,
+      confidence: Number(assessment.confidence || 0),
+      reason: String(assessment.reason || fallback.reason),
+      signalResults,
+    }
+  }
   const useBetabook = async (reason) => {
     const betabookState = runtime.betabookState
     if (!betabookState?.enabled) return
@@ -2015,8 +2088,9 @@ async function runBot(browser, bot, runtime = {}) {
     )
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
+    const minimumSessionMs = config.minMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
-    const routes = cohort.routes
+    const routes = bot.routes
     const visitedRoutes = new Set()
     const rememberCurrentRoute = () => {
       let currentUrl
@@ -2049,8 +2123,28 @@ async function runBot(browser, bot, runtime = {}) {
       rememberCurrentRoute()
       const route = routes.find((candidate) => !visitedRoutes.has(candidate.fallback))
       if (!route) {
-        log(`I have inspected each main path once, so I end the session instead of retracing the same navigation.`)
-        break
+        if (Date.now() - startedAt >= minimumSessionMs) {
+          log(`I have inspected each main path once and met the minimum session time, so I stop instead of retracing the same navigation.`)
+          break
+        }
+        log(`I have inspected each main path, but my goal is unfinished, so I keep exploring visible controls instead of ending early.`)
+        const explored = await runStep(
+          'continue goal-directed exploration',
+          () => tryCuriosityAction(page, bot, log, actions, stats, true, captureScreenshot),
+          false,
+        )
+        if (!explored) {
+          observation = await observe(page)
+          recordScreenQuality(observation)
+          await captureScreenshot('minimum-session-exploration', observation)
+          await runStep(
+            'reflect during minimum session',
+            () => recordReflection(observation, 'goal-directed exploration'),
+            undefined,
+            reflectionTimeoutMs,
+          )
+        }
+        continue
       }
       visitedRoutes.add(route.fallback)
       const clicked = await runStep('click next navigation', () => clickFirst(page, route.labels), null, 15000)
@@ -2060,6 +2154,7 @@ async function runBot(browser, bot, runtime = {}) {
       } else {
         await runStep(`navigate ${route.fallback}`, () => page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'commit', timeout: 20000 }), null, 25000)
         actions.push(`navigated ${route.fallback}`)
+        stats.navigationFallbacks += 1
         log(`I cannot find the obvious link, so I try ${route.fallback} like a determined user using the address bar.`)
       }
 
@@ -2116,6 +2211,16 @@ async function runBot(browser, bot, runtime = {}) {
         }
       }
     }
+    observation = await observe(page)
+    goalAssessment = await runStep(
+      'assess goal completion',
+      () => assessGoalCompletion(observation),
+      { achieved: false, confidence: 0, reason: 'Goal assessment failed.', signalResults: [] },
+      reflectionTimeoutMs,
+    )
+    log(`Goal completion: ${goalAssessment.achieved ? 'achieved' : 'not achieved'} — ${goalAssessment.reason}`, {
+      type: 'goal-assessment',
+    })
   } catch (error) {
     errors.push(error.message)
     log(`I hit a problem: ${error.message}`)
@@ -2123,17 +2228,22 @@ async function runBot(browser, bot, runtime = {}) {
     await context.close().catch(() => {})
   }
 
-  let score = clamp(value + trust - errors.length * 20, 0, 100)
-  if (config.strictScoring) {
-    score -= Math.min(35, stats.repeatedScreens * 2)
-    if (stats.passes > 0) score -= Math.min(50, stats.passes * 35)
-    if (stats.passes > stats.likes + 3) score -= Math.min(20, (stats.passes - stats.likes - 3) * 2)
-    if (cohort.requiresSocialAction && stats.meaningfulSocialActions === 0) score -= 25
-    if (stats.loopHelpRequests > 0 && stats.loopRescuesFollowed === 0) score -= Math.min(18, stats.loopHelpRequests * 6)
-    if (runtime.destinyState?.enabled && destinyMoments.length === 0) score -= 8
-    if (runtime.betabookState?.enabled && betabookMoments.length === 0) score -= 8
-    score = clamp(score, 0, 100)
-  }
+  let score = scoreSession({
+    value,
+    trust,
+    errors,
+    stats,
+    strictScoring: config.strictScoring,
+    requiresSocialAction: cohort.requiresSocialAction,
+    destinyEnabled: Boolean(runtime.destinyState?.enabled),
+    destinyMoments: destinyMoments.length,
+    betabookEnabled: Boolean(runtime.betabookState?.enabled),
+    betabookMoments: betabookMoments.length,
+    elapsedMs: Date.now() - startedAt,
+    minimumSessionMs: config.minMinutes * 60 * 1000,
+    endedByChoice: shouldEndSession,
+    goalAssessment,
+  })
   const botIntegrity = evaluateEnvironmentIntegrity({
     ...(runtime.environmentIntegrityInput || {}),
     detectedMockHeaders: [...(runtime.detectedMockHeaders || [])],
@@ -2191,6 +2301,10 @@ ${notes.join('\n')}
 - Repeated screen penalty events: ${stats.repeatedScreens}
 - Meaningful social actions: ${stats.meaningfulSocialActions}
 - Fallback actions attempted: ${stats.fallbackActionAttempts}
+- Address-bar navigation fallbacks: ${stats.navigationFallbacks}
+- Browser issues recorded: ${stats.browserIssues}
+- Goal achieved: ${goalAssessment?.achieved === true ? 'yes' : 'no'}
+- Goal assessment: ${goalAssessment?.reason || 'No assessment available'}
 - Betabook help requests: ${stats.loopHelpRequests}
 - Destiny loop rescues followed: ${stats.loopRescuesFollowed}
 - Curiosity actions: ${stats.curiosityActions}
@@ -2214,7 +2328,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
+  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, navigationFallbacks: stats.navigationFallbacks, browserIssues: stats.browserIssues, goalAssessment, elapsedSeconds: Math.round((Date.now() - startedAt) / 1000), attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
 }
 
 async function runPool(items, worker, concurrency) {

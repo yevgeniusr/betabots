@@ -26,7 +26,12 @@ For product-quality runs, create audience research first. Read `audience-researc
       "past": "My team loses deals when follow-up is inconsistent, but new tools often create admin work.",
       "discovery": "A colleague mentioned this after we missed a renewal.",
       "goal": "Decide whether the product helps my team follow up without extra meetings.",
-      "lifeGoal": "Build a reputation for choosing tools that protect my team's future."
+      "lifeGoal": "Build a reputation for choosing tools that protect my team's future.",
+      "successSignals": ["Team adoption report", "Permission controls"],
+      "routes": [
+        { "labels": ["dashboard", "pipeline"], "fallback": "/dashboard" },
+        { "labels": ["team", "permissions"], "fallback": "/settings/team" }
+      ]
     },
     {
       "role": "mobile-first account executive",
@@ -87,14 +92,15 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 - `researchSources`: Optional array of evidence sources used to design the cohort. Use source labels, not secrets.
 - `audienceSegments`: Optional array of weighted audience segments. Each segment can include `name`, `weight`, `evidence`, `jobs`, `objections`, `deviceBias`, `vocabulary`, and `assumptions`.
 - `confidenceRules`: Optional thresholds or notes for mapping repeated findings to high/medium/low confidence.
-- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `lifeGoal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`. For truth-pressure runs, prefer explicit `lifeGoal` values for each important persona; generated defaults are useful but less precise than product-specific stakes.
+- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `lifeGoal`, `successSignals`, role-specific `routes`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`. For truth-pressure runs, prefer explicit `lifeGoal` values for each important persona; generated defaults are useful but less precise than product-specific stakes.
 - `requiresSocialAction`: Set to `true` only when meaningful in-product social action is required for the product to deliver value. Non-social products are not penalized for omitting likes, messages, or equivalent actions.
 - `screenSizeDistribution`: Optional weighted screen-size buckets. Each bucket has `category`, `weight`, and `devices`; each device has `name`, `width`, `height`, optional `deviceScaleFactor`, `isMobile`, `hasTouch`, and `userAgent`. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Override per run with `BETABOT_SCREEN_SIZE_DISTRIBUTION` or legacy alias `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `avatar`: Optional custom avatar object or URL for a persona. If omitted, the runner generates a DiceBear avatar from the persona seed.
 - `names`: Optional reusable first names for generated personas.
 - `discoveries`: Optional discovery circumstances used when a role omits `discovery`.
 - `baselines`: Optional emotional baselines such as `curious`, `skeptical`, or `impatient`.
-- `routes`: UI exploration strategy. `labels` are visible link or button names; `fallback` is a route to try when no visible control is found.
+- `routes`: Default UI exploration strategy. `labels` are visible link or button names; `fallback` is a route to try when no visible control is found. A role can provide its own `routes` (or `journey`) when different personas must complete different workflows.
+- `successSignals`: Visible product text that provides concrete evidence for a role's goal. Missing signals are supplied to the final goal assessment and prevent an unsupported high score.
 - `keywords.value`: Words that mean the user saw useful product value.
 - `keywords.trust`: Words that increase confidence, safety, or credibility.
 - `keywords.risk`: Words that lower trust.
@@ -140,5 +146,6 @@ Routes should combine visible affordances and realistic fallback paths:
 - Use visible labels first because real users click UI, not routes.
 - Use fallback paths only as a determined-user behavior.
 - Include routes for onboarding, primary value, settings/account, pricing, help, and each marketplace side when applicable.
+- Prefer role-specific routes when a shared route list would force personas through screens irrelevant to their permissions or job.
 
 Labels can be plain strings or regex strings such as `"/^start$/i"`.

@@ -23,6 +23,7 @@ node --check "$ROOT/skills/betabots/scripts/keyword_scoring.cjs" >/dev/null
 node --test "$ROOT/tests/environment_integrity.test.cjs" >/dev/null
 node --test "$ROOT/tests/screen_identity.test.cjs" >/dev/null
 node --test "$ROOT/tests/keyword_scoring.test.cjs" >/dev/null
+node --test "$ROOT/tests/session_scoring.test.cjs" >/dev/null
 node --check "$ROOT/web/server.cjs" >/dev/null
 test ! -e "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
 test ! -e "$ROOT/skills/betabots/references/live-simulation.md"
@@ -85,5 +86,30 @@ assert avatar['provider'] == 'dicebear'
 assert avatar['style'] == 'bottts-neutral'
 assert 'https://api.dicebear.com/10.x/bottts-neutral/svg?' in avatar['url']
 assert 'seed=' in avatar['url']
+PY
+cat >/tmp/betabots-role-routes.json <<'JSON'
+{
+  "appName": "Role route smoke",
+  "routes": [{"labels": ["global"], "fallback": "/global"}],
+  "roles": [{
+    "role": "administrator",
+    "goal": "Inspect permissions",
+    "successSignals": ["Permission controls"],
+    "routes": [{"labels": ["permissions"], "fallback": "/permissions"}]
+  }]
+}
+JSON
+BETABOT_COHORT_FILE=/tmp/betabots-role-routes.json \
+BETABOT_COHORT_ONLY=true \
+BETABOT_THOUGHTFUL_COUNT=1 \
+BETABOT_RUN_DIR=/tmp/betabots-role-routes-check \
+node "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs" >/tmp/betabots-role-routes-check.json
+python3 - <<'PY'
+import json
+from pathlib import Path
+data = json.loads(Path('/tmp/betabots-role-routes-check/cohort.json').read_text())
+bot = data['bots'][0]
+assert bot['successSignals'] == ['Permission controls']
+assert [route['fallback'] for route in bot['routes']] == ['/permissions']
 PY
 echo "betabots smoke ok"

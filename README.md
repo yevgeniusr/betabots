@@ -319,7 +319,7 @@ Optional auth isolation:
 Persona and role definition:
 
 - The runner accepts `roles` or `personas` as strings or objects.
-- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`.
+- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `successSignals`, role-specific `routes`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`.
 - Role objects can also define `lifeGoal` for truth pressure. If omitted, the runner derives one from the role.
 - Cohort files can define `screenSizeDistribution`; the default distribution uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs.
 - Generated avatars use DiceBear with a seed derived from persona fields, so the avatar changes when the bot's name, role, past, goal, life goal, traits, emotional baseline, or technical comfort changes.

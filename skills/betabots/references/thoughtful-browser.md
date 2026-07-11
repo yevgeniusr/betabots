@@ -255,7 +255,8 @@ Good truth-pressure output is direct, role-grounded, and sometimes negative. Wea
 
 ## Loop Rescue and Curiosity
 
-Thoughtful bots attempt each configured route once per session. They end the
+Thoughtful bots attempt each role's configured routes once per session, falling
+back to the cohort routes when the role has no custom journey. They end the
 planned journey after those paths are exhausted instead of cycling routes to fill
 the full attention window. Route memory reconciles the actual browser URL so a
 page reached through curiosity or Destiny is not revisited as a planned route.
