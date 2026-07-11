@@ -14,6 +14,13 @@ const {
 const { screenFingerprint } = require('./screen_identity.cjs')
 const { newKeywordMatches } = require('./keyword_scoring.cjs')
 const { scoreSession } = require('./session_scoring.cjs')
+const {
+  appendGoalEvidence,
+  buildGoalEvidenceText,
+  validateSignalClaims,
+} = require('./goal_evidence.cjs')
+const { claimCuriosityTarget } = require('./curiosity_memory.cjs')
+const { buildConfidenceRows } = require('./confidence_tiers.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -1427,46 +1434,6 @@ function appendJsonl(file, event) {
   fs.appendFileSync(file, `${JSON.stringify(event)}\n`)
 }
 
-function ideaThemeFor(idea) {
-  const text = String(idea || '').toLowerCase()
-  if (/(proof|diligence|outcome|result|case stud|client|working together|metric|traction|role|status|date|timeline|source|evidence|venture|exit|portfolio|funding|link|speaking reel|event logo|talk topic)/.test(text)) {
-    return 'Proof and diligence layer'
-  }
-  if (/(start here|starter|best essay|recommended|reading path|first-time|newsletter|subscribe|privacy|email frequency|cadence)/.test(text)) {
-    return 'Starter content and subscription trust'
-  }
-  if (/(coming soon|unfinished|breakdown|lightweight brief|hide unfinished)/.test(text)) {
-    return 'Unfinished partnership detail pages'
-  }
-  if (/(next action|next step|cta|contact|engagement|offer|who.*for|what.*expect)/.test(text)) {
-    return 'Clearer next step and offer fit'
-  }
-  if (/(load|skeleton|empty|placeholder|waiting)/.test(text)) {
-    return 'Perceived loading and empty-state risk'
-  }
-  return String(idea || 'Other').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Other'
-}
-
-function buildConfidenceRows(ideaCounts, resultCount) {
-  const themes = new Map()
-  for (const [idea, count] of ideaCounts.entries()) {
-    const theme = ideaThemeFor(idea)
-    const row = themes.get(theme) || { theme, count: 0, examples: [] }
-    row.count += count
-    if (row.examples.length < 3) row.examples.push(idea)
-    themes.set(theme, row)
-  }
-  return [...themes.values()].sort((a, b) => b.count - a.count).map((row) => {
-    const share = resultCount ? row.count / resultCount : 0
-    const tier = row.count >= Math.max(5, Math.ceil(resultCount * 0.25))
-      ? 'high'
-      : row.count >= Math.max(3, Math.ceil(resultCount * 0.1))
-        ? 'medium'
-        : 'low'
-    return { ...row, share, tier }
-  })
-}
-
 async function screenshot(page, bot, step, label = 'screen') {
   const dir = path.join(config.runDir, 'screenshots', bot.id)
   fs.mkdirSync(dir, { recursive: true })
@@ -1674,7 +1641,9 @@ async function tryCuriosityAction(page, bot, log, actions, stats, force = false,
     if (await locator.isVisible({ timeout: 600 }).catch(() => false)) {
       const text = await locator.innerText({ timeout: 500 }).catch(() => String(label))
       if (dangerous.test(text)) continue
-      await locator.click({ timeout: 2500 }).catch(() => {})
+      if (!claimCuriosityTarget(stats.curiosityTargets, text || String(label))) continue
+      const clicked = await locator.click({ timeout: 2500 }).then(() => true).catch(() => false)
+      if (!clicked) continue
       actions.push(`curiosity clicked ${label}`)
       stats.curiosityActions += 1
       stats.meaningfulSocialActions += hasAny(lower, cohort.keywords.value) ? 1 : 0
@@ -1776,6 +1745,7 @@ async function runBot(browser, bot, runtime = {}) {
     fallbackActionAttempts: 0,
     navigationFallbacks: 0,
     browserIssues: 0,
+    curiosityTargets: new Set(),
   }
   let step = 1
   let value = 0
@@ -1831,6 +1801,14 @@ async function runBot(browser, bot, runtime = {}) {
     }
   })
   const captureScreenshot = async (label, observation = lastObservation) => {
+    if (observation) {
+      appendGoalEvidence(seenScreens, {
+        phase: label,
+        url: page.url(),
+        title: observation.title,
+        text: observation.text,
+      })
+    }
     if (config.visualEvidenceMode === 'off') return ''
     const file = await screenshot(page, bot, step++, label)
     lastObservation = observation || lastObservation
@@ -1966,18 +1944,23 @@ async function runBot(browser, bot, runtime = {}) {
     return reflection
   }
   const assessGoalCompletion = async (observation) => {
-    const evidenceText = [
-      ...seenScreens.map((screen) => screen.visibleText),
-      ...actions,
-    ].join('\n').toLowerCase()
-    const signalResults = bot.successSignals.map((signal) => ({
+    appendGoalEvidence(seenScreens, {
+      phase: 'final screen',
+      url: page.url(),
+      title: observation.title,
+      text: observation.text,
+    })
+    const evidenceText = buildGoalEvidenceText(seenScreens, actions)
+    const literalSignalClaims = bot.successSignals.map((signal) => ({
       signal,
-      observed: evidenceText.includes(String(signal).toLowerCase()),
+      observed: evidenceText.toLowerCase().includes(String(signal).toLowerCase()),
+      evidence: evidenceText.toLowerCase().includes(String(signal).toLowerCase()) ? signal : '',
     }))
     const fallback = {
       achieved: false,
       confidence: 0,
       reason: 'The recorded UI journey does not prove that the stated goal was completed.',
+      signalResults: literalSignalClaims,
     }
     const assessment = await llmJson('betabot_goal_assessment', {
       bot: {
@@ -1987,17 +1970,27 @@ async function runBot(browser, bot, runtime = {}) {
         lifeGoal: bot.lifeGoal,
       },
       recordedActions: actions,
-      recentScreens: seenScreens.slice(-10),
+      recordedUiEvidence: seenScreens.slice(-12).map(({ identity, ...entry }) => entry),
       recentThoughts: thoughts.slice(-6),
       recentOpinions: opinions.slice(-6),
-      requiredSuccessSignals: signalResults,
-      instruction: 'Mark achieved true only when the recorded visible UI and actions prove the stated goal was completed. Browsing related pages, seeing summary counts, or intending to act is not completion.',
+      requiredSuccessSignals: bot.successSignals,
+      instruction: 'Mark achieved true only when the recorded visible UI and actions prove the stated goal was completed. For every success signal, cite a short verbatim excerpt from recordedUiEvidence. A signal without a citation is not observed. Browsing related pages, seeing summary counts, or intending to act is not completion.',
       requestedShape: {
         achieved: 'boolean',
         confidence: 'number from 0 to 1',
         reason: 'one direct sentence grounded in recorded UI evidence',
+        signalResults: [{
+          signal: 'required success signal exactly as supplied',
+          observed: 'boolean',
+          evidence: 'short verbatim excerpt from recordedUiEvidence, or empty string',
+        }],
       },
     }, fallback)
+    const signalResults = validateSignalClaims(
+      bot.successSignals,
+      assessment.signalResults,
+      evidenceText,
+    )
     const allSignalsObserved = signalResults.length === 0 || signalResults.every((entry) => entry.observed)
     return {
       achieved: assessment.achieved === true && allSignalsObserved,
@@ -2075,11 +2068,6 @@ async function runBot(browser, bot, runtime = {}) {
     recordScreenQuality(observation)
     await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
-    seenScreens.push({
-      phase: 'arrival',
-      title: observation.title,
-      visibleText: observation.text.slice(0, 800),
-    })
     await runStep(
       'reflect on arrival',
       () => recordReflection(observation, 'arrival'),
@@ -2163,11 +2151,6 @@ async function runBot(browser, bot, runtime = {}) {
       recordScreenQuality(observation)
       await captureScreenshot('exploration', observation)
       log(`I now see: ${observation.text}`)
-      seenScreens.push({
-        phase: 'exploration',
-        title: observation.title,
-        visibleText: observation.text.slice(0, 800),
-      })
       await runStep(
         'reflect on exploration',
         () => recordReflection(observation, 'exploration'),
@@ -2328,7 +2311,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, navigationFallbacks: stats.navigationFallbacks, browserIssues: stats.browserIssues, goalAssessment, elapsedSeconds: Math.round((Date.now() - startedAt) / 1000), attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
+  return { id: bot.id, role: bot.role, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, navigationFallbacks: stats.navigationFallbacks, browserIssues: stats.browserIssues, goalAssessment, elapsedSeconds: Math.round((Date.now() - startedAt) / 1000), attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -2356,7 +2339,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
     }
   }
   const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
-  const confidenceRows = buildConfidenceRows(ideaCounts, results.length).slice(0, 15)
+  const confidenceRows = buildConfidenceRows(results).slice(0, 15)
   const mortalityResults = results.map((result) => result.mortality).filter(Boolean)
   const mortalitySummary = {
     enabled: true,
@@ -2499,7 +2482,7 @@ ${[
 ${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} mentions: ${idea}`).join('\n') : '- None'}
 
 ## Confidence Tiers
-${confidenceRows.length ? confidenceRows.map((row) => `- ${row.tier.toUpperCase()} (${row.count}/${results.length} mentions): ${row.theme}${row.examples?.length ? ` — examples: ${row.examples.slice(0, 2).join(' | ')}` : ''}`).join('\n') : '- None'}
+${confidenceRows.length ? confidenceRows.map((row) => `- ${row.tier.toUpperCase()} (${row.botCount}/${results.length} bots, ${row.mentions} mentions): ${row.theme}${row.examples?.length ? ` — examples: ${row.examples.slice(0, 2).join(' | ')}` : ''}`).join('\n') : '- None'}
 
 ## Audience Research Grounding
 - Cohorts should be seeded from real audience evidence when available: analytics segments, search intent, support/sales notes, reviews, social comments, competitor audiences, and public market/category research.

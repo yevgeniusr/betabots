@@ -20,10 +20,16 @@ node --check "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs" >/d
 node --check "$ROOT/skills/betabots/scripts/environment_integrity.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/screen_identity.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/keyword_scoring.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/goal_evidence.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/curiosity_memory.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/confidence_tiers.cjs" >/dev/null
 node --test "$ROOT/tests/environment_integrity.test.cjs" >/dev/null
 node --test "$ROOT/tests/screen_identity.test.cjs" >/dev/null
 node --test "$ROOT/tests/keyword_scoring.test.cjs" >/dev/null
 node --test "$ROOT/tests/session_scoring.test.cjs" >/dev/null
+node --test "$ROOT/tests/goal_evidence.test.cjs" >/dev/null
+node --test "$ROOT/tests/curiosity_memory.test.cjs" >/dev/null
+node --test "$ROOT/tests/confidence_tiers.test.cjs" >/dev/null
 node --check "$ROOT/web/server.cjs" >/dev/null
 test ! -e "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
 test ! -e "$ROOT/skills/betabots/references/live-simulation.md"
