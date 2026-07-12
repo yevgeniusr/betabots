@@ -23,6 +23,7 @@ node --check "$ROOT/skills/betabots/scripts/keyword_scoring.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/goal_evidence.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/curiosity_memory.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/confidence_tiers.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/route_planning.cjs" >/dev/null
 node --test "$ROOT/tests/environment_integrity.test.cjs" >/dev/null
 node --test "$ROOT/tests/screen_identity.test.cjs" >/dev/null
 node --test "$ROOT/tests/keyword_scoring.test.cjs" >/dev/null
@@ -30,6 +31,7 @@ node --test "$ROOT/tests/session_scoring.test.cjs" >/dev/null
 node --test "$ROOT/tests/goal_evidence.test.cjs" >/dev/null
 node --test "$ROOT/tests/curiosity_memory.test.cjs" >/dev/null
 node --test "$ROOT/tests/confidence_tiers.test.cjs" >/dev/null
+node --test "$ROOT/tests/route_planning.test.cjs" >/dev/null
 node --check "$ROOT/web/server.cjs" >/dev/null
 test ! -e "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
 test ! -e "$ROOT/skills/betabots/references/live-simulation.md"
@@ -48,7 +50,7 @@ grep -q "browserExecutablePath" "$ROOT/skills/betabots/scripts/thoughtful_browse
 grep -q "requiresSocialAction" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "shouldEndSession" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -Fq "stats.passes += 1" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
-grep -Fq "stats.passes * 35" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -Fq "stats.passes || 0) * 35" "$ROOT/skills/betabots/scripts/session_scoring.cjs"
 grep -q "reflectionTimeoutMs" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "continuityInstruction" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "seenScreens: seenScreens.slice" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
@@ -58,7 +60,7 @@ grep -q "rememberCurrentRoute" "$ROOT/skills/betabots/scripts/thoughtful_browser
 grep -q "After the curiosity action" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "cohort.requiresSocialAction && stats.fallbackActionAttempts" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "intersectsViewport" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
-grep -Fq ".or(page.getByRole('tab', { name: label }))" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -Fq ".or(surface.getByRole('tab', { name: label }))" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -Fq "dt, dd, th, td" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callCodex" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callOpenRouter" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"

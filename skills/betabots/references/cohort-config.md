@@ -99,7 +99,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 - `names`: Optional reusable first names for generated personas.
 - `discoveries`: Optional discovery circumstances used when a role omits `discovery`.
 - `baselines`: Optional emotional baselines such as `curious`, `skeptical`, or `impatient`.
-- `routes`: Default UI exploration strategy. `labels` are visible link or button names; `fallback` is a route to try when no visible control is found. A role can provide its own `routes` (or `journey`) when different personas must complete different workflows.
+- `routes`: Default UI exploration strategy. `labels` are visible accessible names; `fallback` is a route to try when no visible control is found. Set `mode` to `"action"` for a link, button, tab, or radio that must be exercised on the current page. Set `mode` to `"select"` with `optionLabels` for a labeled menu or select control. Set `mode` to `"fill"` with `value` for a labeled text field. Control lookup includes same-origin iframes. These control steps are never satisfied by URL reconciliation and never pretend address-bar navigation completed the action. A role can provide its own `routes` (or `journey`) when different personas must complete different workflows.
 - `successSignals`: Visible product text that provides concrete evidence for a role's goal. Missing signals are supplied to the final goal assessment and prevent an unsupported high score.
 - `keywords.value`: Words that mean the user saw useful product value.
 - `keywords.trust`: Words that increase confidence, safety, or credibility.
@@ -145,6 +145,9 @@ Routes should combine visible affordances and realistic fallback paths:
 
 - Use visible labels first because real users click UI, not routes.
 - Use fallback paths only as a determined-user behavior.
+- Use `mode: "action"` for same-page workflow steps such as opening a result, submitting an attestation, or opening a sharing dialog.
+- Use `mode: "select"` with `optionLabels` when the workflow requires choosing a visible option from a labeled control.
+- Use `mode: "fill"` with `value` for text input required to complete a workflow.
 - Include routes for onboarding, primary value, settings/account, pricing, help, and each marketplace side when applicable.
 - Prefer role-specific routes when a shared route list would force personas through screens irrelevant to their permissions or job.
 

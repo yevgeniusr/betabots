@@ -21,6 +21,11 @@ const {
 } = require('./goal_evidence.cjs')
 const { claimCuriosityTarget } = require('./curiosity_memory.cjs')
 const { buildConfidenceRows } = require('./confidence_tiers.cjs')
+const {
+  normalizeRouteMode,
+  routeVisitKey,
+  shouldReconcileRouteByUrl,
+} = require('./route_planning.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -211,7 +216,12 @@ function patternFromLabel(label) {
 function normalizeRoutes(routes) {
   return normalizeList(routes, defaultCohort.routes).map((route) => ({
     labels: normalizeList(route.labels, []).map(patternFromLabel),
+    optionLabels: normalizeList(route.optionLabels || route.options, []).map(
+      patternFromLabel,
+    ),
+    value: String(route.value || route.text || ''),
     fallback: route.fallback || '/',
+    mode: normalizeRouteMode(route.mode),
   }))
 }
 
@@ -1348,11 +1358,17 @@ function startDestiny(bots, state, betabookState) {
   }
 }
 
-function locatorForRole(page, label) {
-  return page.getByRole('link', { name: label })
-    .or(page.getByRole('button', { name: label }))
-    .or(page.getByRole('tab', { name: label }))
+function locatorForRole(surface, label) {
+  return surface.getByRole('link', { name: label })
+    .or(surface.getByRole('button', { name: label }))
+    .or(surface.getByRole('tab', { name: label }))
+    .or(surface.getByRole('radio', { name: label }))
     .first()
+}
+
+function browserSurfaces(page) {
+  const mainFrame = page.mainFrame()
+  return [page, ...page.frames().filter((frame) => frame !== mainFrame)]
 }
 
 async function observe(page) {
@@ -1391,13 +1407,63 @@ async function observe(page) {
 }
 
 async function clickFirst(page, labels) {
-  for (const label of labels) {
-    const locator = locatorForRole(page, label)
-    if (await locator.isVisible({ timeout: 1000 }).catch(() => false)) {
+  for (const surface of browserSurfaces(page)) {
+    for (const label of labels) {
+      const locator = locatorForRole(surface, label)
+      if (await locator.isVisible({ timeout: 1000 }).catch(() => false)) {
+        try {
+          await locator.click({ timeout: 5000 })
+          return label instanceof RegExp ? label.toString() : label
+        } catch {}
+      }
+    }
+  }
+  return null
+}
+
+async function chooseFirst(page, labels, optionLabels) {
+  for (const surface of browserSurfaces(page)) {
+    for (const label of labels) {
+      const control = surface.getByRole('combobox', { name: label }).first()
+      if (!(await control.isVisible({ timeout: 1000 }).catch(() => false))) {
+        continue
+      }
       try {
-        await locator.click({ timeout: 5000 })
-        return label instanceof RegExp ? label.toString() : label
-      } catch {}
+        await control.click({ timeout: 5000 })
+      } catch {
+        continue
+      }
+      for (const optionLabel of optionLabels) {
+        const option = surface.getByRole('option', { name: optionLabel }).first()
+        if (await option.isVisible({ timeout: 1000 }).catch(() => false)) {
+          try {
+            await option.click({ timeout: 5000 })
+            const controlName = label instanceof RegExp ? label.toString() : label
+            const optionName = optionLabel instanceof RegExp
+              ? optionLabel.toString()
+              : optionLabel
+            return `${controlName} -> ${optionName}`
+          } catch {}
+        }
+      }
+      await page.keyboard.press('Escape').catch(() => {})
+    }
+  }
+  return null
+}
+
+async function fillFirst(page, labels, value) {
+  for (const surface of browserSurfaces(page)) {
+    for (const label of labels) {
+      const field = surface.getByRole('textbox', { name: label })
+        .or(surface.getByLabel(label))
+        .first()
+      if (await field.isVisible({ timeout: 1000 }).catch(() => false)) {
+        try {
+          await field.fill(value, { timeout: 5000 })
+          return label instanceof RegExp ? label.toString() : label
+        } catch {}
+      }
     }
   }
   return null
@@ -2087,7 +2153,8 @@ async function runBot(browser, bot, runtime = {}) {
       } catch {
         return
       }
-      for (const route of routes) {
+      for (const [routeIndex, route] of routes.entries()) {
+        if (!shouldReconcileRouteByUrl(route)) continue
         let targetUrl
         try {
           targetUrl = new URL(`${config.appUrl}${route.fallback}`)
@@ -2098,7 +2165,9 @@ async function runBot(browser, bot, runtime = {}) {
         const targetPath = targetUrl.pathname.replace(/\/$/, '')
         const samePath = currentUrl.origin === targetUrl.origin && currentPath === targetPath
         const sameAnchor = !targetUrl.hash || currentUrl.hash === targetUrl.hash
-        if (samePath && sameAnchor) visitedRoutes.add(route.fallback)
+        if (samePath && sameAnchor) {
+          visitedRoutes.add(routeVisitKey(route, routeIndex))
+        }
       }
     }
 
@@ -2109,8 +2178,11 @@ async function runBot(browser, bot, runtime = {}) {
       await runStep('follow destiny', followDestiny)
       if (move > 0 && move % 3 === 0) await runStep('check Betabook', () => useBetabook('between actions'))
       rememberCurrentRoute()
-      const route = routes.find((candidate) => !visitedRoutes.has(candidate.fallback))
-      if (!route) {
+      const routeIndex = routes.findIndex(
+        (candidate, index) =>
+          !visitedRoutes.has(routeVisitKey(candidate, index)),
+      )
+      if (routeIndex === -1) {
         if (Date.now() - startedAt >= minimumSessionMs) {
           log(`I have inspected each main path once and met the minimum session time, so I stop instead of retracing the same navigation.`)
           break
@@ -2134,11 +2206,39 @@ async function runBot(browser, bot, runtime = {}) {
         }
         continue
       }
-      visitedRoutes.add(route.fallback)
-      const clicked = await runStep('click next navigation', () => clickFirst(page, route.labels), null, 15000)
+      const route = routes[routeIndex]
+      visitedRoutes.add(routeVisitKey(route, routeIndex))
+      const clicked = route.mode === 'select'
+        ? await runStep(
+          'choose planned option',
+          () => chooseFirst(page, route.labels, route.optionLabels),
+          null,
+          15000,
+        )
+        : route.mode === 'fill'
+          ? await runStep(
+            'fill planned field',
+            () => fillFirst(page, route.labels, route.value),
+            null,
+            15000,
+          )
+        : await runStep('click next navigation', () => clickFirst(page, route.labels), null, 15000)
       if (clicked) {
-        actions.push(`clicked ${clicked}`)
-        log(`I click "${clicked}" because it looks like the next natural thing.`)
+        const verb = route.mode === 'select'
+          ? 'selected'
+          : route.mode === 'fill'
+            ? 'filled'
+            : 'clicked'
+        actions.push(`${verb} ${clicked}`)
+        const actionWord = verb === 'selected'
+          ? 'choose'
+          : verb === 'filled'
+            ? 'fill'
+            : 'click'
+        log(`I ${actionWord} "${clicked}" because it looks like the next natural thing.`)
+      } else if (route.mode !== 'navigate') {
+        actions.push(`could not find action ${route.labels.join(' or ')}`)
+        log(`I cannot find the planned same-page action, so I leave it uncompleted instead of pretending address-bar navigation performed it.`)
       } else {
         await runStep(`navigate ${route.fallback}`, () => page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'commit', timeout: 20000 }), null, 25000)
         actions.push(`navigated ${route.fallback}`)
@@ -2572,7 +2672,10 @@ async function main() {
       requiresSocialAction: cohort.requiresSocialAction,
       routes: cohort.routes.map((route) => ({
         labels: route.labels.map((label) => label.toString()),
+        optionLabels: route.optionLabels.map((label) => label.toString()),
+        value: route.value,
         fallback: route.fallback,
+        mode: route.mode,
       })),
       screenSizeDistribution: cohort.screenSizeDistribution,
       keywords: cohort.keywords,
