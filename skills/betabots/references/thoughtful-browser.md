@@ -16,6 +16,9 @@ Use Betabots when you need to know how simulated people experience the product s
 ## Rules
 
 - Launch actual browser contexts.
+- Repeat a screenshot -> LLM decision -> validated browser action loop for every bot.
+- Give the LLM the current screenshot and an inventory of visible controls with stable IDs.
+- Execute only the one structured action the LLM chose from that inventory.
 - Move at human speed with real pauses.
 - Feed the LLM mind text from the current visible viewport, including the destination of in-page anchor navigation.
 - Preserve bounded session memory of prior screens, reactions, and actions so later reflections remain continuous without replacing current-viewport evidence.
@@ -41,7 +44,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 ## LLM Minds
 
-Thoughtful mode uses actual LLM calls for bot thoughts, opinions, ideas, social messages, Betabook help/comment text, and Destiny planning. The LLM mind layer is mandatory for product-quality runs; the bundled runner rejects `BETABOT_LLM_PROVIDER=none`.
+Thoughtful mode uses actual multimodal LLM calls for screenshot-grounded action decisions, thoughts, opinions, ideas, social messages, Betabook help/comment text, and Destiny planning. The LLM mind layer is mandatory; the bundled runner rejects `BETABOT_LLM_PROVIDER=none`.
 
 Default provider:
 
@@ -84,7 +87,7 @@ Provider knobs:
 - `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`
 - `BETABOT_OPENROUTER_BASE_URL`
 
-Always inspect `summary.json -> llm.failures` and `llm.fallbacks` after truthfulness benchmarks. Unsupported local Codex model names will cause the runner to fall back to deterministic text, which invalidates any personality-quality conclusion even though the browser run itself may complete.
+Always inspect `summary.json -> llm.failures`, `llm.fallbacks`, and each result's `mindActionFailures`. Unsupported local Codex model names make action decisions fail visibly; repeated failures stop that bot instead of allowing deterministic text to move the browser.
 
 ## Cohort Configuration
 
@@ -102,7 +105,7 @@ Read `references/audience-research.md` before creating a product-quality cohort.
 Screen-size seeding is part of random character generation. By default, thoughtful mode uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Set `screenSizeDistribution` in the cohort file or pass `BETABOT_SCREEN_SIZE_DISTRIBUTION` as a JSON array to change the weighted buckets.
 
 - `roles` define who the betabots are, what happened before they arrived, how they discovered the app, and what they want today.
-- `routes` define visible labels and fallback URLs the bots can realistically try.
+- `routes` provide optional visible-label journey hints to the persona mind. They do not script or execute navigation.
 - `keywords` define what counts as value, trust, risk, and empty-state evidence for that product.
 
 Each bot also gets a DiceBear avatar. Set `BETABOT_AVATAR_STYLE` to a style slug such as `bottts-neutral` or a DiceBear style URL. The seed includes persona fields, so the image is stable for a bot and shifts when the persona changes.
@@ -201,16 +204,14 @@ Thoughtful mode defaults to `BETABOT_STRICT_SCORING=true`. Strict scoring preven
 
 - repeated screens stop adding full value/trust credit;
 - repeated pass-heavy discovery behavior lowers happiness;
-- an LLM decision to pass ends the session and applies a strict negative-intent penalty;
+- visible pass actions lower happiness, while an LLM `leave` body action ends the session;
 - high happiness requires at least one meaningful social action only when the cohort sets `requiresSocialAction: true`;
 - reports include UI likes, passes, messages, repeated-screen penalties, and meaningful social actions.
 
-LLM decisions to leave, stop, end, abandon, or exit are honored as real session
-endings. The runner only attempts its generic fallback social action when the
-cohort requires social behavior, and limits that fallback to one attempt per
-session. Reflection steps use `BETABOT_LLM_TIMEOUT_MS` rather than the shorter
-browser-action timeout, and provider failures fall back without being scored as
-product dead ends.
+LLM `leave` decisions are honored as real session endings. The runner does not
+inject generic route or social actions. Decision steps use
+`BETABOT_LLM_TIMEOUT_MS` rather than the shorter browser-action timeout, and
+provider failures are recorded as mind failures instead of product dead ends.
 
 Disable strict scoring only for low-level runner debugging:
 
@@ -253,32 +254,32 @@ Artifacts include mortality fields in `raw/<bot-id>.md`, `summary.json`, and `an
 
 Good truth-pressure output is direct, role-grounded, and sometimes negative. Weak output still sounds like a generic AI assistant: bland praise, vague concerns, polite hedging, or feedback that could come from any persona.
 
-## Loop Rescue and Curiosity
+## Thinking Body And Loop Rescue
 
-Thoughtful bots attempt each role's configured routes once per session, falling
-back to the cohort routes when the role has no custom journey. They end the
-planned journey after those paths are exhausted instead of cycling routes to fill
-the full attention window. Route memory reconciles the actual browser URL so a
-page reached through curiosity or Destiny is not revisited as a planned route.
-When a screen still repeats past
-`BETABOT_LOOP_REPEAT_THRESHOLD`, the bot posts a `loop-help` request in Betabook
-instead of pretending the loop is fine.
+Every move begins with a current-viewport screenshot and visible-control
+inventory. The persona LLM returns exactly one `click`, `fill`, `select`,
+`scroll`, `wait`, `back`, or `leave` action. Click, fill, and select actions must
+reference an exact visible control ID. The runtime rejects invented, disabled,
+destructive, payment, and type-incompatible targets before Playwright executes
+anything.
+
+Configured routes are optional hints included in the decision context. They do
+not move the browser. When a screen repeats past `BETABOT_LOOP_REPEAT_THRESHOLD`,
+the bot can post a `loop-help` request in Betabook instead of pretending the loop
+is fine. Three consecutive decisions that cannot be executed stop the session
+and mark the run as non-autonomous.
 
 Destiny watches Betabook help posts and can rescue the bot by:
 
 - commenting on the help post;
 - sending a Betabook invite;
-- nudging the bot toward a different route;
+- nudging the bot toward a different part of the product;
 - reducing the score if the bot stays stuck.
 
-Bots also have controlled curiosity. On some moves, they may click safe visible controls, change filters/selects, or adjust sliders to see how the product reacts. This is intentionally bounded and avoids destructive actions.
-
-Useful knobs:
+Useful knob:
 
 ```bash
 BETABOT_LOOP_REPEAT_THRESHOLD=4 \
-BETABOT_CURIOSITY_CHANCE=0.18 \
-BETABOT_MAX_CURIOSITY_ACTIONS=8 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 

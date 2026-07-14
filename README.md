@@ -63,7 +63,7 @@ Betabots can help you answer:
 
 ## Browser Betabots
 
-Betabots launches real browsers and runs human-speed sessions. It is for comprehension, trust, emotion, copy, onboarding, visual UI, and product taste. Each bot records what it sees, thinks, clicks, types, misunderstands, likes, and why it leaves or returns.
+Betabots launches real browsers and runs human-speed sessions. It is for comprehension, trust, emotion, copy, onboarding, visual UI, and product taste. Each bot repeatedly captures its current screen, inventories visible controls, thinks with its persona LLM, chooses one action, executes it, and observes the result. It records what it sees, thinks, clicks, types, misunderstands, likes, and why it leaves or returns.
 
 Betabots must interact through the same visible product surface a person can see. The runner does not call product APIs, use server URLs, load hidden implementation maps, or ship project-specific lifecycle code.
 
@@ -76,13 +76,13 @@ BETABOT_HEADLESS=false \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-By default, browser sessions use real-time pacing (`BETABOT_TIME_SCALE=1`). Lower the scale only for development dry-runs.
+Browser sessions use real-time pacing (`BETABOT_TIME_SCALE=1`). Thoughtful mode clamps lower values back to `1`.
 
-Betabots use an actual LLM mind layer continuously during browser use:
+Betabots use an actual multimodal LLM mind layer continuously during browser use. Screenshots and visible-control IDs are sent with each decision so the model chooses the next action instead of merely narrating one:
 
 - `BETABOT_LLM_PROVIDER=codex` uses local Codex CLI with the signed-in ChatGPT/Codex account.
 - `BETABOT_LLM_PROVIDER=openrouter` uses OpenRouter chat completions.
-- `BETABOT_LLM_PROVIDER=none` disables model calls and uses deterministic fallback text for runner debugging only.
+- `BETABOT_LLM_PROVIDER=none` is rejected because a run without a mind is not a Betabot run.
 
 ```bash
 BETABOT_LLM_PROVIDER=codex \
@@ -155,7 +155,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
 The runner aggregates first-person thoughts and ideas into `analysis.md` and `summary.json`.
-Thoughtful sessions keep thinking tied to product use: each observation can produce a thought, first reaction, similarity/comparison, or idea, but the runner should not spend most of a session in reflection-only mode.
+Thoughtful sessions use a screenshot -> think -> validated action loop. Route configuration gives the mind optional journey hints; it does not script browser movement. A failed LLM action decision is recorded as a mind failure and cannot silently fall back to deterministic navigation.
 By default, Betabots uses a generic cross-product cohort. For domain-specific testing, pass `BETABOT_COHORT_FILE` with roles, pasts, discovery circumstances, routes, value keywords, trust keywords, and idea rules. See `skills/betabots/references/cohort-config.md`.
 
 Truth pressure is always on. Bots treat honesty, attention, and money as scarce survival constraints, and you can tune the ledger costs for a run:
@@ -187,6 +187,12 @@ skills/betabots/references/    Session templates, safety, cohort, and browser gu
 scripts/install-local.sh       Local installer for Codex, Claude, and Cursor
 tests/smoke.sh                 Lightweight validation
 ```
+
+## Plugin And Runtime
+
+Betabots is already packaged as a Codex, Claude Code, Cursor, and Agent Skills plugin. The plugin is the discovery and instruction layer; the bundled Node process is the portable runtime used by those hosts. It owns Playwright browser contexts, human-paced timers, concurrent bot isolation, screenshot files, evidence logs, and deterministic cleanup.
+
+Keeping that runtime out of the host agent prevents one long Codex or Claude conversation from becoming the browser scheduler for every bot. It also makes the same cohort behavior available across hosts. Node is an implementation choice, not a product boundary: another runtime could implement the same screenshot -> decision -> action protocol, but a plugin alone still needs executable code somewhere to keep browsers alive and coordinate them.
 
 ## Install Locally
 
@@ -306,13 +312,11 @@ Optional auth isolation:
 - `BETABOT_TRUTH_ACTION_MONTHS=1`: life-months charged per meaningful website action.
 - `BETABOT_TRUTH_DOLLAR_YEARS=1`: life-years charged per committed dollar.
 - `BETABOT_LOOP_REPEAT_THRESHOLD=4`: repeated-screen threshold that makes a stuck bot ask Betabook for help.
-- `BETABOT_CURIOSITY_CHANCE=0.18`: chance per move that a bot tries a safe curiosity action instead of the planned route.
-- `BETABOT_MAX_CURIOSITY_ACTIONS=8`: cap on curiosity clicks/config changes per bot session.
-- `BETABOT_LLM_PROVIDER=codex`: model provider for betabot thoughts, social text, Betabook comments, and Destiny plans. Supports `codex`, `openrouter`, or `none`.
+- `BETABOT_LLM_PROVIDER=codex`: model provider for screenshot-grounded decisions, social text, Betabook comments, and Destiny plans. Supports `codex` or `openrouter`.
 - `BETABOT_LLM_MODEL`: optional provider model override.
 - `BETABOT_CODEX_COMMAND=codex`: Codex CLI command path for the local ChatGPT/Codex provider.
 - `BETABOT_LLM_TIMEOUT_MS=90000`: timeout per model call.
-- `BETABOT_LLM_MAX_CALLS=500`: cap per run before falling back.
+- `BETABOT_LLM_MAX_CALLS=500`: cap per run; further mind decisions fail visibly instead of driving the browser with fallback text.
 - `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`: OpenRouter key when `BETABOT_LLM_PROVIDER=openrouter`.
 - `BETABOT_OPENROUTER_BASE_URL`: optional OpenRouter-compatible base URL.
 
@@ -323,7 +327,7 @@ Persona and role definition:
 - Role objects can also define `lifeGoal` for truth pressure. If omitted, the runner derives one from the role.
 - Cohort files can define `screenSizeDistribution`; the default distribution uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs.
 - Generated avatars use DiceBear with a seed derived from persona fields, so the avatar changes when the bot's name, role, past, goal, life goal, traits, emotional baseline, or technical comfort changes.
-- Product-specific routes and words belong in cohort JSON, not in runner code.
+- Product-specific route labels are optional hints to the persona mind; they do not prescribe or execute the journey.
 - Use `skills/betabots/examples/generic-saas.cohort.json` as a portable baseline.
 
 ## Safety

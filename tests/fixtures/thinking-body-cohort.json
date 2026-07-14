@@ -1,0 +1,13 @@
+{
+  "appName": "Thinking Body Fixture",
+  "requiresSocialAction": false,
+  "routes": [{ "labels": ["Continue"], "fallback": "/" }],
+  "roles": [{
+    "role": "curious first-time user",
+    "past": "I want to see whether the visible action does anything.",
+    "goal": "Make the page visibly change once.",
+    "lifeGoal": "Spend my time only on interfaces that respond clearly.",
+    "attentionSpanMinutes": 0.05,
+    "successSignals": ["Done: the action changed the product."]
+  }]
+}

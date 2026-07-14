@@ -99,7 +99,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 - `names`: Optional reusable first names for generated personas.
 - `discoveries`: Optional discovery circumstances used when a role omits `discovery`.
 - `baselines`: Optional emotional baselines such as `curious`, `skeptical`, or `impatient`.
-- `routes`: Default UI exploration strategy. `labels` are visible accessible names; `fallback` is a route to try when no visible control is found. Set `mode` to `"action"` for a link, button, tab, or radio that must be exercised on the current page. Set `mode` to `"select"` with `optionLabels` for a labeled menu or select control. Set `mode` to `"fill"` with `value` for a labeled text field. Control lookup includes same-origin iframes. These control steps are never satisfied by URL reconciliation and never pretend address-bar navigation completed the action. A role can provide its own `routes` (or `journey`) when different personas must complete different workflows.
+- `routes`: Optional journey hints shown to the persona mind. `labels`, `mode`, `optionLabels`, and `value` describe controls relevant to the role, but the LLM still chooses each action from the current screenshot and visible-control inventory. `fallback` is retained for cohort compatibility and reporting; it does not drive address-bar navigation. A role can provide its own `routes` (or `journey`) when different personas should notice different workflows.
 - `successSignals`: Visible product text that provides concrete evidence for a role's goal. Missing signals are supplied to the final goal assessment and prevent an unsupported high score.
 - `keywords.value`: Words that mean the user saw useful product value.
 - `keywords.trust`: Words that increase confidence, safety, or credibility.
@@ -141,14 +141,14 @@ If analytics says 70% of visitors are mobile, do not use the generic 50/20/30 mo
 
 ## Route Design
 
-Routes should combine visible affordances and realistic fallback paths:
+Route hints should describe relevant visible affordances without scripting the journey:
 
-- Use visible labels first because real users click UI, not routes.
-- Use fallback paths only as a determined-user behavior.
+- Use visible accessible labels because the mind can match them to current controls.
+- Treat fallback paths as documentation, not automatic navigation.
 - Use `mode: "action"` for same-page workflow steps such as opening a result, submitting an attestation, or opening a sharing dialog.
 - Use `mode: "select"` with `optionLabels` when the workflow requires choosing a visible option from a labeled control.
 - Use `mode: "fill"` with `value` for text input required to complete a workflow.
-- Include routes for onboarding, primary value, settings/account, pricing, help, and each marketplace side when applicable.
+- Include hints for onboarding, primary value, settings/account, pricing, help, and each marketplace side when applicable.
 - Prefer role-specific routes when a shared route list would force personas through screens irrelevant to their permissions or job.
 
 Labels can be plain strings or regex strings such as `"/^start$/i"`.

@@ -19,12 +19,15 @@ const {
   buildGoalEvidenceText,
   validateSignalClaims,
 } = require('./goal_evidence.cjs')
-const { claimCuriosityTarget } = require('./curiosity_memory.cjs')
 const { buildConfidenceRows } = require('./confidence_tiers.cjs')
 const {
+  collectInteractiveControls,
+  executeMindAction,
+  normalizeMindDecision,
+} = require('./thinking_body.cjs')
+const { codexImageArgs, openRouterUserContent } = require('./vision_payload.cjs')
+const {
   normalizeRouteMode,
-  routeVisitKey,
-  shouldReconcileRouteByUrl,
 } = require('./route_planning.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
@@ -56,8 +59,6 @@ const config = {
   destinyIntervalMs: Number(process.env.BETABOT_DESTINY_INTERVAL_MS || process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
   strictScoring: String(process.env.BETABOT_STRICT_SCORING || 'true') === 'true',
   loopRepeatThreshold: Number(process.env.BETABOT_LOOP_REPEAT_THRESHOLD || 4),
-  curiosityChance: Number(process.env.BETABOT_CURIOSITY_CHANCE || 0.18),
-  maxCuriosityActions: Number(process.env.BETABOT_MAX_CURIOSITY_ACTIONS || 8),
   avatarStyle: normalizeDiceBearStyle(process.env.BETABOT_AVATAR_STYLE || 'bottts-neutral'),
   avatarBaseUrl: normalizeDiceBearBaseUrl(process.env.BETABOT_AVATAR_BASE_URL || 'https://api.dicebear.com/10.x'),
   truthPressureStartingYears: Number(process.env.BETABOT_TRUTH_YEARS || 100),
@@ -571,7 +572,7 @@ function extractJson(text) {
   throw new Error(`could not parse JSON from LLM response: ${trimmed.slice(0, 200)}`)
 }
 
-async function callCodex(prompt) {
+async function callCodex(prompt, imagePaths = []) {
   const outputFile = path.join(os.tmpdir(), `betabots-codex-${process.pid}-${Date.now()}-${Math.floor(random() * 100000)}.txt`)
   const args = [
     'exec',
@@ -586,6 +587,7 @@ async function callCodex(prompt) {
     outputFile,
   ]
   if (config.llmModel) args.push('-m', config.llmModel)
+  args.push(...codexImageArgs(imagePaths))
   args.push('-')
   const result = await runProcess(config.codexCommand, args, prompt, config.llmTimeoutMs)
   if (fs.existsSync(outputFile)) {
@@ -596,7 +598,7 @@ async function callCodex(prompt) {
   return result.stdout
 }
 
-async function callOpenRouter(prompt) {
+async function callOpenRouter(prompt, imagePaths = []) {
   if (!config.openrouterApiKey) throw new Error('OPENROUTER_API_KEY or BETABOT_OPENROUTER_API_KEY is required')
   const model = config.llmModel || 'openai/gpt-4.1-mini'
   const controller = new AbortController()
@@ -619,7 +621,7 @@ async function callOpenRouter(prompt) {
             role: 'system',
             content: 'You are a synthetic human/user simulation component. Return only valid JSON. Do not include markdown.',
           },
-          { role: 'user', content: prompt },
+          { role: 'user', content: openRouterUserContent(prompt, imagePaths) },
         ],
         temperature: 0.8,
       }),
@@ -633,13 +635,13 @@ async function callOpenRouter(prompt) {
   }
 }
 
-async function llmJson(task, payload, fallback) {
+async function llmJson(task, payload, fallback, options = {}) {
   if (config.llmProvider === 'none') {
     throw new Error('Thoughtful betabots require an LLM provider; BETABOT_LLM_PROVIDER=none is not allowed.')
   }
   if (llmStats.calls >= config.llmMaxCalls) {
     llmStats.fallbacks += 1
-    return fallback
+    return { ...fallback, _betabotMindFallback: true, _betabotMindError: 'LLM call limit reached' }
   }
 
   llmStats.calls += 1
@@ -663,15 +665,15 @@ ${JSON.stringify(fallback, null, 2)}
 
   try {
     const raw = config.llmProvider === 'openrouter'
-      ? await callOpenRouter(prompt)
-      : await callCodex(prompt)
+      ? await callOpenRouter(prompt, options.imagePaths)
+      : await callCodex(prompt, options.imagePaths)
     const parsed = extractJson(raw)
     return { ...fallback, ...parsed }
   } catch (error) {
     llmStats.failures += 1
     llmStats.fallbacks += 1
     llmStats.errors.push(`${task}: ${error.message}`.slice(0, 500))
-    return fallback
+    return { ...fallback, _betabotMindFallback: true, _betabotMindError: error.message }
   }
 }
 
@@ -1358,19 +1360,6 @@ function startDestiny(bots, state, betabookState) {
   }
 }
 
-function locatorForRole(surface, label) {
-  return surface.getByRole('link', { name: label })
-    .or(surface.getByRole('button', { name: label }))
-    .or(surface.getByRole('tab', { name: label }))
-    .or(surface.getByRole('radio', { name: label }))
-    .first()
-}
-
-function browserSurfaces(page) {
-  const mainFrame = page.mainFrame()
-  return [page, ...page.frames().filter((frame) => frame !== mainFrame)]
-}
-
 async function observe(page) {
   const url = page.url()
   const title = await page.title().catch(() => '')
@@ -1404,78 +1393,6 @@ async function observe(page) {
   }).catch(() => '')
   const fallbackText = text || await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
   return { url, title, text: firstVisibleText(fallbackText) }
-}
-
-async function clickFirst(page, labels) {
-  for (const surface of browserSurfaces(page)) {
-    for (const label of labels) {
-      const locator = locatorForRole(surface, label)
-      if (await locator.isVisible({ timeout: 1000 }).catch(() => false)) {
-        try {
-          await locator.click({ timeout: 5000 })
-          return label instanceof RegExp ? label.toString() : label
-        } catch {}
-      }
-    }
-  }
-  return null
-}
-
-async function chooseFirst(page, labels, optionLabels) {
-  for (const surface of browserSurfaces(page)) {
-    for (const label of labels) {
-      const control = surface.getByRole('combobox', { name: label }).first()
-      if (!(await control.isVisible({ timeout: 1000 }).catch(() => false))) {
-        continue
-      }
-      try {
-        await control.click({ timeout: 5000 })
-      } catch {
-        continue
-      }
-      for (const optionLabel of optionLabels) {
-        const option = surface.getByRole('option', { name: optionLabel }).first()
-        if (await option.isVisible({ timeout: 1000 }).catch(() => false)) {
-          try {
-            await option.click({ timeout: 5000 })
-            const controlName = label instanceof RegExp ? label.toString() : label
-            const optionName = optionLabel instanceof RegExp
-              ? optionLabel.toString()
-              : optionLabel
-            return `${controlName} -> ${optionName}`
-          } catch {}
-        }
-      }
-      await page.keyboard.press('Escape').catch(() => {})
-    }
-  }
-  return null
-}
-
-async function fillFirst(page, labels, value) {
-  for (const surface of browserSurfaces(page)) {
-    for (const label of labels) {
-      const field = surface.getByRole('textbox', { name: label })
-        .or(surface.getByLabel(label))
-        .first()
-      if (await field.isVisible({ timeout: 1000 }).catch(() => false)) {
-        try {
-          await field.fill(value, { timeout: 5000 })
-          return label instanceof RegExp ? label.toString() : label
-        } catch {}
-      }
-    }
-  }
-  return null
-}
-
-async function selectByIndex(locator, index) {
-  const count = await locator.count().catch(() => 0)
-  if (count === 0) return false
-  await locator.nth(0).selectOption({ index }).catch(async () => {
-    await locator.nth(0).selectOption({ index: 1 })
-  })
-  return true
 }
 
 function slugifyLabel(label) {
@@ -1556,7 +1473,7 @@ function ideaFrom(bot, observation) {
   return 'Idea: keep the next best action visually obvious after every page transition.'
 }
 
-async function llmBotReflection(bot, observation, phase, fallback, stats = {}, sessionMemory = {}) {
+async function llmBotReflection(bot, observation, phase, fallback, stats = {}, sessionMemory = {}, bodyContext = {}) {
   const truthPressurePayload = {
     enabled: true,
     lifeGoal: bot.lifeGoal,
@@ -1582,8 +1499,17 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
     phase,
     visibleScreen: observation.text.slice(0, 1600),
     title: observation.title,
+    currentUrl: observation.url,
+    screenshotAttached: Boolean(bodyContext.screenshotFile),
+    visibleControls: bodyContext.controls || [],
+    journeyHints: bot.routes.map((route) => ({
+      labels: route.labels.map((label) => label.toString()),
+      mode: route.mode,
+      value: route.value,
+    })),
     sessionMemory,
     continuityInstruction: 'Use session memory as the bot\'s actual prior experience. Do not claim information was never shown when it appeared on an earlier screen; instead distinguish whether it was clear, credible, and available at the moment it was needed.',
+    bodyInstruction: 'Choose exactly one next body action from the current screenshot and visibleControls. For click, fill, or select, copy a targetId exactly. Use scroll, wait, back, or leave when no visible control is honestly worth using. Do not merely narrate an action.',
     truthPressure: truthPressurePayload,
     sessionStats: {
       likes: stats.likes || 0,
@@ -1591,7 +1517,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       messages: stats.messages || 0,
       repeatedScreens: stats.repeatedScreens || 0,
       loopHelpRequests: stats.loopHelpRequests || 0,
-      curiosityActions: stats.curiosityActions || 0,
+      mindActions: stats.mindActions || 0,
       yearsRemaining: stats.yearsRemaining,
       actionsCharged: stats.actionsCharged,
       dollarsCommitted: stats.dollarsCommitted,
@@ -1600,11 +1526,16 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       thought: 'first-person thought',
       opinion: 'first-person reaction/opinion',
       idea: 'Idea: product idea in first person or concise product suggestion',
-      desiredAction: 'one of: continue, like, pass, message, ask_betabook, explore, leave',
+      action: {
+        type: 'one of: click, fill, select, scroll, wait, back, leave',
+        targetId: 'an exact visibleControls id for click/fill/select, otherwise empty',
+        value: 'text to enter, option label/value, scroll direction, or empty',
+      },
+      actionReason: 'one direct first-person reason for this exact action',
       truthfulAssessment: 'direct private judgment about the visible product, with confidence if uncertain',
       lifeCostJustification: 'one sentence weighing the next action cost against the life goal',
     },
-  }, fallback)
+  }, fallback, { imagePaths: bodyContext.screenshotFile ? [bodyContext.screenshotFile] : [] })
 }
 
 async function llmBotShortText(task, bot, context, fallbackText) {
@@ -1692,65 +1623,6 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
   }, fallback)
 }
 
-async function tryCuriosityAction(page, bot, log, actions, stats, force = false, captureEvidence = null) {
-  if (!force && random() > config.curiosityChance) return false
-  if (stats.curiosityActions >= config.maxCuriosityActions) return false
-
-  const observation = await observe(page)
-  const lower = observation.text.toLowerCase()
-  const routeLabels = cohort.routes.flatMap((route) => route.labels || [])
-  const safeLabels = [...new Set([...routeLabels, /filters/i, /read/i, /learn more/i, /details/i, /apply filters/i])]
-  const dangerous = /delete|remove|revoke|sign out|logout|pay|purchase|submit|publish/i
-
-  for (const label of safeLabels.sort(() => random() - 0.5)) {
-    const locator = locatorForRole(page, label)
-    if (await locator.isVisible({ timeout: 600 }).catch(() => false)) {
-      const text = await locator.innerText({ timeout: 500 }).catch(() => String(label))
-      if (dangerous.test(text)) continue
-      if (!claimCuriosityTarget(stats.curiosityTargets, text || String(label))) continue
-      const clicked = await locator.click({ timeout: 2500 }).then(() => true).catch(() => false)
-      if (!clicked) continue
-      actions.push(`curiosity clicked ${label}`)
-      stats.curiosityActions += 1
-      stats.meaningfulSocialActions += hasAny(lower, cohort.keywords.value) ? 1 : 0
-      log(`Curiosity gets me to try "${text || label}" instead of repeating the same path.`)
-      await wait(900 + random() * 2200)
-      if (captureEvidence) await captureEvidence('curiosity-click', await observe(page))
-      return true
-    }
-  }
-
-  const selects = page.locator('select')
-  const selectCount = await selects.count().catch(() => 0)
-  if (selectCount > 0) {
-    const index = Math.floor(random() * Math.min(selectCount, 3))
-    const changed = await selectByIndex(selects.nth(index), 1 + Math.floor(random() * 3)).catch(() => false)
-    if (changed) {
-      actions.push(`curiosity changed select ${index + 1}`)
-      stats.curiosityActions += 1
-      log(`Curiosity makes me change a filter/config option to see whether the product reacts.`)
-      await wait(900 + random() * 2200)
-      if (captureEvidence) await captureEvidence('curiosity-select-changed', await observe(page))
-      return true
-    }
-  }
-
-  const ranges = page.locator('input[type="range"]')
-  const rangeCount = await ranges.count().catch(() => 0)
-  if (rangeCount > 0) {
-    const index = Math.floor(random() * Math.min(rangeCount, 4))
-    await ranges.nth(index).fill(String(20 + Math.floor(random() * 70))).catch(() => {})
-    actions.push(`curiosity adjusted range ${index + 1}`)
-    stats.curiosityActions += 1
-    log(`Curiosity makes me adjust a slider to understand what control I have.`)
-    await wait(900 + random() * 2200)
-    if (captureEvidence) await captureEvidence('curiosity-slider-adjusted', await observe(page))
-    return true
-  }
-
-  return false
-}
-
 async function runBot(browser, bot, runtime = {}) {
   const startedAt = Date.now()
   const screenSize = bot.screenSize || selectScreenSize(bot.viewport)
@@ -1803,15 +1675,13 @@ async function runBot(browser, bot, runtime = {}) {
     repeatedScreens: 0,
     loopHelpRequests: 0,
     loopRescuesFollowed: 0,
-    curiosityActions: 0,
     likes: 0,
     passes: 0,
     messages: 0,
     meaningfulSocialActions: 0,
-    fallbackActionAttempts: 0,
-    navigationFallbacks: 0,
     browserIssues: 0,
-    curiosityTargets: new Set(),
+    mindActions: 0,
+    mindActionFailures: 0,
   }
   let step = 1
   let value = 0
@@ -1972,12 +1842,13 @@ async function runBot(browser, bot, runtime = {}) {
     }
     return true
   }
-  const recordReflection = async (observation, phase) => {
+  const recordReflection = async (observation, phase, bodySnapshot, screenshotFile) => {
     const fallback = {
       thought: think(bot, observation, phase),
       opinion: opinionFrom(bot, observation),
       idea: ideaFrom(bot, observation),
-      desiredAction: 'continue',
+      action: { type: 'wait', targetId: '', value: '' },
+      actionReason: 'I need a moment before I choose another visible action.',
       truthfulAssessment: 'My honest judgment is that I need more evidence before spending much life on this.',
       lifeCostJustification: `One more careful action may be worth ${config.truthPressureActionMonths} month(s) only if it helps ${bot.lifeGoal}`,
     }
@@ -1989,25 +1860,71 @@ async function runBot(browser, bot, runtime = {}) {
       recentThoughts: thoughts.slice(-4),
       recentOpinions: opinions.slice(-4),
       recentActions: actions.slice(-8),
+    }, {
+      controls: bodySnapshot.controls,
+      screenshotFile,
     })
-    recordThought(reflection.thought || fallback.thought)
-    recordOpinion(reflection.opinion || fallback.opinion)
-    recordIdea(reflection.idea || fallback.idea)
-    recordLifeDecision(reflection.lifeCostJustification || reflection.lifeDecision || '')
-    recordTruthAssessment(reflection.truthfulAssessment || reflection.truthAssessment || '')
-    if (reflection.desiredAction) {
-      const desiredAction = String(reflection.desiredAction).toLowerCase()
-      log(`My impulse is to ${reflection.desiredAction}.`)
-      if (/\bpass\b/i.test(desiredAction)) {
-        stats.passes += 1
-        trust -= 25
-      }
-      if (/\b(pass|leave|stop|end|abandon|exit)\b/i.test(desiredAction)) {
-        shouldEndSession = true
-        log(`I follow that impulse and end this session instead of continuing a forced loop.`)
-      }
+    if (reflection._betabotMindFallback) {
+      throw new Error(`LLM mind unavailable: ${reflection._betabotMindError || 'provider fallback'}`)
     }
-    return reflection
+    const decision = normalizeMindDecision(reflection)
+    recordThought(decision.thought || fallback.thought)
+    recordOpinion(decision.opinion || fallback.opinion)
+    recordIdea(decision.idea || fallback.idea)
+    recordLifeDecision(decision.lifeCostJustification)
+    recordTruthAssessment(decision.truthfulAssessment)
+    log(`I decide to ${decision.action.type}${decision.action.targetId ? ` ${decision.action.targetId}` : ''}${decision.actionReason ? ` because ${decision.actionReason}` : ''}.`, { type: 'mind-decision' })
+    return decision
+  }
+  const runMindCycle = async (observation, phase, screenshotFile) => {
+    if (!screenshotFile || !fs.existsSync(screenshotFile)) {
+      stats.mindActionFailures += 1
+      log(`I cannot ground my next action because the current screenshot is unavailable.`, { type: 'mind-action-rejected' })
+      return false
+    }
+    const bodySnapshot = await runStep(
+      'inventory visible controls',
+      () => collectInteractiveControls(page),
+      { controls: [], locators: new Map() },
+      15000,
+    )
+    const decision = await runStep(
+      `think and choose an action during ${phase}`,
+      () => recordReflection(observation, phase, bodySnapshot, screenshotFile),
+      null,
+      reflectionTimeoutMs,
+    )
+    if (!decision) {
+      stats.mindActionFailures += 1
+      return false
+    }
+    const result = await runStep(
+      `execute mind action ${decision.action.type}`,
+      () => executeMindAction(page, bodySnapshot, decision.action),
+      { ok: false, reason: 'body execution failed' },
+      20000,
+    )
+    if (!result.ok) {
+      stats.mindActionFailures += 1
+      log(`My chosen action cannot be performed: ${result.reason}`, { type: 'mind-action-rejected' })
+      return false
+    }
+
+    stats.mindActions += 1
+    log(`My body ${result.description}.`, { type: 'mind-action' })
+    if (result.ended) {
+      shouldEndSession = true
+      return true
+    }
+    if (['click', 'fill', 'select'].includes(decision.action.type)) {
+      actions.push(result.description)
+      const actionText = `${decision.action.type} ${result.control?.name || ''}`.toLowerCase()
+      if (/\blike\b/.test(actionText)) stats.likes += 1
+      if (/\bpass\b|not interested/.test(actionText)) stats.passes += 1
+      if (/message|send|reply|contact/.test(actionText)) stats.messages += 1
+      if (/like|message|send|reply|contact|save|connect|follow/.test(actionText)) stats.meaningfulSocialActions += 1
+    }
+    return true
   }
   const assessGoalCompletion = async (observation) => {
     appendGoalEvidence(seenScreens, {
@@ -2132,167 +2049,53 @@ async function runBot(browser, bot, runtime = {}) {
     await wait(2500 + random() * 5000)
     let observation = await observe(page)
     recordScreenQuality(observation)
-    await captureScreenshot('arrival', observation)
+    let screenshotFile = await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
-    await runStep(
-      'reflect on arrival',
-      () => recordReflection(observation, 'arrival'),
-      undefined,
-      reflectionTimeoutMs
-    )
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
-    const minimumSessionMs = config.minMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
-    const routes = bot.routes
-    const visitedRoutes = new Set()
-    const rememberCurrentRoute = () => {
-      let currentUrl
-      try {
-        currentUrl = new URL(page.url())
-      } catch {
-        return
-      }
-      for (const [routeIndex, route] of routes.entries()) {
-        if (!shouldReconcileRouteByUrl(route)) continue
-        let targetUrl
-        try {
-          targetUrl = new URL(`${config.appUrl}${route.fallback}`)
-        } catch {
-          continue
-        }
-        const currentPath = currentUrl.pathname.replace(/\/$/, '')
-        const targetPath = targetUrl.pathname.replace(/\/$/, '')
-        const samePath = currentUrl.origin === targetUrl.origin && currentPath === targetPath
-        const sameAnchor = !targetUrl.hash || currentUrl.hash === targetUrl.hash
-        if (samePath && sameAnchor) {
-          visitedRoutes.add(routeVisitKey(route, routeIndex))
-        }
-      }
-    }
+    const sessionStartedAt = Date.now()
+    let consecutiveMindFailures = 0
 
-    for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs && !shouldEndSession; move += 1) {
-      const remainingMs = sessionMs - (Date.now() - startedAt)
-      await wait(Math.min(remainingMs, 6000 + random() * 12000))
-      if (Date.now() - startedAt >= sessionMs) break
-      await runStep('follow destiny', followDestiny)
+    for (let move = 0; move < maxMoves && Date.now() - sessionStartedAt < sessionMs && !shouldEndSession; move += 1) {
+      if (move > 0) {
+        const remainingMs = sessionMs - (Date.now() - sessionStartedAt)
+        await wait(Math.min(remainingMs, 6000 + random() * 12000))
+        if (Date.now() - sessionStartedAt >= sessionMs) break
+        await runStep('follow destiny', followDestiny)
+        observation = await observe(page)
+        recordScreenQuality(observation)
+        screenshotFile = await captureScreenshot(`mind-cycle-${move + 1}`, observation)
+        log(`I look again and see: ${observation.text}`)
+      }
       if (move > 0 && move % 3 === 0) await runStep('check Betabook', () => useBetabook('between actions'))
-      rememberCurrentRoute()
-      const routeIndex = routes.findIndex(
-        (candidate, index) =>
-          !visitedRoutes.has(routeVisitKey(candidate, index)),
-      )
-      if (routeIndex === -1) {
-        if (Date.now() - startedAt >= minimumSessionMs) {
-          log(`I have inspected each main path once and met the minimum session time, so I stop instead of retracing the same navigation.`)
+      const acted = await runMindCycle(observation, move === 0 ? 'arrival' : 'exploration', screenshotFile)
+      if (!acted) {
+        consecutiveMindFailures += 1
+        if (consecutiveMindFailures >= 3) {
+          errors.push('mind could not produce three consecutive executable actions')
+          log(`My mind and body fail to agree on an executable action three times, so this run cannot represent autonomous behavior.`)
           break
-        }
-        log(`I have inspected each main path, but my goal is unfinished, so I keep exploring visible controls instead of ending early.`)
-        const explored = await runStep(
-          'continue goal-directed exploration',
-          () => tryCuriosityAction(page, bot, log, actions, stats, true, captureScreenshot),
-          false,
-        )
-        if (!explored) {
-          observation = await observe(page)
-          recordScreenQuality(observation)
-          await captureScreenshot('minimum-session-exploration', observation)
-          await runStep(
-            'reflect during minimum session',
-            () => recordReflection(observation, 'goal-directed exploration'),
-            undefined,
-            reflectionTimeoutMs,
-          )
         }
         continue
       }
-      const route = routes[routeIndex]
-      visitedRoutes.add(routeVisitKey(route, routeIndex))
-      const clicked = route.mode === 'select'
-        ? await runStep(
-          'choose planned option',
-          () => chooseFirst(page, route.labels, route.optionLabels),
-          null,
-          15000,
-        )
-        : route.mode === 'fill'
-          ? await runStep(
-            'fill planned field',
-            () => fillFirst(page, route.labels, route.value),
-            null,
-            15000,
-          )
-        : await runStep('click next navigation', () => clickFirst(page, route.labels), null, 15000)
-      if (clicked) {
-        const verb = route.mode === 'select'
-          ? 'selected'
-          : route.mode === 'fill'
-            ? 'filled'
-            : 'clicked'
-        actions.push(`${verb} ${clicked}`)
-        const actionWord = verb === 'selected'
-          ? 'choose'
-          : verb === 'filled'
-            ? 'fill'
-            : 'click'
-        log(`I ${actionWord} "${clicked}" because it looks like the next natural thing.`)
-      } else if (route.mode !== 'navigate') {
-        actions.push(`could not find action ${route.labels.join(' or ')}`)
-        log(`I cannot find the planned same-page action, so I leave it uncompleted instead of pretending address-bar navigation performed it.`)
-      } else {
-        await runStep(`navigate ${route.fallback}`, () => page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'commit', timeout: 20000 }), null, 25000)
-        actions.push(`navigated ${route.fallback}`)
-        stats.navigationFallbacks += 1
-        log(`I cannot find the obvious link, so I try ${route.fallback} like a determined user using the address bar.`)
-      }
+      consecutiveMindFailures = 0
+      if (shouldEndSession) break
 
       await wait(2500 + random() * 7000)
       observation = await observe(page)
-      recordScreenQuality(observation)
-      await captureScreenshot('exploration', observation)
-      log(`I now see: ${observation.text}`)
-      await runStep(
-        'reflect on exploration',
-        () => recordReflection(observation, 'exploration'),
-        undefined,
-        reflectionTimeoutMs
-      )
-      if (shouldEndSession) break
-
+      const currentFingerprintCount = recordScreenQuality(observation)
+      screenshotFile = await captureScreenshot('post-mind-action', observation)
+      log(`After my action, I see: ${observation.text}`)
       const lower = observation.text.toLowerCase()
-      const currentFingerprintCount = screenCounts.get(screenFingerprint(observation)) || 1
       if (currentFingerprintCount >= config.loopRepeatThreshold) {
         const asked = await runStep('ask Betabook for help', () => askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation), false)
-        if (asked) {
-          trust -= 4
-          await runStep('try curiosity rescue', () => tryCuriosityAction(page, bot, log, actions, stats, true, captureScreenshot), false)
-        }
+        if (asked) trust -= 4
       }
       const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
       if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
       if (newKeywordMatches(lower, cohort.keywords.risk, seenRiskKeywords).length > 0) trust -= 20
-      const actedCuriously = await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
-      if (actedCuriously) {
-        observation = await observe(page)
-        recordScreenQuality(observation)
-        await captureScreenshot('post-curiosity-action', observation)
-        log(`After the curiosity action, I see: ${observation.text}`)
-      } else if (cohort.requiresSocialAction && stats.fallbackActionAttempts === 0) {
-        stats.fallbackActionAttempts += 1
-        const fallbackLabels = [/^save$/i, /^message$/i, /contact/i]
-        const reserveClicked = await runStep('try fallback action', () => clickFirst(page, fallbackLabels), null, 15000)
-        if (reserveClicked) {
-          actions.push(`clicked ${reserveClicked}`)
-          stats.meaningfulSocialActions += 1
-          log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
-          await wait(2500 + random() * 5500)
-          observation = await observe(page)
-          recordScreenQuality(observation)
-          await captureScreenshot(`post-${reserveClicked}`, observation)
-          log(`After trying "${reserveClicked}", I see: ${observation.text}`)
-        }
-      }
     }
     observation = await observe(page)
     goalAssessment = await runStep(
@@ -2381,16 +2184,15 @@ ${notes.join('\n')}
 - Likes sent: ${stats.likes}
 - Passes: ${stats.passes}
 - Messages sent through UI: ${stats.messages}
+- Autonomous mind actions executed: ${stats.mindActions}
+- Mind actions rejected or failed: ${stats.mindActionFailures}
 - Repeated screen penalty events: ${stats.repeatedScreens}
 - Meaningful social actions: ${stats.meaningfulSocialActions}
-- Fallback actions attempted: ${stats.fallbackActionAttempts}
-- Address-bar navigation fallbacks: ${stats.navigationFallbacks}
 - Browser issues recorded: ${stats.browserIssues}
 - Goal achieved: ${goalAssessment?.achieved === true ? 'yes' : 'no'}
 - Goal assessment: ${goalAssessment?.reason || 'No assessment available'}
 - Betabook help requests: ${stats.loopHelpRequests}
 - Destiny loop rescues followed: ${stats.loopRescuesFollowed}
-- Curiosity actions: ${stats.curiosityActions}
 - Life years remaining: ${mortality.yearsRemaining.toFixed(2)}
 - Life years spent on actions: ${mortality.yearsSpentOnActions.toFixed(2)}
 - Life years spent on money: ${mortality.yearsSpentOnMoney.toFixed(2)}
@@ -2411,7 +2213,7 @@ ${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
 ${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, role: bot.role, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, navigationFallbacks: stats.navigationFallbacks, browserIssues: stats.browserIssues, goalAssessment, elapsedSeconds: Math.round((Date.now() - startedAt) / 1000), attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
+  return { id: bot.id, role: bot.role, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, mindActions: stats.mindActions, mindActionFailures: stats.mindActionFailures, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, browserIssues: stats.browserIssues, goalAssessment, elapsedSeconds: Math.round((Date.now() - startedAt) / 1000), attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -2551,6 +2353,8 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - Browser sessions completed: ${results.length}
 - Screenshots captured: ${results.reduce((sum, result) => sum + result.screenshots, 0)}
 - UI actions attempted: ${results.reduce((sum, result) => sum + result.actions, 0)}
+- Autonomous mind actions executed: ${results.reduce((sum, result) => sum + (result.mindActions || 0), 0)}
+- Mind actions rejected or failed: ${results.reduce((sum, result) => sum + (result.mindActionFailures || 0), 0)}
 - Thoughts expressed: ${results.reduce((sum, result) => sum + result.thoughts, 0)}
 - Opinions expressed: ${results.reduce((sum, result) => sum + result.opinions, 0)}
 - Ideas expressed: ${results.reduce((sum, result) => sum + (result.ideas || []).length, 0)}
@@ -2563,7 +2367,6 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - Meaningful social actions: ${results.reduce((sum, result) => sum + (result.meaningfulSocialActions || 0), 0)}
 - Betabook help requests: ${results.reduce((sum, result) => sum + (result.loopHelpRequests || 0), 0)}
 - Destiny loop rescues followed: ${results.reduce((sum, result) => sum + (result.loopRescuesFollowed || 0), 0)}
-- Curiosity actions: ${results.reduce((sum, result) => sum + (result.curiosityActions || 0), 0)}
 - Error bots: ${errorBots.length}
 
 ## Truth Pressure
@@ -2616,8 +2419,9 @@ ${destinyState?.enabled
 - Recent errors: ${llmStats.errors.length ? llmStats.errors.slice(-10).join('; ') : 'none'}
 
 ## Interpretation
-- Browser Betabots launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
-- Betabot reflections, social text, Betabook comments, and Destiny planning require an LLM provider. Deterministic fallback text is not a product-quality mind layer.
+  - Browser Betabots launched real browser contexts and repeated a screenshot -> think -> validated action loop at human pace.
+  - Each product action was selected by the persona LLM from the current screenshot and visible-control inventory. Route configuration supplied hints, not a scripted journey.
+  - Betabot decisions, social text, Betabook comments, and Destiny planning require an LLM provider. Deterministic fallback text is not a product-quality mind layer.
 - This mode evaluates comprehension and emotional product quality, not server scale.
 
 ## Error Bots
