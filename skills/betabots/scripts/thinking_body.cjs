@@ -297,7 +297,7 @@ async function retrySemanticTarget(page, originalControl, action, originalReason
 async function scrollVisibleRegion(page, direction) {
   if (typeof page.evaluate !== 'function') return false
 
-  return page.evaluate((scrollDirection) => {
+  const scrollFrame = (frame) => frame.evaluate((scrollDirection) => {
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
     const documentScroller = document.scrollingElement
@@ -329,6 +329,23 @@ async function scrollVisibleRegion(page, direction) {
     target.scrollTop += scrollDirection * distance
     return target.scrollTop !== before
   }, direction).catch(() => false)
+
+  const mainFrame = page.mainFrame?.()
+  const visibleChildFrames = []
+  for (const frame of page.frames?.() || []) {
+    if (frame === mainFrame) continue
+    const frameElement = await frame.frameElement().catch(() => null)
+    if (!frameElement || !(await frameElement.isVisible({ timeout: 250 }).catch(() => false))) continue
+    const box = await frameElement.boundingBox().catch(() => null)
+    if (!box || box.width <= 0 || box.height <= 0) continue
+    visibleChildFrames.push({ frame, area: box.width * box.height })
+  }
+  visibleChildFrames.sort((left, right) => right.area - left.area)
+
+  for (const { frame } of visibleChildFrames) {
+    if (await scrollFrame(frame)) return true
+  }
+  return scrollFrame(mainFrame || page)
 }
 
 async function executeMindAction(page, snapshot, requestedAction, options = {}) {
