@@ -263,6 +263,38 @@ test('scrolls the visible nested overflow container when the document is fixed',
   assert.ok(await page.getByTestId('scroll-region').evaluate((element) => element.scrollTop > 0))
 })
 
+test('scrolls a visible activity iframe when its controls extend below the fold', async (t) => {
+  const browser = await chromium.launch({ headless: true })
+  t.after(() => browser.close())
+  const page = await browser.newPage({ viewport: { width: 1000, height: 700 } })
+  await page.setContent(`
+    <style>
+      html, body { height: 100%; margin: 0; overflow: hidden; }
+      iframe { display: block; width: 800px; height: 620px; margin: 40px auto; border: 0; }
+    </style>
+    <iframe title="Quest simulator" srcdoc="
+      <style>
+        html, body { height: 100%; margin: 0; overflow: hidden; }
+        main { height: 100%; overflow-y: auto; }
+        .content { height: 1800px; }
+      </style>
+      <main data-testid='activity-scroll-region'>
+        <div class='content'>Activity choices</div>
+        <button>Final activity choice</button>
+      </main>
+    "></iframe>
+  `)
+
+  const result = await executeMindAction(page, { controls: [], locators: new Map() }, {
+    type: 'scroll',
+    value: 'down',
+  })
+  const activityFrame = page.frames().find((frame) => frame !== page.mainFrame())
+
+  assert.equal(result.ok, true)
+  assert.ok(await activityFrame.locator('[data-testid="activity-scroll-region"]').evaluate((element) => element.scrollTop > 0))
+})
+
 test('semantic retry revalidates a replacement that became disabled', async (t) => {
   const browser = await chromium.launch({ headless: true })
   t.after(() => browser.close())
