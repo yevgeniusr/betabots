@@ -35,9 +35,14 @@ function validateMindAction(action = {}, controls = []) {
   }
   if (!TARGET_ACTIONS.has(type)) return { ok: true, action: { ...action, type } }
 
-  const targetId = cleanText(action.targetId || action.target, 120)
-  const control = controls.find((candidate) => candidate.id === targetId)
-  if (!control) return { ok: false, reason: `Target ${targetId || '(empty)'} was not visible to the mind.` }
+  const requestedTarget = cleanText(action.targetId || action.target, 120)
+  const semanticMatches = controls.filter(
+    (candidate) => cleanText(candidate.name, 120).toLowerCase() === requestedTarget.toLowerCase(),
+  )
+  const control = controls.find((candidate) => candidate.id === requestedTarget) ||
+    (semanticMatches.length === 1 ? semanticMatches[0] : null)
+  if (!control) return { ok: false, reason: `Target ${requestedTarget || '(empty)'} was not visible to the mind.` }
+  const targetId = control.id
   if (control.disabled) return { ok: false, reason: `Target ${targetId} is disabled.` }
   if (UNSAFE_CONTROL.test(`${control.name || ''} ${control.kind || ''}`)) {
     return { ok: false, reason: `Target ${targetId} is unsafe for synthetic beta traffic.` }
@@ -64,9 +69,30 @@ function validateMindAction(action = {}, controls = []) {
   }
 }
 
+async function isExposedInteractiveControl(candidate) {
+  return candidate.evaluate((element) => {
+    if (element.closest('[inert], [aria-hidden="true"]')) return false
+    const rect = element.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return false
+    const x = Math.min(Math.max(rect.left + rect.width / 2, 0), window.innerWidth - 1)
+    const y = Math.min(Math.max(rect.top + rect.height / 2, 0), window.innerHeight - 1)
+    const topmost = document.elementFromPoint(x, y)
+    return Boolean(topmost && (topmost === element || element.contains(topmost)))
+  }).catch(() => false)
+}
+
+function equivalentLinkKey(control) {
+  if (!control?.href) return ''
+  const kind = cleanText(control.kind, 200).toLowerCase()
+  const name = cleanText(control.name, 200).toLowerCase()
+  const scope = control.isMainFrame ? 'main' : `frame:${control.frameUrl || ''}`
+  return `${kind}\n${name}\n${scope}\n${cleanText(control.href, 2000)}`
+}
+
 async function collectInteractiveControls(page, limit = 80) {
   const controls = []
   const locators = new Map()
+  const equivalentLinks = new Set()
   const viewport = page.viewportSize() || await page.evaluate(() => ({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -87,11 +113,18 @@ async function collectInteractiveControls(page, limit = 80) {
   ].join(',')
 
   for (const frame of page.frames()) {
+    await frame.locator('[data-betabot-ref]').evaluateAll((elements) => {
+      for (const element of elements) element.removeAttribute('data-betabot-ref')
+    }).catch(() => {})
+  }
+
+  for (const frame of page.frames()) {
     const candidates = frame.locator(selector)
     const count = await candidates.count().catch(() => 0)
     for (let index = 0; index < count && controls.length < limit; index += 1) {
       const candidate = candidates.nth(index)
       if (!(await candidate.isVisible({ timeout: 250 }).catch(() => false))) continue
+      if (!(await isExposedInteractiveControl(candidate))) continue
       const box = await candidate.boundingBox().catch(() => null)
       const intersectsViewport = box &&
         box.width > 0 &&
@@ -131,6 +164,7 @@ async function collectInteractiveControls(page, limit = 80) {
           kind,
           name: String(name).replace(/\s+/g, ' ').trim().slice(0, 180),
           disabled: Boolean(element.disabled) || element.getAttribute('aria-disabled') === 'true',
+          href: tag === 'a' ? String(element.href || '') : '',
           value: inputType === 'password' ? '' : ('value' in element ? String(element.value || '').slice(0, 180) : ''),
           options: tag === 'select'
             ? [...element.options].slice(0, 30).map((option) => ({ label: option.textContent.trim(), value: option.value }))
@@ -138,6 +172,14 @@ async function collectInteractiveControls(page, limit = 80) {
         }
       }, id).catch(() => null)
       if (!control) continue
+      control.frameUrl = frame.url()
+      control.isMainFrame = frame === page.mainFrame()
+      const linkKey = equivalentLinkKey(control)
+      if (linkKey && equivalentLinks.has(linkKey)) {
+        await candidate.evaluate((element) => element.removeAttribute('data-betabot-ref')).catch(() => {})
+        continue
+      }
+      if (linkKey) equivalentLinks.add(linkKey)
       const locator = frame.locator(`[data-betabot-ref="${id}"]`).first()
       controls.push(control)
       locators.set(id, locator)
@@ -148,7 +190,148 @@ async function collectInteractiveControls(page, limit = 80) {
   return { controls, locators }
 }
 
-async function executeMindAction(page, snapshot, requestedAction) {
+function semanticControlMatches(candidate, original) {
+  const sameKind = cleanText(candidate.kind, 180).toLowerCase() === cleanText(original.kind, 180).toLowerCase()
+  const sameName = cleanText(candidate.name, 180).toLowerCase() === cleanText(original.name, 180).toLowerCase()
+  if (!sameKind || !sameName) return false
+  if ((candidate.href || original.href) && candidate.href !== original.href) return false
+  if (
+    typeof candidate.isMainFrame === 'boolean' &&
+    typeof original.isMainFrame === 'boolean' &&
+    candidate.isMainFrame !== original.isMainFrame
+  ) return false
+  if (candidate.isMainFrame === false && original.frameUrl && candidate.frameUrl !== original.frameUrl) return false
+  return true
+}
+
+function transientLocatorFailure(error) {
+  return /detached|not attached|not connected|waiting for locator|resolved to hidden|element is not visible|no element found/i.test(
+    String(error?.message || error || ''),
+  )
+}
+
+async function visibleAriaOptions(page, value, exact) {
+  const matches = []
+  for (const frame of page.frames()) {
+    const options = frame.getByRole('option', { name: value, exact })
+    const count = await options.count().catch(() => 0)
+    for (let index = 0; index < count; index += 1) {
+      const option = options.nth(index)
+      if (await option.isVisible({ timeout: 250 }).catch(() => false)) matches.push(option)
+    }
+  }
+  return matches
+}
+
+async function selectAriaOption(page, locator, value) {
+  const expanded = await locator.getAttribute('aria-expanded').catch(() => null)
+  if (expanded !== 'true') await locator.click({ timeout: 5000 })
+
+  let matches = []
+  for (let attempt = 0; attempt < 4 && matches.length === 0; attempt += 1) {
+    matches = await visibleAriaOptions(page, value, true)
+    if (matches.length === 0) matches = await visibleAriaOptions(page, value, false)
+    if (matches.length === 0) await page.waitForTimeout(150)
+  }
+  if (matches.length !== 1) {
+    throw new Error(`Expected one visible option named "${value}", found ${matches.length}.`)
+  }
+  await matches[0].click({ timeout: 5000 })
+}
+
+async function performTargetAction(page, locator, action) {
+  if (action.type === 'click') await locator.click({ timeout: 5000 })
+  if (action.type === 'fill') await locator.fill(action.value, { timeout: 5000 })
+  if (action.type === 'select') {
+    const tagName = await locator.evaluate((element) => element.tagName.toLowerCase())
+    if (tagName === 'select') {
+      await locator.selectOption({ label: action.value }).catch(() => locator.selectOption(action.value))
+    } else {
+      await selectAriaOption(page, locator, action.value)
+    }
+  }
+}
+
+function successfulTargetAction(action, control, retried = false) {
+  const verb = action.type === 'fill' ? 'filled' : action.type === 'select' ? 'selected' : 'clicked'
+  return {
+    ok: true,
+    description: `${verb} ${control.name}`,
+    control,
+    ...(retried ? { retried: true } : {}),
+  }
+}
+
+async function retrySemanticTarget(page, originalControl, action, originalReason, options = {}) {
+  const freshSnapshot = await collectInteractiveControls(page)
+  const matches = freshSnapshot.controls.filter((candidate) => (
+    semanticControlMatches(candidate, originalControl)
+  ))
+  if (matches.length !== 1) {
+    return {
+      ok: false,
+      reason: `Target ${action.targetId} became stale; found ${matches.length} visible semantic matches for ${originalControl.kind} "${originalControl.name}". ${originalReason}`,
+    }
+  }
+
+  const replacement = matches[0]
+  const retryAction = { ...action, targetId: replacement.id }
+  const revalidated = validateMindAction(retryAction, freshSnapshot.controls)
+  if (!revalidated.ok) return revalidated
+  const locator = freshSnapshot.locators.get(replacement.id)
+  if (!locator || !(await locator.isVisible({ timeout: 1000 }).catch(() => false))) {
+    return { ok: false, reason: `Semantic replacement ${replacement.id} disappeared before the retry.` }
+  }
+  try {
+    await options.beforeTargetAction?.({ action: revalidated.action, control: revalidated.control })
+    await performTargetAction(page, locator, revalidated.action)
+    return successfulTargetAction(revalidated.action, revalidated.control, true)
+  } catch (error) {
+    return {
+      ok: false,
+      reason: `Semantic retry for ${replacement.id} failed: ${cleanText(error.message, 500)}`,
+    }
+  }
+}
+
+async function scrollVisibleRegion(page, direction) {
+  if (typeof page.evaluate !== 'function') return false
+
+  return page.evaluate((scrollDirection) => {
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const documentScroller = document.scrollingElement
+    const candidates = [documentScroller, ...document.querySelectorAll('*')]
+      .filter((element, index, all) => element && all.indexOf(element) === index)
+      .map((element) => {
+        const style = getComputedStyle(element)
+        const rect = element.getBoundingClientRect()
+        const isDocument = element === documentScroller
+        const canOverflow = isDocument || /(auto|scroll|overlay)/.test(style.overflowY)
+        const visibleWidth = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0))
+        const visibleHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0))
+        const remaining = scrollDirection > 0
+          ? element.scrollHeight - element.clientHeight - element.scrollTop
+          : element.scrollTop
+        return {
+          element,
+          canScroll: canOverflow && remaining > 1 && visibleWidth > 0 && visibleHeight > 0,
+          score: visibleWidth * visibleHeight,
+        }
+      })
+      .filter((candidate) => candidate.canScroll)
+      .sort((left, right) => right.score - left.score)
+
+    const target = candidates[0]?.element
+    if (!target) return false
+    const before = target.scrollTop
+    const distance = Math.max(320, Math.min(800, target.clientHeight * 0.75))
+    target.scrollTop += scrollDirection * distance
+    return target.scrollTop !== before
+  }, direction).catch(() => false)
+}
+
+async function executeMindAction(page, snapshot, requestedAction, options = {}) {
   const validated = validateMindAction(requestedAction, snapshot.controls)
   if (!validated.ok) return validated
 
@@ -160,26 +343,59 @@ async function executeMindAction(page, snapshot, requestedAction) {
   }
   if (action.type === 'scroll') {
     const direction = /up/i.test(action.value) ? -1 : 1
-    await page.mouse?.wheel(0, direction * 0.75 * 800)
+    const moved = await scrollVisibleRegion(page, direction)
+    if (!moved) await page.mouse?.wheel(0, direction * 0.75 * 800)
     return { ok: true, description: `scrolled ${direction < 0 ? 'up' : 'down'}` }
   }
   if (action.type === 'back') {
     await page.goBack?.({ waitUntil: 'commit', timeout: 15000 }).catch(() => null)
+    const currentUrl = cleanText(page.url?.(), 2000).toLowerCase()
+    if (
+      options.fallbackUrl &&
+      (!currentUrl || currentUrl === 'about:blank' || currentUrl.startsWith('data:,'))
+    ) {
+      await page.goto?.(options.fallbackUrl, {
+        waitUntil: 'commit',
+        timeout: options.actionTimeoutMs || 15000,
+      })
+      return {
+        ok: true,
+        recovered: true,
+        description: 'went back and recovered to the app',
+      }
+    }
     return { ok: true, description: 'went back' }
   }
 
   const locator = snapshot.locators.get(action.targetId)
   if (!locator || !(await locator.isVisible({ timeout: 1000 }).catch(() => false))) {
-    return { ok: false, reason: `Target ${action.targetId} disappeared before the action.` }
+    return retrySemanticTarget(
+      page,
+      validated.control,
+      action,
+      `Target ${action.targetId} disappeared before the action.`,
+      options,
+    )
   }
-  if (action.type === 'click') await locator.click({ timeout: 5000 })
-  if (action.type === 'fill') await locator.fill(action.value, { timeout: 5000 })
-  if (action.type === 'select') {
-    await locator.selectOption({ label: action.value }).catch(() => locator.selectOption(action.value))
+  try {
+    await options.beforeTargetAction?.({ action, control: validated.control })
+    await performTargetAction(page, locator, action)
+    return successfulTargetAction(action, validated.control)
+  } catch (error) {
+    if (!transientLocatorFailure(error)) {
+      return {
+        ok: false,
+        reason: `Target ${action.targetId} could not perform ${action.type}: ${cleanText(error.message, 500)}`,
+      }
+    }
+    return retrySemanticTarget(
+      page,
+      validated.control,
+      action,
+      `The original locator failed transiently: ${cleanText(error.message, 500)}`,
+      options,
+    )
   }
-
-  const verb = action.type === 'fill' ? 'filled' : action.type === 'select' ? 'selected' : 'clicked'
-  return { ok: true, description: `${verb} ${validated.control.name}`, control: validated.control }
 }
 
 module.exports = {

@@ -47,6 +47,26 @@ test('rejects actions whose target was not visible to the mind', () => {
   assert.match(result.reason, /not visible/i)
 })
 
+test('recovers a unique visible control when the mind returns its exact name', () => {
+  const result = validateMindAction(
+    { type: 'fill', targetId: 'Message', value: 'Hello there' },
+    controls,
+  )
+
+  assert.equal(result.ok, true)
+  assert.equal(result.action.targetId, 'control-2')
+})
+
+test('does not guess when a visible control name is ambiguous', () => {
+  const result = validateMindAction(
+    { type: 'click', targetId: 'View details' },
+    [...controls, { id: 'control-4', kind: 'button', name: 'View details', disabled: false }],
+  )
+
+  assert.equal(result.ok, false)
+  assert.match(result.reason, /not visible/i)
+})
+
 test('rejects destructive and payment actions', () => {
   const result = validateMindAction(
     { type: 'click', targetId: 'control-3' },
@@ -71,6 +91,26 @@ test('allows body-only actions without a target', () => {
   for (const type of ['scroll', 'wait', 'back', 'leave']) {
     assert.equal(validateMindAction({ type }, controls).ok, true)
   }
+})
+
+test('recovers a back action that leaves the browser on about:blank', async () => {
+  const calls = []
+  const page = {
+    goBack: async () => calls.push('back'),
+    url: () => 'about:blank',
+    goto: async (url) => calls.push(['goto', url]),
+  }
+
+  const result = await executeMindAction(
+    page,
+    { controls: [], locators: new Map() },
+    { type: 'back' },
+    { fallbackUrl: 'https://app.test/workspace' },
+  )
+
+  assert.equal(result.ok, true)
+  assert.equal(result.recovered, true)
+  assert.deepEqual(calls, ['back', ['goto', 'https://app.test/workspace']])
 })
 
 test('executes the validated action through its captured locator', async () => {

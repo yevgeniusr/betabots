@@ -5,8 +5,8 @@ function evaluateEnvironmentIntegrity(input = {}) {
   }
 
   if (input.probeError) reasons.push('attestation_probe_failed')
-  if (input.requireRealBackend && !input.attestation) {
-    reasons.push('attestation_missing')
+  if (!input.attestation) {
+    reasons.push(input.requireRealBackend ? 'attestation_missing' : 'environment_unverified')
   }
 
   const attestation = input.attestation

@@ -42,6 +42,29 @@ BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES=75 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+## Return Sessions
+
+Use cohort-wide rounds for genuine return visits. Every bot completes session 1,
+the runner waits for the configured gap, and then the cohort returns for the next
+session. Each visit gets a fresh browser context. The same per-bot storage-state
+path is loaded and atomically written back after every visit, including cookies,
+localStorage, and IndexedDB.
+
+```bash
+BETABOT_SESSION_COUNT=3 \
+BETABOT_SESSION_GAP_MINUTES=60 \
+BETABOT_STORAGE_STATE_TEMPLATE='/tmp/product-auth/{id}.json' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+Multi-session runs require a storage-state template that resolves to a unique
+path for every bot. Create the initial files through visible UI login. The runner
+writes one combined `raw/<bot-id>.md`, nested `sessionResults` in `summary.json`,
+and session-specific screenshot folders. Persona memory and truth-pressure costs
+continue across visits; repeated-screen state resets for each visit. The in-process
+scheduler is intended for hour-scale studies. It is not a crash-resumable multi-day
+job scheduler.
+
 ## LLM Minds
 
 Thoughtful mode uses actual multimodal LLM calls for screenshot-grounded action decisions, thoughts, opinions, ideas, social messages, Betabook help/comment text, and Destiny planning. The LLM mind layer is mandatory; the bundled runner rejects `BETABOT_LLM_PROVIDER=none`.
@@ -100,6 +123,20 @@ BETABOT_APP_URL=http://localhost:5173 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
+Request failures are scored as product defects only for the app URL's origin.
+If the product uses additional first-party API origins, list them explicitly:
+
+```bash
+BETABOT_APP_ORIGINS='https://api.example.com,https://uploads.example.com' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+Failures from other origins remain in each session's
+`externalRequestFailureDetails` but do not reduce the product score. Same-origin
+request failures remain fail-closed. An aborted Next.js RSC or prefetch fetch is
+excluded only when a later browser observation shows non-empty UI at that exact
+destination.
+
 Read `references/audience-research.md` before creating a product-quality cohort. Use `references/cohort-config.md` for the full schema. In short:
 
 Screen-size seeding is part of random character generation. By default, thoughtful mode uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Set `screenSizeDistribution` in the cohort file or pass `BETABOT_SCREEN_SIZE_DISTRIBUTION` as a JSON array to change the weighted buckets.
@@ -112,6 +149,31 @@ Each bot also gets a DiceBear avatar. Set `BETABOT_AVATAR_STYLE` to a style slug
 - `ideaRules` turn observed product text into first-person product ideas.
 
 The runner has generic defaults, but serious product testing must provide a cohort file and audience research for the target domain. Generic defaults are only for smoke tests.
+
+## Required Product Evidence
+
+Use evidence requirements when a high score must prove interaction depth, not
+just exposure to the right screen:
+
+```bash
+BETABOT_MIN_AI_USER_TURNS=3 \
+BETABOT_MIN_COMPLETED_ACTIVITIES=1 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The environment variables are cohort-wide minimums. A cohort or individual role
+can define higher requirements and product-specific visible patterns with
+`evidenceRequirements`; see `cohort-config.md`. A role cannot lower the cohort
+or environment floor. An AI user turn counts only after the bot fills a chat
+input, uses a matching visible submit control, and a later observation on the
+same chat shows both the exact submitted text and new response content after it.
+An activity counts only after a named activity control is used and a configured
+completion signal newly appears on that same activity URL. Echoed chat text,
+unrelated iframe clicks, and stale completion screens do not count.
+
+Unmet required evidence is not an infrastructure error, but it prevents a happy
+result by capping that bot below `50`. Per-bot checks appear under
+`result.evidenceRequirements`; aggregate counts appear under `productEvidence`.
 
 ## Auth Isolation
 
@@ -128,8 +190,8 @@ BETABOT_AUTH_TOKEN_TEMPLATE='base-dev-token:{id}' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-Injected auth is classified as synthetic and caps the run at `0`. For a
-real-backend cohort, authenticate through the visible product UI first, save a
+Injected auth and missing attestation both cap the run at `0`. For a
+product-quality cohort, authenticate through the visible product UI first, save a
 Playwright storage-state file per bot, and configure:
 
 ```bash
@@ -196,7 +258,7 @@ BETABOT_DESTINY=true \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-The runner writes `destiny.json` with the master plan, interventions, path-crossing states, nudges, and errors. If Destiny repeatedly has to force crossings that should happen organically, treat that as product evidence: real users may also fail to find relevant people, content, inventory, or next steps.
+The runner writes `destiny.json` with the master plan, interventions, path-crossing states, nudges, and errors. Destiny never changes the address bar. A route intention can be followed only when its configured accessible label matches a currently visible control and the normal body safety validator accepts that control. When no matching control is visible, the nudge is recorded but not counted as followed. If Destiny repeatedly has to force crossings that should happen organically, treat that as product evidence: real users may also fail to find relevant people, content, inventory, or next steps.
 
 ## Strict Scoring
 

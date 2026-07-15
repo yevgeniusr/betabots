@@ -78,6 +78,11 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 Browser sessions use real-time pacing (`BETABOT_TIME_SCALE=1`). Thoughtful mode clamps lower values back to `1`.
 
+For return visits, set `BETABOT_SESSION_COUNT` and
+`BETABOT_SESSION_GAP_MINUTES` together with a unique per-bot
+`BETABOT_STORAGE_STATE_TEMPLATE`. The runner writes browser state after every
+visit and produces one combined first-person storyline per bot.
+
 Betabots use an actual multimodal LLM mind layer continuously during browser use. Screenshots and visible-control IDs are sent with each decision so the model chooses the next action instead of merely narrating one:
 
 - `BETABOT_LLM_PROVIDER=codex` uses local Codex CLI with the signed-in ChatGPT/Codex account.
@@ -112,8 +117,8 @@ Because this bypasses the product's authentication flow, Betabots marks the
 environment invalid and caps scores at `0`. Never use injected auth for a report
 that claims a working product.
 
-For a real-backend run, create Playwright storage state through the product's
-actual login UI and require a runtime attestation:
+Every product-quality run must provide a runtime attestation. Authenticated
+products must also create Playwright storage state through the actual login UI:
 
 ```bash
 BETABOT_REQUIRE_REAL_BACKEND=true \
@@ -122,7 +127,8 @@ BETABOT_STORAGE_STATE_TEMPLATE='/tmp/product-auth/{id}.json' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-The attestation must report real authentication and connected, persistent
+Without an attestation, the browser journey may still run as a layout smoke test,
+but every happiness score is capped at zero. The attestation must report real authentication and connected, persistent
 PostgreSQL storage. Missing or failed attestations, injected auth, explicit mock
 headers, mock/fixture modes, volatile storage, and missing storage-state files
 invalidate the run and force every happiness score to `0`.
@@ -132,6 +138,10 @@ For social products, enable **Betabook** and **Destiny** as separate layers.
 Betabook is a simple Reddit-like board scoped to the current simulation. Betabots can introduce themselves, post coordination or help notes, comment, receive invites, and coordinate outside the product UI while still behaving like independent people.
 
 Destiny is the orchestration layer. It watches the cohort in real time, follows a global master plan, and makes paths cross, almost cross, or intentionally not cross. Destiny can manipulate Betabook and can nudge individual betabots by giving them believable hunches, timing, and actions.
+
+Destiny cannot navigate directly. It may follow a route intention only through a
+matching visible control that passes the same body validation as any other UI
+action.
 
 ```bash
 BETABOT_BETABOOK=true \
@@ -296,7 +306,7 @@ Optional auth isolation:
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
 - `BETABOT_STORAGE_STATE_TEMPLATE`: Playwright storage-state path template produced by real UI login; supports `{id}`, `{name}`, and `{role}`.
-- `BETABOT_REQUIRE_REAL_BACKEND`: fail closed unless runtime integrity is verified.
+- `BETABOT_REQUIRE_REAL_BACKEND`: require an explicit real-backend attestation; unverified runs score zero even when this flag is omitted.
 - `BETABOT_ENVIRONMENT_ATTESTATION_URL`: JSON endpoint proving real auth and persistent PostgreSQL connectivity.
 - `BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS`: attestation timeout; defaults to `5000`.
 - `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, screen-size distribution, keywords, and idea rules.

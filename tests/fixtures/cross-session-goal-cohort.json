@@ -1,0 +1,16 @@
+{
+  "appName": "Cross-session Goal Fixture",
+  "requiresSocialAction": false,
+  "routes": [{ "labels": ["Inspect sample result", "Open pilot request"], "fallback": "/" }],
+  "roles": [{
+    "role": "L&D buyer",
+    "past": "I need to inspect proof and then open a pilot request.",
+    "goal": "Inspect the sample result and open the customer-support pilot request.",
+    "lifeGoal": "Reskill employees using evidence I can inspect.",
+    "attentionSpanMinutes": 0.05,
+    "successSignals": [
+      "Sample verification result inspected",
+      "Pilot request opened"
+    ]
+  }]
+}

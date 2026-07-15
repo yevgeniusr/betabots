@@ -13,11 +13,11 @@ const {
 } = require('./environment_integrity.cjs')
 const { screenFingerprint } = require('./screen_identity.cjs')
 const { newKeywordMatches } = require('./keyword_scoring.cjs')
-const { scoreSession } = require('./session_scoring.cjs')
+const { scoreMultiSessionJourney, scoreSession } = require('./session_scoring.cjs')
 const {
   appendGoalEvidence,
-  buildGoalEvidenceText,
-  validateSignalClaims,
+  buildCrossSessionGoalContext,
+  finalizeGoalAssessment,
 } = require('./goal_evidence.cjs')
 const { buildConfidenceRows } = require('./confidence_tiers.cjs')
 const {
@@ -25,6 +25,37 @@ const {
   executeMindAction,
   normalizeMindDecision,
 } = require('./thinking_body.cjs')
+const {
+  findVisibleDestinyAction,
+  queueDestinyNudge,
+  setDestinyBotStatus,
+  takeQueuedDestinyNudges,
+} = require('./destiny_actions.cjs')
+const {
+  beginBrowserIssueRecoveryShutdown,
+  createBrowserIssueRecoveryTracker,
+  finalizeBrowserIssueRecovery,
+  trackBrowserConsoleError,
+  trackBrowserRequestFailure,
+  trackBrowserRequestStart,
+  trackBrowserResponse,
+  trackNavigationIntent,
+  trackVisiblePage,
+  isProductUrl,
+} = require('./browser_issue_recovery.cjs')
+const {
+  createEvidenceTracker,
+  evaluateEvidenceRequirements,
+  mergeEvidenceRequirements,
+  normalizeEvidenceRequirements,
+  recordEvidenceAction,
+  recordEvidenceObservation,
+} = require('./product_evidence.cjs')
+const {
+  normalizeSessionPlan,
+  persistContextStorageState,
+  runSessionSequence,
+} = require('./session_scheduler.cjs')
 const { codexImageArgs, openRouterUserContent } = require('./vision_payload.cjs')
 const {
   normalizeRouteMode,
@@ -35,11 +66,17 @@ const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOO
 
 const config = {
   appUrl: (process.env.BETABOT_APP_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  appOrigins: String(process.env.BETABOT_APP_ORIGINS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
   count: Number(process.env.BETABOT_THOUGHTFUL_COUNT || process.env.BETABOT_COUNT || 3),
   minutes: Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8),
   minMinutes: Number(process.env.BETABOT_THOUGHTFUL_MIN_SESSION_MINUTES || process.env.BETABOT_THOUGHTFUL_MINUTES || 8),
   maxMinutes: Number(process.env.BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES || Math.max(Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8) + 4, 180)),
   concurrency: Number(process.env.BETABOT_THOUGHTFUL_CONCURRENCY || 1),
+  sessionCount: Number(process.env.BETABOT_SESSION_COUNT || 1),
+  sessionGapMinutes: Number(process.env.BETABOT_SESSION_GAP_MINUTES || 0),
   headless: String(process.env.BETABOT_HEADLESS || 'false') === 'true',
   browserExecutablePath: process.env.BETABOT_BROWSER_EXECUTABLE_PATH || '',
   requestedTimeScale: Number(process.env.BETABOT_TIME_SCALE || 1),
@@ -76,6 +113,8 @@ const config = {
   openrouterAppName: process.env.BETABOT_OPENROUTER_APP_NAME || 'Betabots',
   visualEvidenceMode: (process.env.BETABOT_VISUAL_EVIDENCE_MODE || process.env.BETABOT_SCREENSHOT_EVIDENCE_MODE || 'audit').toLowerCase(),
   screenSizeDistribution: process.env.BETABOT_SCREEN_SIZE_DISTRIBUTION || process.env.BETABOT_VIEWPORT_DISTRIBUTION || '',
+  minAiUserTurns: Number(process.env.BETABOT_MIN_AI_USER_TURNS || 0),
+  minCompletedActivities: Number(process.env.BETABOT_MIN_COMPLETED_ACTIVITIES || 0),
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -317,6 +356,7 @@ function loadCohortConfig() {
     roles: normalizeList(override.roles || override.personas, defaultCohort.roles),
     requiresSocialAction: Boolean(override.requiresSocialAction ?? defaultCohort.requiresSocialAction),
     routes: normalizeRoutes(override.routes || defaultCohort.routes),
+    evidenceRequirements: normalizeEvidenceRequirements(override.evidenceRequirements || {}),
     screenSizeDistribution: screenDistributionFromEnv() || normalizeScreenSizeDistribution(override.screenSizeDistribution || override.screen_size_distribution || override.screenSizes || override.screen_sizes || override.viewports, defaultCohort.screenSizeDistribution),
     keywords: { ...defaultCohort.keywords, ...(override.keywords || {}) },
     ideaRules: normalizeList(override.ideaRules || override.ideas, defaultCohort.ideaRules),
@@ -492,6 +532,17 @@ function validateRunConfig() {
   }
   if (config.requestedTimeScale < 1) {
     console.warn(`BETABOT_TIME_SCALE=${config.requestedTimeScale} was requested, but thoughtful mode is human-paced. Using BETABOT_TIME_SCALE=1.`)
+  }
+  const sessionPlan = normalizeSessionPlan(config)
+  config.sessionCount = sessionPlan.sessionCount
+  config.sessionGapMinutes = sessionPlan.sessionGapMinutes
+  config.sessionGapMs = sessionPlan.sessionGapMs
+  normalizeEvidenceRequirements({
+    minAiUserTurns: config.minAiUserTurns,
+    minCompletedActivities: config.minCompletedActivities,
+  })
+  if (config.sessionCount > 1 && !config.storageStateTemplate) {
+    throw new Error('BETABOT_STORAGE_STATE_TEMPLATE is required when BETABOT_SESSION_COUNT is greater than 1.')
   }
 }
 
@@ -781,6 +832,14 @@ function personaAt(index) {
   const technicalComfort = roleObject.technicalComfort || pick(['low', 'medium', 'high'])
   const configuredMinutes = Number(roleObject.attentionSpanMinutes || roleObject.durationMinutes || 0)
   const configuredScreenSize = roleObject.screenSize || roleObject.screen_size
+  const roleEvidenceRequirements = mergeEvidenceRequirements(
+    cohort.evidenceRequirements,
+    roleObject.evidenceRequirements || {},
+    {
+      minAiUserTurns: config.minAiUserTurns,
+      minCompletedActivities: config.minCompletedActivities,
+    },
+  )
   const screenSize = configuredScreenSize
     ? normalizeScreenSizeDistribution([{ category: configuredScreenSize.category || roleObject.viewport || 'custom', devices: [configuredScreenSize] }])[0].devices[0]
     : screenSizeForPersona(index, roleObject.viewport || (role.toLowerCase().includes('mobile') ? 'mobile' : ''))
@@ -797,6 +856,7 @@ function personaAt(index) {
     traits: roleObject.traits || [],
     successSignals: normalizeList(roleObject.successSignals || roleObject.success_signals, []),
     routes: normalizeRoutes(roleObject.routes || roleObject.journey || cohort.routes),
+    evidenceRequirements: roleEvidenceRequirements,
     viewport: roleObject.viewport || screenSize.category || (role.toLowerCase().includes('mobile') ? 'mobile' : 'desktop'),
     screenSize,
     attentionSpanMinutes: configuredMinutes || clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
@@ -1162,8 +1222,11 @@ function createDestinyState(bots) {
   return {
     enabled: config.destinyEnabled,
     intervalMs: config.destinyIntervalMs,
+    nudgeCooldownMs: Math.max(30000, config.destinyIntervalMs * 2),
     masterPlan: plans,
     nudgesByBotId: Object.fromEntries(bots.map((bot) => [bot.id, []])),
+    botStatusById: Object.fromEntries(bots.map((bot) => [bot.id, 'inactive'])),
+    lastRouteNudgeAtByBotId: Object.fromEntries(bots.map((bot) => [bot.id, {}])),
     rescuedHelpPostIds: [],
     events: [],
     errors: [],
@@ -1195,17 +1258,20 @@ async function initializeDestinyMasterPlan(bots, state, betabookState) {
 }
 
 function addDestinyNudge(state, botId, nudge) {
-  if (!state.enabled) return
-  state.nudgesByBotId[botId] ||= []
-  state.nudgesByBotId[botId].push({ ...nudge, at: nowIso() })
-  state.events.push({ type: 'nudge_created', botId, kind: nudge.kind, at: nowIso() })
+  const result = queueDestinyNudge(state, botId, nudge)
+  state.events.push({
+    type: result.accepted ? 'nudge_created' : 'nudge_rejected',
+    botId,
+    kind: nudge.kind,
+    route: nudge.route || null,
+    reason: result.reason || null,
+    at: nowIso(),
+  })
+  return result
 }
 
 function takeDestinyNudges(state, botId) {
-  if (!state?.enabled) return []
-  const nudges = state.nudgesByBotId[botId] || []
-  state.nudgesByBotId[botId] = []
-  return nudges
+  return takeQueuedDestinyNudges(state, botId)
 }
 
 function runDestinyLoopRescue(bots, state, betabookState) {
@@ -1222,7 +1288,8 @@ function runDestinyLoopRescue(bots, state, betabookState) {
       thought: 'I am stuck in a loop, so I should stop doing the same thing and try a different path.',
       route: pick(genericNudgeRoutes()),
     }
-    addDestinyNudge(state, bot.id, nudge)
+    const queued = addDestinyNudge(state, bot.id, nudge)
+    if (!queued.accepted) continue
     betabookComment(betabookState, {
       postId: post.id,
       authorId: 'destiny',
@@ -1250,12 +1317,14 @@ async function runDestinyPass(bots, state, betabookState) {
   const advice = await llmDestinyLiveAdvice(bots, state, betabookState)
   for (const nudge of (advice.nudges || []).slice(0, 3)) {
     if (!nudge.botId || !botsById.has(nudge.botId)) continue
-    addDestinyNudge(state, nudge.botId, {
+    const queued = addDestinyNudge(state, nudge.botId, {
       kind: nudge.kind || 'think',
       thought: nudge.thought || 'I have a hunch that I should try a different path now.',
       route: nudge.route || undefined,
     })
-    state.events.push({ type: 'llm_live_nudge', botId: nudge.botId, route: nudge.route || null, at: nowIso() })
+    if (queued.accepted) {
+      state.events.push({ type: 'llm_live_nudge', botId: nudge.botId, route: nudge.route || null, at: nowIso() })
+    }
   }
   if (advice.betabookComment) {
     betabookPost(betabookState, {
@@ -1273,6 +1342,7 @@ async function runDestinyPass(bots, state, betabookState) {
     const botA = botsById.get(pair.a)
     const botB = botsById.get(pair.b)
     if (!botA || !botB) continue
+    if (state.botStatusById[pair.a] !== 'active' || state.botStatusById[pair.b] !== 'active') continue
 
     if (pair.intent === 'near_miss') {
       const post = betabookPost(betabookState, {
@@ -1352,9 +1422,6 @@ function startDestiny(bots, state, betabookState) {
     stopped = true
     clearInterval(timer)
     if (currentRun) await currentRun
-    stopped = false
-    await run()
-    stopped = true
     writeDestinyState(state)
     writeBetabookState(betabookState)
   }
@@ -1363,36 +1430,60 @@ function startDestiny(bots, state, betabookState) {
 async function observe(page) {
   const url = page.url()
   const title = await page.title().catch(() => '')
-  const text = await page.evaluate(() => {
-    const selector = 'h1, h2, h3, h4, p, a, button, label, li, dt, dd, th, td, [role="cell"], [role="gridcell"], [role="status"], [role="alert"]'
-    const seen = new Set()
-    const visible = []
+  const frameTexts = []
+  const framePrimaryTexts = []
+  for (const frame of page.frames()) {
+    const visibleContent = await frame.evaluate(() => {
+      const selector = 'h1, h2, h3, h4, p, a, button, label, li, dt, dd, th, td, [role="cell"], [role="gridcell"], [role="status"], [role="alert"]'
+      const collect = (elements) => {
+        const seen = new Set()
+        const visible = []
+        for (const element of elements) {
+          const rect = element.getBoundingClientRect()
+          const style = window.getComputedStyle(element)
+          const intersectsViewport =
+            rect.width > 0 &&
+            rect.height > 0 &&
+            rect.bottom >= 0 &&
+            rect.right >= 0 &&
+            rect.top <= window.innerHeight &&
+            rect.left <= window.innerWidth
 
-    for (const element of document.querySelectorAll(selector)) {
-      const rect = element.getBoundingClientRect()
-      const style = window.getComputedStyle(element)
-      const intersectsViewport =
-        rect.width > 0 &&
-        rect.height > 0 &&
-        rect.bottom >= 0 &&
-        rect.right >= 0 &&
-        rect.top <= window.innerHeight &&
-        rect.left <= window.innerWidth
+          if (!intersectsViewport || style.visibility === 'hidden' || style.display === 'none') continue
 
-      if (!intersectsViewport || style.visibility === 'hidden' || style.display === 'none') continue
+          const value = String(element.getAttribute('aria-label') || element.textContent || '')
+            .replace(/\s+/g, ' ')
+            .trim()
+          if (!value || seen.has(value)) continue
+          seen.add(value)
+          visible.push(value)
+        }
+        return visible.join(' ')
+      }
 
-      const value = String(element.getAttribute('aria-label') || element.textContent || '')
-        .replace(/\s+/g, ' ')
-        .trim()
-      if (!value || seen.has(value)) continue
-      seen.add(value)
-      visible.push(value)
-    }
-
-    return visible.join(' ')
-  }).catch(() => '')
+      const primaryRoots = [...document.querySelectorAll('main, [role="main"], article')]
+      const primaryElements = primaryRoots.flatMap((root) => [root, ...root.querySelectorAll(selector)])
+      if (primaryElements.length === 0) {
+        primaryElements.push(...[...document.querySelectorAll('h1, h2, h3')].filter((element) => (
+          !element.closest('nav, header, footer, [role="navigation"]')
+        )))
+      }
+      return {
+        text: collect(document.querySelectorAll(selector)),
+        primaryText: collect(primaryElements),
+      }
+    }).catch(() => ({ text: '', primaryText: '' }))
+    if (visibleContent.text) frameTexts.push(visibleContent.text)
+    if (visibleContent.primaryText) framePrimaryTexts.push(visibleContent.primaryText)
+  }
+  const text = frameTexts.join(' ')
   const fallbackText = text || await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
-  return { url, title, text: firstVisibleText(fallbackText) }
+  return {
+    url,
+    title,
+    text: firstVisibleText(fallbackText),
+    primaryText: firstVisibleText(framePrimaryTexts.join(' ')),
+  }
 }
 
 function slugifyLabel(label) {
@@ -1417,8 +1508,13 @@ function appendJsonl(file, event) {
   fs.appendFileSync(file, `${JSON.stringify(event)}\n`)
 }
 
-async function screenshot(page, bot, step, label = 'screen') {
-  const dir = path.join(config.runDir, 'screenshots', bot.id)
+async function screenshot(page, bot, step, label = 'screen', sessionNumber = 1) {
+  const dir = path.join(
+    config.runDir,
+    'screenshots',
+    bot.id,
+    `session-${String(sessionNumber).padStart(2, '0')}`,
+  )
   fs.mkdirSync(dir, { recursive: true })
   const file = path.join(dir, `${String(step).padStart(3, '0')}-${slugifyLabel(label)}.png`)
   try {
@@ -1623,10 +1719,13 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
   }, fallback)
 }
 
-async function runBot(browser, bot, runtime = {}) {
+async function runBotSession(browser, bot, runtime = {}, session = {}) {
   const startedAt = Date.now()
+  const sessionNumber = Number(session.sessionNumber || 1)
+  const sessionCount = Number(session.sessionCount || 1)
+  const sessionPhase = sessionNumber === 1 ? 'Discovery' : 'Return'
   const screenSize = bot.screenSize || selectScreenSize(bot.viewport)
-  const storageStatePath = resolveStorageStatePath(config.storageStateTemplate, bot)
+  const storageStatePath = runtime.storageStatePath || resolveStorageStatePath(config.storageStateTemplate, bot)
   const context = await browser.newContext({
     viewport: screenSize.viewport || { width: screenSize.width, height: screenSize.height },
     deviceScaleFactor: screenSize.deviceScaleFactor || 1,
@@ -1643,6 +1742,7 @@ async function runBot(browser, bot, runtime = {}) {
   }
   const page = await context.newPage()
   page.on('response', async (response) => {
+    if (!isProductUrl([config.appUrl, ...config.appOrigins], response.url())) return
     const headers = await response.allHeaders().catch(() => ({}))
     for (const header of detectedMockHeaders(headers)) {
       runtime.detectedMockHeaders?.add(header)
@@ -1650,7 +1750,7 @@ async function runBot(browser, bot, runtime = {}) {
   })
   const notes = []
   const actions = []
-  const mortality = createMortalityLedger(bot)
+  const mortality = runtime.mortality || createMortalityLedger(bot)
   const originalActionPush = actions.push.bind(actions)
   actions.push = (...items) => {
     for (const item of items) {
@@ -1680,6 +1780,7 @@ async function runBot(browser, bot, runtime = {}) {
     messages: 0,
     meaningfulSocialActions: 0,
     browserIssues: 0,
+    externalRequestFailures: 0,
     mindActions: 0,
     mindActionFailures: 0,
   }
@@ -1693,7 +1794,10 @@ async function runBot(browser, bot, runtime = {}) {
   const reflectionTimeoutMs = config.llmTimeoutMs + 5000
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
-  fs.writeFileSync(liveRawFile, `# ${bot.id} — Live Thoughtful Browser Storyline\n\n## Raw Journey\n`)
+  fs.appendFileSync(
+    liveRawFile,
+    `\n## Session ${sessionNumber} — ${sessionPhase}\n`,
+  )
 
   const evidenceRef = () => lastScreenshot ? ` [screen: ${lastScreenshot}]` : ''
   const log = (text, options = {}) => {
@@ -1708,9 +1812,17 @@ async function runBot(browser, bot, runtime = {}) {
       text,
       screenshot: lastScreenshot || null,
       screenHash: lastObservation ? textHash(lastObservation.text) : null,
+      sessionNumber,
     })
   }
   const browserIssueKeys = new Set()
+  const browserIssueRecovery = createBrowserIssueRecoveryTracker({
+    appOrigins: [config.appUrl, ...config.appOrigins],
+  })
+  const browserRequestIds = new WeakMap()
+  let browserRequestSequence = 0
+  const externalRequestFailureKeys = new Set()
+  const externalRequestFailureDetails = []
   const recordBrowserIssue = (kind, detail) => {
     const message = `${kind}: ${String(detail || '').trim()}`
     if (!detail || browserIssueKeys.has(message)) return
@@ -1721,24 +1833,85 @@ async function runBot(browser, bot, runtime = {}) {
       type: 'browser-error',
     })
   }
+  const recordExternalRequestFailure = (detail) => {
+    const message = String(detail || '').trim()
+    if (!message || externalRequestFailureKeys.has(message)) return
+    externalRequestFailureKeys.add(message)
+    externalRequestFailureDetails.push(message)
+    stats.externalRequestFailures += 1
+    log(`A third-party request failed without being scored as a product defect: ${message}`, {
+      type: 'external-request-failure',
+      noEvidence: true,
+    })
+  }
   page.on('console', (message) => {
-    if (message.type() === 'error') recordBrowserIssue('console error', message.text())
+    if (message.type() !== 'error') return
+    const recovery = trackBrowserConsoleError(browserIssueRecovery, {
+      text: message.text(),
+      url: message.location()?.url,
+    })
+    if (recovery.deferred) return
+    if (recovery.scoring === false) recordExternalRequestFailure(recovery.detail)
+    else recordBrowserIssue('console error', message.text())
   })
   page.on('pageerror', (error) => recordBrowserIssue('page error', error.message))
+  page.on('request', (request) => {
+    const requestId = `request-${++browserRequestSequence}`
+    browserRequestIds.set(request, requestId)
+    trackBrowserRequestStart(browserIssueRecovery, {
+      requestId,
+      method: request.method(),
+      url: request.url(),
+      resourceType: request.resourceType(),
+      headers: request.headers(),
+    })
+  })
   page.on('requestfailed', (request) => {
-    recordBrowserIssue(
-      'request failed',
-      `${request.method()} ${request.url()} ${request.failure()?.errorText || ''}`,
-    )
+    const failure = trackBrowserRequestFailure(browserIssueRecovery, {
+      requestId: browserRequestIds.get(request),
+      method: request.method(),
+      url: request.url(),
+      errorText: request.failure()?.errorText || '',
+      resourceType: request.resourceType(),
+      headers: request.headers(),
+    })
+    if (failure.ignored) return
+    if (failure.deferred) return
+    if (!failure.scoring) recordExternalRequestFailure(failure.detail)
+    else recordBrowserIssue('request failed', failure.detail)
   })
   page.on('response', (response) => {
+    const recovery = trackBrowserResponse(browserIssueRecovery, {
+      method: response.request().method(),
+      url: response.url(),
+      status: response.status(),
+    })
+    if (recovery.deferred) return
     if (response.status() >= 500) {
-      recordBrowserIssue('HTTP failure', `${response.status()} ${response.url()}`)
+      if (recovery.scoring === false) recordExternalRequestFailure(recovery.detail)
+      else recordBrowserIssue('HTTP failure', `${response.status()} ${response.url()}`)
     }
   })
+  const bodyActionOptions = {
+    fallbackUrl: config.appUrl,
+    actionTimeoutMs: config.actionTimeoutMs,
+    beforeTargetAction: ({ action, control }) => {
+      if (action.type !== 'click' || !control?.href) return
+      trackNavigationIntent(browserIssueRecovery, {
+        url: control.href,
+        controlName: control.name,
+      })
+    },
+  }
+  const observeProduct = async () => {
+    const observation = await observe(page)
+    trackVisiblePage(browserIssueRecovery, observation)
+    return observation
+  }
   const captureScreenshot = async (label, observation = lastObservation) => {
+    let goalEvidence = null
     if (observation) {
-      appendGoalEvidence(seenScreens, {
+      goalEvidence = appendGoalEvidence(seenScreens, {
         phase: label,
         url: page.url(),
         title: observation.title,
@@ -1746,7 +1919,7 @@ async function runBot(browser, bot, runtime = {}) {
       })
     }
     if (config.visualEvidenceMode === 'off') return ''
-    const file = await screenshot(page, bot, step++, label)
+    const file = await screenshot(page, bot, step++, label, sessionNumber)
     lastObservation = observation || lastObservation
     if (!file || !fs.existsSync(file)) {
       appendJsonl(evidenceFile, {
@@ -1757,10 +1930,12 @@ async function runBot(browser, bot, runtime = {}) {
         url: page.url(),
         title: observation?.title || '',
         screenHash: observation ? textHash(observation.text) : null,
+        sessionNumber,
       })
       return ''
     }
     lastScreenshot = path.relative(config.runDir, file)
+    if (goalEvidence) goalEvidence.screenshot = lastScreenshot
     appendJsonl(evidenceFile, {
       type: 'screenshot',
       at: new Date().toISOString(),
@@ -1771,6 +1946,7 @@ async function runBot(browser, bot, runtime = {}) {
       title: observation?.title || '',
       screenHash: observation ? textHash(observation.text) : null,
       visibleText: observation?.text ? observation.text.slice(0, 1400) : '',
+      sessionNumber,
     })
     log(`Screenshot evidence (${label}): ${lastScreenshot}`, { type: 'screenshot-note', noEvidence: true })
     return file
@@ -1860,6 +2036,7 @@ async function runBot(browser, bot, runtime = {}) {
       recentThoughts: thoughts.slice(-4),
       recentOpinions: opinions.slice(-4),
       recentActions: actions.slice(-8),
+      previousSessions: runtime.previousSessions || [],
     }, {
       controls: bodySnapshot.controls,
       screenshotFile,
@@ -1900,7 +2077,7 @@ async function runBot(browser, bot, runtime = {}) {
     }
     const result = await runStep(
       `execute mind action ${decision.action.type}`,
-      () => executeMindAction(page, bodySnapshot, decision.action),
+      () => executeMindAction(page, bodySnapshot, decision.action, bodyActionOptions),
       { ok: false, reason: 'body execution failed' },
       20000,
     )
@@ -1912,6 +2089,14 @@ async function runBot(browser, bot, runtime = {}) {
 
     stats.mindActions += 1
     log(`My body ${result.description}.`, { type: 'mind-action' })
+    if (runtime.evidenceTracker) {
+      recordEvidenceAction(runtime.evidenceTracker, {
+        action: decision.action,
+        control: result.control,
+        url: page.url(),
+        beforeText: observation.text,
+      })
+    }
     if (result.ended) {
       shouldEndSession = true
       return true
@@ -1933,7 +2118,13 @@ async function runBot(browser, bot, runtime = {}) {
       title: observation.title,
       text: observation.text,
     })
-    const evidenceText = buildGoalEvidenceText(seenScreens, actions)
+    const goalContext = buildCrossSessionGoalContext({
+      previousSessions: runtime.previousSessions || [],
+      currentScreens: seenScreens,
+      currentActions: actions,
+      runDir: config.runDir,
+    })
+    const evidenceText = goalContext.evidenceText
     const literalSignalClaims = bot.successSignals.map((signal) => ({
       signal,
       observed: evidenceText.toLowerCase().includes(String(signal).toLowerCase()),
@@ -1952,12 +2143,14 @@ async function runBot(browser, bot, runtime = {}) {
         goal: bot.goal,
         lifeGoal: bot.lifeGoal,
       },
-      recordedActions: actions,
-      recordedUiEvidence: seenScreens.slice(-12).map(({ identity, ...entry }) => entry),
+      priorSessionActions: goalContext.priorRecordedActions,
+      priorSessionUiEvidence: goalContext.priorRecordedUiEvidence,
+      currentSessionActions: goalContext.currentRecordedActions,
+      currentSessionUiEvidence: goalContext.currentRecordedUiEvidence,
       recentThoughts: thoughts.slice(-6),
       recentOpinions: opinions.slice(-6),
       requiredSuccessSignals: bot.successSignals,
-      instruction: 'Mark achieved true only when the recorded visible UI and actions prove the stated goal was completed. For every success signal, cite a short verbatim excerpt from recordedUiEvidence. A signal without a citation is not observed. Browsing related pages, seeing summary counts, or intending to act is not completion.',
+      instruction: 'Assess the long-term goal from cumulative visible UI and performed actions across prior and current sessions. Mark achieved true only when that recorded evidence proves completion. Keep session chronology honest: priorSessionActions happened earlier and must never be described as current-session behavior; an honest return session may make no new action when earlier visible proof already completed the goal. For every success signal, cite a short verbatim excerpt from priorSessionUiEvidence or currentSessionUiEvidence. A signal without a citation is not observed. Browsing related pages, seeing summary counts, intending to act, thoughts, and errors are not completion evidence.',
       requestedShape: {
         achieved: 'boolean',
         confidence: 'number from 0 to 1',
@@ -1968,19 +2161,20 @@ async function runBot(browser, bot, runtime = {}) {
           evidence: 'short verbatim excerpt from recordedUiEvidence, or empty string',
         }],
       },
-    }, fallback)
-    const signalResults = validateSignalClaims(
-      bot.successSignals,
-      assessment.signalResults,
+    }, fallback, {
+      imagePaths: goalContext.screenshotPaths.slice(-6),
+    })
+    const priorAchievedAssessment = [...(runtime.previousSessions || [])]
+      .reverse()
+      .map((session) => session?.goalAssessment)
+      .find((candidate) => candidate?.achieved === true) || null
+    return finalizeGoalAssessment({
+      requiredSignals: bot.successSignals,
+      assessment,
       evidenceText,
-    )
-    const allSignalsObserved = signalResults.length === 0 || signalResults.every((entry) => entry.observed)
-    return {
-      achieved: assessment.achieved === true && allSignalsObserved,
-      confidence: Number(assessment.confidence || 0),
-      reason: String(assessment.reason || fallback.reason),
-      signalResults,
-    }
+      fallbackReason: fallback.reason,
+      priorAchievedAssessment,
+    })
   }
   const useBetabook = async (reason) => {
     const betabookState = runtime.betabookState
@@ -2013,19 +2207,40 @@ async function runBot(browser, bot, runtime = {}) {
     const destinyState = runtime.destinyState
     const nudges = takeDestinyNudges(destinyState, bot.id)
     for (const nudge of nudges) {
-      destinyMoments.push(nudge.kind)
-      if (nudge.kind === 'loop_rescue') stats.loopRescuesFollowed += 1
       if (nudge.thought) recordThought(nudge.thought)
       if (nudge.route) {
-        await page.goto(`${config.appUrl}${nudge.route}`, { waitUntil: 'commit', timeout: 20000 }).catch((error) => {
-          errors.push(`destiny navigation ${nudge.route}: ${error.message}`)
-        })
-        actions.push(`followed a hunch to ${nudge.route}`)
-        log(`I follow a hunch and check ${nudge.route}.`)
-        const destinyObservation = await observe(page)
+        const bodySnapshot = await collectInteractiveControls(page)
+        const visibleAction = findVisibleDestinyAction(
+          nudge,
+          bodySnapshot.controls,
+          [...bot.routes, ...cohort.routes],
+        )
+        if (!visibleAction) {
+          log(`Destiny suggests another path, but I cannot see a matching control, so I stay on the current screen.`)
+          continue
+        }
+        const result = await executeMindAction(page, bodySnapshot, visibleAction, bodyActionOptions)
+        if (!result.ok) {
+          log(`I cannot follow Destiny through the visible interface: ${result.reason}`)
+          continue
+        }
+        destinyMoments.push(nudge.kind)
+        if (nudge.kind === 'loop_rescue') stats.loopRescuesFollowed += 1
+        actions.push(`followed Destiny through visible control ${result.control?.name || visibleAction.targetId}`)
+        if (runtime.evidenceTracker) {
+          recordEvidenceAction(runtime.evidenceTracker, {
+            action: visibleAction,
+            control: result.control,
+            url: page.url(),
+            beforeText: lastObservation?.text || '',
+          })
+        }
+        log(`I follow a hunch by using the visible ${result.control?.name || 'control'}.`)
+        const destinyObservation = await observeProduct()
+        if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, destinyObservation)
         recordScreenQuality(destinyObservation)
         await captureScreenshot(`destiny ${nudge.route}`, destinyObservation)
-        log(`After following Destiny to ${nudge.route}, I see: ${destinyObservation.text}`)
+        log(`After following Destiny through the interface, I see: ${destinyObservation.text}`)
       }
     }
   }
@@ -2047,7 +2262,8 @@ async function runBot(browser, bot, runtime = {}) {
     })
     await page.goto(config.appUrl, { waitUntil: 'commit', timeout: config.actionTimeoutMs })
     await wait(2500 + random() * 5000)
-    let observation = await observe(page)
+    let observation = await observeProduct()
+    if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
     recordScreenQuality(observation)
     let screenshotFile = await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
@@ -2063,7 +2279,8 @@ async function runBot(browser, bot, runtime = {}) {
         await wait(Math.min(remainingMs, 6000 + random() * 12000))
         if (Date.now() - sessionStartedAt >= sessionMs) break
         await runStep('follow destiny', followDestiny)
-        observation = await observe(page)
+        observation = await observeProduct()
+        if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
         recordScreenQuality(observation)
         screenshotFile = await captureScreenshot(`mind-cycle-${move + 1}`, observation)
         log(`I look again and see: ${observation.text}`)
@@ -2083,7 +2300,8 @@ async function runBot(browser, bot, runtime = {}) {
       if (shouldEndSession) break
 
       await wait(2500 + random() * 7000)
-      observation = await observe(page)
+      observation = await observeProduct()
+      if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
       const currentFingerprintCount = recordScreenQuality(observation)
       screenshotFile = await captureScreenshot('post-mind-action', observation)
       log(`After my action, I see: ${observation.text}`)
@@ -2097,7 +2315,8 @@ async function runBot(browser, bot, runtime = {}) {
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
       if (newKeywordMatches(lower, cohort.keywords.risk, seenRiskKeywords).length > 0) trust -= 20
     }
-    observation = await observe(page)
+    observation = await observeProduct()
+    if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
     goalAssessment = await runStep(
       'assess goal completion',
       () => assessGoalCompletion(observation),
@@ -2111,7 +2330,21 @@ async function runBot(browser, bot, runtime = {}) {
     errors.push(error.message)
     log(`I hit a problem: ${error.message}`)
   } finally {
+    beginBrowserIssueRecoveryShutdown(browserIssueRecovery)
+    try {
+      const storageResult = await persistContextStorageState(context, storageStatePath)
+      if (storageResult.persisted) {
+        log(`My browser state is saved for the next session.`, { type: 'storage-state', noEvidence: true })
+      }
+    } catch (error) {
+      errors.push(`storage state write-back: ${error.message}`)
+      log(`My browser state could not be saved for the next session.`, { type: 'storage-state-error', noEvidence: true })
+    }
     await context.close().catch(() => {})
+    const finalBrowserIssues = finalizeBrowserIssueRecovery(browserIssueRecovery)
+    for (const issue of finalBrowserIssues) {
+      recordBrowserIssue(issue.kind, issue.detail)
+    }
   }
 
   let score = scoreSession({
@@ -2149,7 +2382,130 @@ async function runBot(browser, bot, runtime = {}) {
         ? pick(['understood value but needs more live people', 'found enough value for one session'])
         : pick(endings.slice(1))
 
-  const raw = `# ${bot.id} — Thoughtful Browser Raw Storyline
+  const storyline = `## Session ${sessionNumber} — ${sessionPhase}
+${notes.join('\n')}
+
+### Session outcome
+- End reason: ${endReason}
+- Happiness score: ${score}
+- Goal achieved: ${goalAssessment?.achieved === true ? 'yes' : 'no'}
+- Goal assessment: ${goalAssessment?.reason || 'No assessment available'}
+- Actions: ${actions.length}
+- Screenshots: ${step - 1}
+- Errors: ${errors.length ? errors.join('; ') : 'none'}
+`
+  return {
+    id: bot.id,
+    role: bot.role,
+    sessionNumber,
+    sessionCount,
+    phase: sessionPhase.toLowerCase(),
+    score,
+    endReason,
+    errors,
+    actions: actions.length,
+    actionEvidence: actions,
+    screenshots: step - 1,
+    ideas,
+    thoughts: thoughts.length,
+    opinions: opinions.length,
+    recentThoughts: thoughts.slice(-4),
+    recentOpinions: opinions.slice(-4),
+    screenSize: bot.screenSize,
+    avatar: bot.avatar,
+    betabookMoments: betabookMoments.length,
+    destinyMoments: destinyMoments.length,
+    likes: stats.likes,
+    passes: stats.passes,
+    messages: stats.messages,
+    mindActions: stats.mindActions,
+    mindActionFailures: stats.mindActionFailures,
+    repeatedScreens: stats.repeatedScreens,
+    meaningfulSocialActions: stats.meaningfulSocialActions,
+    loopHelpRequests: stats.loopHelpRequests,
+    loopRescuesFollowed: stats.loopRescuesFollowed,
+    browserIssues: stats.browserIssues,
+    externalRequestFailures: stats.externalRequestFailures,
+    externalRequestFailureDetails,
+    goalAssessment,
+    elapsedSeconds: Math.round((Date.now() - startedAt) / 1000),
+    attentionSpanMinutes: bot.attentionSpanMinutes,
+    lifeGoal: bot.lifeGoal,
+    mortality,
+    storyline,
+    memory: {
+      sessionNumber,
+      endReason,
+      goalAssessment,
+      recentThoughts: thoughts.slice(-4),
+      recentOpinions: opinions.slice(-4),
+      recentActions: actions.slice(-8),
+      recentScreens: seenScreens.slice(-4).map(({ identity, ...entry }) => entry),
+      goalActions: [...actions],
+      goalScreens: seenScreens.map(({ identity, ...entry }) => entry),
+    },
+  }
+}
+
+const SUMMED_RESULT_FIELDS = [
+  'actions',
+  'screenshots',
+  'thoughts',
+  'opinions',
+  'betabookMoments',
+  'destinyMoments',
+  'likes',
+  'passes',
+  'messages',
+  'mindActions',
+  'mindActionFailures',
+  'repeatedScreens',
+  'meaningfulSocialActions',
+  'loopHelpRequests',
+  'loopRescuesFollowed',
+  'browserIssues',
+  'externalRequestFailures',
+  'elapsedSeconds',
+]
+
+function combineBotSessions(bot, sessions, evidenceRequirements, mortality) {
+  const last = sessions[sessions.length - 1] || {}
+  const errors = [...new Set(sessions.flatMap((session) => session.errors || []))]
+  const score = scoreMultiSessionJourney(sessions, evidenceRequirements)
+  const combined = {
+    id: bot.id,
+    role: bot.role,
+    score,
+    endReason: evidenceRequirements.met === false
+      ? 'required product evidence was not completed'
+      : errors.length
+        ? 'hit a bug or dead end'
+        : last.endReason || 'no browser session completed',
+    errors,
+    ideas: sessions.flatMap((session) => session.ideas || []),
+    screenSize: bot.screenSize,
+    avatar: bot.avatar,
+    goalAssessment: last.goalAssessment || null,
+    attentionSpanMinutes: bot.attentionSpanMinutes,
+    lifeGoal: bot.lifeGoal,
+    mortality,
+    sessionsCompleted: sessions.length,
+    sessionResults: sessions.map(({ storyline, memory, mortality: ignoredMortality, ...session }) => session),
+    evidenceRequirements,
+    externalRequestFailureDetails: sessions.flatMap((session) => session.externalRequestFailureDetails || []),
+  }
+  for (const field of SUMMED_RESULT_FIELDS) {
+    combined[field] = sessions.reduce((sum, session) => sum + Number(session[field] || 0), 0)
+  }
+  return combined
+}
+
+function writeCombinedStoryline(bot, sessions, result) {
+  const actions = sessions.flatMap((session) => (
+    (session.actionEvidence || []).map((action) => `- [Session ${session.sessionNumber}] ${action}`)
+  ))
+  const failures = result.evidenceRequirements.failures || []
+  const raw = `# ${bot.id} — Multi-Session Raw Storyline
 
 ## Persona
 - Name: ${bot.name}
@@ -2163,57 +2519,51 @@ async function runBot(browser, bot, runtime = {}) {
 - Avatar seed: ${bot.avatar?.seed || ''}
 - Emotional baseline: ${bot.emotionalBaseline}
 - Technical comfort: ${bot.technicalComfort}
-- Estimated session duration: ${bot.attentionSpanMinutes} minutes
+- Estimated duration per session: ${bot.attentionSpanMinutes} minutes
+- Scheduled sessions: ${config.sessionCount}
 - Visual evidence mode: ${config.visualEvidenceMode}
 - Truth pressure: always on
 
 ## Raw Journey
-${notes.join('\n')}
+${sessions.map((session) => session.storyline).join('\n')}
 
 ## Session End
-- End reason: ${endReason}
-- Happiness score: ${score}
-- Return likelihood: ${score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low'}
-- Trust level: ${trust >= 70 ? 'high' : trust >= 45 ? 'medium' : 'low'}
-- Value understood: ${value >= 35 ? 'yes' : value >= 15 ? 'partial' : 'unclear'}
-- Ideas expressed: ${ideas.length}
-- Thoughts expressed: ${thoughts.length}
-- Opinions expressed: ${opinions.length}
-- Betabook moments: ${betabookMoments.length}
-- Destiny nudges followed: ${destinyMoments.length}
-- Likes sent: ${stats.likes}
-- Passes: ${stats.passes}
-- Messages sent through UI: ${stats.messages}
-- Autonomous mind actions executed: ${stats.mindActions}
-- Mind actions rejected or failed: ${stats.mindActionFailures}
-- Repeated screen penalty events: ${stats.repeatedScreens}
-- Meaningful social actions: ${stats.meaningfulSocialActions}
-- Browser issues recorded: ${stats.browserIssues}
-- Goal achieved: ${goalAssessment?.achieved === true ? 'yes' : 'no'}
-- Goal assessment: ${goalAssessment?.reason || 'No assessment available'}
-- Betabook help requests: ${stats.loopHelpRequests}
-- Destiny loop rescues followed: ${stats.loopRescuesFollowed}
-- Life years remaining: ${mortality.yearsRemaining.toFixed(2)}
-- Life years spent on actions: ${mortality.yearsSpentOnActions.toFixed(2)}
-- Life years spent on money: ${mortality.yearsSpentOnMoney.toFixed(2)}
-- Dollars committed: ${mortality.dollarsCommitted}
-- Truth assessments recorded: ${mortality.truthAuditRiskEvents}
-- Mortality status: ${mortality.death ? `dead (${mortality.deathReason})` : 'alive'}
+- End reason: ${result.endReason}
+- Happiness score: ${result.score}
+- Sessions completed: ${result.sessionsCompleted}/${config.sessionCount}
+- Return likelihood: ${result.score >= 70 ? 'high' : result.score >= 50 ? 'medium' : 'low'}
+- Goal achieved in final session: ${result.goalAssessment?.achieved === true ? 'yes' : 'no'}
+- Required product evidence: ${result.evidenceRequirements.met ? 'met' : 'not met'}
+- AI user turns: ${result.evidenceRequirements.observed.aiUserTurns}/${result.evidenceRequirements.requirements.minAiUserTurns}
+- Completed activities: ${result.evidenceRequirements.observed.completedActivities}/${result.evidenceRequirements.requirements.minCompletedActivities}
+- Evidence failures: ${failures.length ? failures.map((failure) => `${failure.key} ${failure.observed}/${failure.required}`).join('; ') : 'none'}
+- Ideas expressed: ${result.ideas.length}
+- Thoughts expressed: ${result.thoughts}
+- Opinions expressed: ${result.opinions}
+- Destiny nudges followed through visible controls: ${result.destinyMoments}
+- Autonomous mind actions executed: ${result.mindActions}
+- Mind actions rejected or failed: ${result.mindActionFailures}
+- Browser issues recorded: ${result.browserIssues}
+- Life years remaining: ${result.mortality.yearsRemaining.toFixed(2)}
+- Life years spent on actions: ${result.mortality.yearsSpentOnActions.toFixed(2)}
+- Life years spent on money: ${result.mortality.yearsSpentOnMoney.toFixed(2)}
+- Dollars committed: ${result.mortality.dollarsCommitted}
+- Truth assessments recorded: ${result.mortality.truthAuditRiskEvents}
+- Mortality status: ${result.mortality.death ? `dead (${result.mortality.deathReason})` : 'alive'}
 
 ## Action Evidence
-${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
+${actions.length ? actions.join('\n') : '- None'}
 
 ## Visual Evidence
-- Live raw log: ${path.relative(config.runDir, liveRawFile)}
-- Evidence manifest: ${path.relative(config.runDir, evidenceFile)}
-- Screenshot folder: ${path.relative(config.runDir, path.join(config.runDir, 'screenshots', bot.id))}
-- Screenshots captured: ${step - 1}
+- Live raw log: ${path.join('live', `${bot.id}.md`)}
+- Evidence manifest: ${path.join('evidence', `${bot.id}.jsonl`)}
+- Screenshot folder: ${path.join('screenshots', bot.id)}
+- Screenshots captured: ${result.screenshots}
 
 ## Errors
-${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
+${result.errors.length ? result.errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, role: bot.role, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, mindActions: stats.mindActions, mindActionFailures: stats.mindActionFailures, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, browserIssues: stats.browserIssues, goalAssessment, elapsedSeconds: Math.round((Date.now() - startedAt) / 1000), attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -2256,6 +2606,13 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
     deaths: mortalityResults.filter((item) => item.death).length,
     truthAuditRiskEvents: mortalityResults.reduce((sum, item) => sum + (item.truthAuditRiskEvents || 0), 0),
   }
+  const productEvidenceSummary = {
+    passedBots: results.filter((result) => result.evidenceRequirements?.met !== false).length,
+    failedBots: results.filter((result) => result.evidenceRequirements?.met === false).length,
+    aiUserTurns: results.reduce((sum, result) => sum + Number(result.evidenceRequirements?.observed?.aiUserTurns || 0), 0),
+    activityInteractions: results.reduce((sum, result) => sum + Number(result.evidenceRequirements?.observed?.activityInteractions || 0), 0),
+    completedActivities: results.reduce((sum, result) => sum + Number(result.evidenceRequirements?.observed?.completedActivities || 0), 0),
+  }
   const summary = {
     config: publicConfig(),
     environmentIntegrity,
@@ -2289,6 +2646,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
       ...mortalitySummary,
       truthAssessments: mortalitySummary.truthAuditRiskEvents,
     },
+    productEvidence: productEvidenceSummary,
     llm: llmStats,
     elapsedSeconds,
     happy,
@@ -2335,13 +2693,15 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - LLM fallbacks: ${llmStats.fallbacks}
 - Bots: ${results.length}
 - App URL: ${config.appUrl}
-- Estimated minutes per bot: ${config.minutes}
-- Minimum minutes per bot: ${config.minMinutes}
-- Maximum minutes per bot: ${config.maxMinutes}
+- Estimated minutes per bot session: ${config.minutes}
+- Minimum minutes per bot session: ${config.minMinutes}
+- Maximum minutes per bot session: ${config.maxMinutes}
 - Time scale: ${config.timeScale}
 - Requested time scale: ${config.requestedTimeScale}
 - Headless: ${config.headless}
 - Concurrency: ${config.concurrency}
+- Sessions per bot: ${config.sessionCount}
+- Gap between sessions: ${config.sessionGapMinutes} minute(s)
 - Elapsed wall time: ${elapsedSeconds}s
 
 ## Happiness
@@ -2350,7 +2710,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - Median score: ${median}
 
 ## Evidence
-- Browser sessions completed: ${results.length}
+- Browser sessions completed: ${results.reduce((sum, result) => sum + Number(result.sessionsCompleted || 0), 0)}
 - Screenshots captured: ${results.reduce((sum, result) => sum + result.screenshots, 0)}
 - UI actions attempted: ${results.reduce((sum, result) => sum + result.actions, 0)}
 - Autonomous mind actions executed: ${results.reduce((sum, result) => sum + (result.mindActions || 0), 0)}
@@ -2367,6 +2727,10 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - Meaningful social actions: ${results.reduce((sum, result) => sum + (result.meaningfulSocialActions || 0), 0)}
 - Betabook help requests: ${results.reduce((sum, result) => sum + (result.loopHelpRequests || 0), 0)}
 - Destiny loop rescues followed: ${results.reduce((sum, result) => sum + (result.loopRescuesFollowed || 0), 0)}
+- Product-evidence requirements met: ${productEvidenceSummary.passedBots}/${results.length}
+- AI user turns verified: ${productEvidenceSummary.aiUserTurns}
+- Activity interactions observed: ${productEvidenceSummary.activityInteractions}
+- Completed activities verified: ${productEvidenceSummary.completedActivities}
 - Error bots: ${errorBots.length}
 
 ## Truth Pressure
@@ -2440,6 +2804,12 @@ async function main() {
       .filter((file) => !fs.existsSync(file))
       .map((file) => `missing ${file}`)
     : []
+  if (config.sessionCount > 1) {
+    const resolvedPaths = bots.map((bot) => resolveStorageStatePath(config.storageStateTemplate, bot))
+    if (new Set(resolvedPaths).size !== resolvedPaths.length) {
+      throw new Error('BETABOT_STORAGE_STATE_TEMPLATE must resolve to a unique path for every bot in a multi-session run.')
+    }
+  }
   const integrityProbe = await probeEnvironmentIntegrity({
     requireRealBackend: config.requireRealBackend,
     attestationUrl: config.environmentAttestationUrl,
@@ -2474,6 +2844,7 @@ async function main() {
       confidenceRules: cohort.confidenceRules,
       roles: cohort.roles,
       requiresSocialAction: cohort.requiresSocialAction,
+      evidenceRequirements: cohort.evidenceRequirements,
       routes: cohort.routes.map((route) => ({
         labels: route.labels.map((label) => label.toString()),
         optionLabels: route.optionLabels.map((label) => label.toString()),
@@ -2496,21 +2867,57 @@ async function main() {
     headless: config.headless,
     ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
   })
-  const results = []
   const runtimeMockHeaders = new Set(environmentIntegrity.detectedMockHeaders || [])
+  const journeys = new Map(bots.map((bot) => {
+    const liveRawFile = path.join(config.runDir, 'live', `${bot.id}.md`)
+    fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
+    fs.writeFileSync(liveRawFile, `# ${bot.id} — Live Multi-Session Storyline\n`)
+    return [bot.id, {
+      sessions: [],
+      mortality: createMortalityLedger(bot),
+      evidenceTracker: createEvidenceTracker(bot.evidenceRequirements),
+      storageStatePath: resolveStorageStatePath(config.storageStateTemplate, bot),
+    }]
+  }))
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)
   const stopDestiny = startDestiny(bots, destinyState, betabookState)
   try {
-    await runPool(bots, async (bot) => {
-      results.push(await runBot(browser, bot, {
-        betabookState,
-        destinyState,
-        bots,
-        detectedMockHeaders: runtimeMockHeaders,
-        environmentIntegrityInput: integrityInput,
-      }))
-    }, config.concurrency)
+    await runSessionSequence({
+      sessionCount: config.sessionCount,
+      sessionGapMs: config.sessionGapMs,
+      runSession: async (session) => runPool(bots, async (bot) => {
+        const journey = journeys.get(bot.id)
+        setDestinyBotStatus(destinyState, bot.id, 'active')
+        destinyState.events.push({ type: 'bot_session_active', botId: bot.id, sessionNumber: session.sessionNumber, at: nowIso() })
+        try {
+          const sessionResult = await runBotSession(browser, bot, {
+            betabookState,
+            destinyState,
+            bots,
+            detectedMockHeaders: runtimeMockHeaders,
+            environmentIntegrityInput: integrityInput,
+            mortality: journey.mortality,
+            evidenceTracker: journey.evidenceTracker,
+            storageStatePath: journey.storageStatePath,
+            previousSessions: journey.sessions.map((result) => result.memory),
+          }, session)
+          journey.sessions.push(sessionResult)
+        } finally {
+          const status = session.sessionNumber === session.sessionCount ? 'completed' : 'inactive'
+          const transition = setDestinyBotStatus(destinyState, bot.id, status)
+          destinyState.events.push({
+            type: 'bot_session_inactive',
+            botId: bot.id,
+            sessionNumber: session.sessionNumber,
+            status,
+            droppedNudges: transition.droppedNudges,
+            at: nowIso(),
+          })
+        }
+      }, config.concurrency),
+      wait: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+    })
   } finally {
     await stopDestiny()
     await browser.close()
@@ -2518,6 +2925,15 @@ async function main() {
   await stirBetabook(bots, betabookState, 'final wrap-up')
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)
+  const results = bots.map((bot) => {
+    const journey = journeys.get(bot.id)
+    return combineBotSessions(
+      bot,
+      journey.sessions,
+      evaluateEvidenceRequirements(journey.evidenceTracker),
+      journey.mortality,
+    )
+  })
   environmentIntegrity = {
     ...environmentIntegrity,
     ...evaluateEnvironmentIntegrity({
@@ -2527,6 +2943,9 @@ async function main() {
     detectedMockHeaders: [...runtimeMockHeaders],
   }
   const finalResults = applyIntegrityToResults(results, environmentIntegrity)
+  for (const [index, bot] of bots.entries()) {
+    writeCombinedStoryline(bot, journeys.get(bot.id).sessions, finalResults[index])
+  }
   writeAnalysis(finalResults, startedAt, betabookState, destinyState, environmentIntegrity)
   console.log(JSON.stringify({
     runDir: config.runDir,

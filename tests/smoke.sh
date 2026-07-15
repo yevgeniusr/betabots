@@ -25,6 +25,10 @@ node --check "$ROOT/skills/betabots/scripts/curiosity_memory.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/confidence_tiers.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/route_planning.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/thinking_body.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/session_scheduler.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/browser_issue_recovery.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/destiny_actions.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/product_evidence.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/vision_payload.cjs" >/dev/null
 node --test "$ROOT/tests/environment_integrity.test.cjs" >/dev/null
 node --test "$ROOT/tests/screen_identity.test.cjs" >/dev/null
@@ -37,6 +41,12 @@ node --test "$ROOT/tests/route_planning.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body_browser.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body_runner.test.cjs" >/dev/null
+node --test "$ROOT/tests/session_scheduler.test.cjs" >/dev/null
+node --test "$ROOT/tests/session_state_browser.test.cjs" >/dev/null
+node --test "$ROOT/tests/browser_issue_recovery.test.cjs" >/dev/null
+node --test "$ROOT/tests/request_failure_browser.test.cjs" >/dev/null
+node --test "$ROOT/tests/destiny_actions.test.cjs" >/dev/null
+node --test "$ROOT/tests/product_evidence.test.cjs" >/dev/null
 node --test "$ROOT/tests/vision_payload.test.cjs" >/dev/null
 node --check "$ROOT/web/server.cjs" >/dev/null
 test ! -e "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
@@ -50,8 +60,13 @@ grep -q "bottts-neutral" "$ROOT/skills/betabots/scripts/thoughtful_browser_betab
 grep -q "BETABOT_LLM_PROVIDER" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_BROWSER_EXECUTABLE_PATH" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_REQUIRE_REAL_BACKEND" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_APP_ORIGINS" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_ENVIRONMENT_ATTESTATION_URL" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_STORAGE_STATE_TEMPLATE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_SESSION_COUNT" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_SESSION_GAP_MINUTES" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_MIN_AI_USER_TURNS" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_MIN_COMPLETED_ACTIVITIES" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "browserExecutablePath" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "requiresSocialAction" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "shouldEndSession" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
@@ -68,6 +83,7 @@ grep -q "screenshotAttached" "$ROOT/skills/betabots/scripts/thoughtful_browser_b
 grep -q "codexImageArgs" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "openRouterUserContent" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 ! grep -q "page.goto.*route.fallback" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+! grep -q "page.goto.*nudge.route" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callCodex" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callOpenRouter" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 ! grep -R -E 'BETABOT_MORTAL_TRUTH|mortalTruth|config\.mortalTruthEnabled|Mortal truth mode|mortal-truth mode|non-mortal-truth|Mortal Truth|Truth Notes' "$ROOT/README.md" "$ROOT/docs" "$ROOT/skills/betabots" "$ROOT/web" >/dev/null

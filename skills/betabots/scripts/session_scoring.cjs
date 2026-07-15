@@ -47,7 +47,11 @@ function scoreSession({
       minimumSessionMs > 0 &&
       elapsedMs < minimumSessionMs &&
       !endedByChoice &&
-      errors.length === 0
+      errors.length === 0 &&
+      !(
+        goalAssessment?.achieved === true &&
+        goalAssessment?.retainedFromPriorSession === true
+      )
     ) {
       score = Math.min(score, 49)
     }
@@ -59,4 +63,20 @@ function scoreSession({
   return clamp(score, 0, 100)
 }
 
-module.exports = { scoreSession }
+function scoreMultiSessionJourney(sessions = [], evidenceAssessment = {}) {
+  const recordedSessions = Array.isArray(sessions) ? sessions : []
+  const weighted = recordedSessions.reduce((result, session) => {
+    const actionWeight = Math.max(0, Number(session?.actions || 0))
+    const recordedErrors = Array.isArray(session?.errors) ? session.errors.length : 0
+    const browserIssues = Math.max(0, Number(session?.browserIssues || 0))
+    const issueWeight = Math.max(recordedErrors, browserIssues)
+    const weight = 1 + actionWeight + issueWeight
+    result.score += Number(session?.score || 0) * weight
+    result.weight += weight
+    return result
+  }, { score: 0, weight: 0 })
+  const average = weighted.weight > 0 ? Math.round(weighted.score / weighted.weight) : 0
+  return evidenceAssessment?.met === false ? Math.min(average, 49) : average
+}
+
+module.exports = { scoreMultiSessionJourney, scoreSession }

@@ -55,16 +55,27 @@ To make betabots replace as much early user research as possible, build every se
 ## Environment Integrity
 
 A real-browser session is not proof of a real product when authentication or
-API data is mocked. Product-quality runs should set
+API data is mocked. Product-quality runs must set
 `BETABOT_REQUIRE_REAL_BACKEND=true`, provide
 `BETABOT_ENVIRONMENT_ATTESTATION_URL`, and use Playwright storage state created
 through actual UI login via `BETABOT_STORAGE_STATE_TEMPLATE`.
 
-Detected injected auth, mock response headers, mock/fixture attestation,
+For multi-session runs, set `BETABOT_SESSION_COUNT` and
+`BETABOT_SESSION_GAP_MINUTES`. Storage paths must be unique per bot. The runner
+loads and atomically writes back cookies, localStorage, and IndexedDB after every
+visit, then combines all visits into one first-person storyline.
+
+Missing attestation, detected injected auth, first-party mock response headers, mock/fixture attestation,
 disconnected or non-persistent storage, missing storage state, and failed or
 missing required attestation invalidate the run and force all scores to `0`.
 Mock-backed browser sessions may still be useful for layout smoke testing, but
 their happiness score is intentionally unusable as product evidence.
+
+When interaction depth matters, configure `BETABOT_MIN_AI_USER_TURNS`,
+`BETABOT_MIN_COMPLETED_ACTIVITIES`, or role-level `evidenceRequirements`. Unmet
+requirements cap the bot below `50` and remain distinct from infrastructure
+errors. Destiny must never use direct navigation; it can act only through a
+currently visible control accepted by the normal body validator.
 
 ## Session Rules
 
