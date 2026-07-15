@@ -350,7 +350,31 @@ async function scrollVisibleRegion(page, direction) {
 
 async function executeMindAction(page, snapshot, requestedAction, options = {}) {
   const validated = validateMindAction(requestedAction, snapshot.controls)
-  if (!validated.ok) return validated
+  if (!validated.ok) {
+    const requestedType = cleanText(requestedAction.type, 30).toLowerCase()
+    const optionValue = cleanText(requestedAction.value, 500)
+    if (
+      requestedType === 'select' &&
+      optionValue &&
+      /was not visible to the mind/i.test(validated.reason)
+    ) {
+      if (UNSAFE_CONTROL.test(optionValue)) {
+        return { ok: false, reason: `Selection option "${optionValue}" is unsafe for synthetic beta traffic.` }
+      }
+      let matches = await visibleAriaOptions(page, optionValue, true)
+      if (matches.length === 0) matches = await visibleAriaOptions(page, optionValue, false)
+      if (matches.length === 1) {
+        await matches[0].click({ timeout: 5000 })
+        return {
+          ok: true,
+          description: `selected ${cleanText(requestedAction.targetId || requestedAction.target || optionValue, 180)}`,
+          control: { kind: 'option', name: optionValue },
+          recovered: true,
+        }
+      }
+    }
+    return validated
+  }
 
   const action = validated.action
   if (action.type === 'leave') return { ok: true, ended: true, description: 'left the session' }
