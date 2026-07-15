@@ -86,6 +86,30 @@ test('selects a uniquely visible option from an ARIA combobox', async (t) => {
   assert.equal(await page.locator('#selected').innerText(), 'Only me')
 })
 
+test('selects an already-open custom combobox option after its trigger is covered', async (t) => {
+  const browser = await chromium.launch({ headless: true })
+  t.after(() => browser.close())
+  const page = await browser.newPage()
+  await page.setContent(`
+    <button aria-label="Visibility" role="combobox" style="visibility: hidden">My company</button>
+    <div role="listbox">
+      <button role="option" onclick="document.querySelector('#selected').textContent = 'Only me'">Only me</button>
+      <button role="option" onclick="document.querySelector('#selected').textContent = 'Public'">Public</button>
+    </div>
+    <p id="selected">My company</p>
+  `)
+
+  const snapshot = await collectInteractiveControls(page)
+  const result = await executeMindAction(page, snapshot, {
+    type: 'select',
+    targetId: 'Visibility',
+    value: 'Only me',
+  })
+
+  assert.equal(result.ok, true)
+  assert.equal(await page.locator('#selected').innerText(), 'Only me')
+})
+
 test('a replaced textarea is retried once through the same visible semantic control', async (t) => {
   const browser = await chromium.launch({ headless: true })
   t.after(() => browser.close())
