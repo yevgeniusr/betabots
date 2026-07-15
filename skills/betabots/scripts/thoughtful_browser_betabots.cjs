@@ -13,17 +13,70 @@ const {
 } = require('./environment_integrity.cjs')
 const { screenFingerprint } = require('./screen_identity.cjs')
 const { newKeywordMatches } = require('./keyword_scoring.cjs')
+const { scoreMultiSessionJourney, scoreSession } = require('./session_scoring.cjs')
+const {
+  appendGoalEvidence,
+  buildCrossSessionGoalContext,
+  finalizeGoalAssessment,
+} = require('./goal_evidence.cjs')
+const { buildConfidenceRows } = require('./confidence_tiers.cjs')
+const {
+  collectInteractiveControls,
+  executeMindAction,
+  normalizeMindDecision,
+} = require('./thinking_body.cjs')
+const {
+  findVisibleDestinyAction,
+  queueDestinyNudge,
+  setDestinyBotStatus,
+  takeQueuedDestinyNudges,
+} = require('./destiny_actions.cjs')
+const {
+  beginBrowserIssueRecoveryShutdown,
+  createBrowserIssueRecoveryTracker,
+  finalizeBrowserIssueRecovery,
+  trackBrowserConsoleError,
+  trackBrowserRequestFailure,
+  trackBrowserRequestStart,
+  trackBrowserResponse,
+  trackNavigationIntent,
+  trackVisiblePage,
+  isProductUrl,
+} = require('./browser_issue_recovery.cjs')
+const {
+  createEvidenceTracker,
+  evaluateEvidenceRequirements,
+  mergeEvidenceRequirements,
+  normalizeEvidenceRequirements,
+  recordEvidenceAction,
+  recordEvidenceObservation,
+} = require('./product_evidence.cjs')
+const {
+  normalizeSessionPlan,
+  persistContextStorageState,
+  runSessionSequence,
+} = require('./session_scheduler.cjs')
+const { codexImageArgs, openRouterUserContent } = require('./vision_payload.cjs')
+const {
+  normalizeRouteMode,
+} = require('./route_planning.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
 
 const config = {
   appUrl: (process.env.BETABOT_APP_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  appOrigins: String(process.env.BETABOT_APP_ORIGINS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
   count: Number(process.env.BETABOT_THOUGHTFUL_COUNT || process.env.BETABOT_COUNT || 3),
   minutes: Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8),
   minMinutes: Number(process.env.BETABOT_THOUGHTFUL_MIN_SESSION_MINUTES || process.env.BETABOT_THOUGHTFUL_MINUTES || 8),
   maxMinutes: Number(process.env.BETABOT_THOUGHTFUL_MAX_SESSION_MINUTES || Math.max(Number(process.env.BETABOT_THOUGHTFUL_MINUTES || 8) + 4, 180)),
   concurrency: Number(process.env.BETABOT_THOUGHTFUL_CONCURRENCY || 1),
+  sessionCount: Number(process.env.BETABOT_SESSION_COUNT || 1),
+  sessionGapMinutes: Number(process.env.BETABOT_SESSION_GAP_MINUTES || 0),
   headless: String(process.env.BETABOT_HEADLESS || 'false') === 'true',
   browserExecutablePath: process.env.BETABOT_BROWSER_EXECUTABLE_PATH || '',
   requestedTimeScale: Number(process.env.BETABOT_TIME_SCALE || 1),
@@ -43,8 +96,6 @@ const config = {
   destinyIntervalMs: Number(process.env.BETABOT_DESTINY_INTERVAL_MS || process.env.BETABOT_THOUGHTFUL_COORDINATION_INTERVAL_MS || 45000),
   strictScoring: String(process.env.BETABOT_STRICT_SCORING || 'true') === 'true',
   loopRepeatThreshold: Number(process.env.BETABOT_LOOP_REPEAT_THRESHOLD || 4),
-  curiosityChance: Number(process.env.BETABOT_CURIOSITY_CHANCE || 0.18),
-  maxCuriosityActions: Number(process.env.BETABOT_MAX_CURIOSITY_ACTIONS || 8),
   avatarStyle: normalizeDiceBearStyle(process.env.BETABOT_AVATAR_STYLE || 'bottts-neutral'),
   avatarBaseUrl: normalizeDiceBearBaseUrl(process.env.BETABOT_AVATAR_BASE_URL || 'https://api.dicebear.com/10.x'),
   truthPressureStartingYears: Number(process.env.BETABOT_TRUTH_YEARS || 100),
@@ -62,6 +113,8 @@ const config = {
   openrouterAppName: process.env.BETABOT_OPENROUTER_APP_NAME || 'Betabots',
   visualEvidenceMode: (process.env.BETABOT_VISUAL_EVIDENCE_MODE || process.env.BETABOT_SCREENSHOT_EVIDENCE_MODE || 'audit').toLowerCase(),
   screenSizeDistribution: process.env.BETABOT_SCREEN_SIZE_DISTRIBUTION || process.env.BETABOT_VIEWPORT_DISTRIBUTION || '',
+  minAiUserTurns: Number(process.env.BETABOT_MIN_AI_USER_TURNS || 0),
+  minCompletedActivities: Number(process.env.BETABOT_MIN_COMPLETED_ACTIVITIES || 0),
   runDir: process.env.BETABOT_RUN_DIR || `.betabots/runs/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 13)}-thoughtful`,
 }
 
@@ -203,7 +256,12 @@ function patternFromLabel(label) {
 function normalizeRoutes(routes) {
   return normalizeList(routes, defaultCohort.routes).map((route) => ({
     labels: normalizeList(route.labels, []).map(patternFromLabel),
+    optionLabels: normalizeList(route.optionLabels || route.options, []).map(
+      patternFromLabel,
+    ),
+    value: String(route.value || route.text || ''),
     fallback: route.fallback || '/',
+    mode: normalizeRouteMode(route.mode),
   }))
 }
 
@@ -298,6 +356,7 @@ function loadCohortConfig() {
     roles: normalizeList(override.roles || override.personas, defaultCohort.roles),
     requiresSocialAction: Boolean(override.requiresSocialAction ?? defaultCohort.requiresSocialAction),
     routes: normalizeRoutes(override.routes || defaultCohort.routes),
+    evidenceRequirements: normalizeEvidenceRequirements(override.evidenceRequirements || {}),
     screenSizeDistribution: screenDistributionFromEnv() || normalizeScreenSizeDistribution(override.screenSizeDistribution || override.screen_size_distribution || override.screenSizes || override.screen_sizes || override.viewports, defaultCohort.screenSizeDistribution),
     keywords: { ...defaultCohort.keywords, ...(override.keywords || {}) },
     ideaRules: normalizeList(override.ideaRules || override.ideas, defaultCohort.ideaRules),
@@ -474,6 +533,17 @@ function validateRunConfig() {
   if (config.requestedTimeScale < 1) {
     console.warn(`BETABOT_TIME_SCALE=${config.requestedTimeScale} was requested, but thoughtful mode is human-paced. Using BETABOT_TIME_SCALE=1.`)
   }
+  const sessionPlan = normalizeSessionPlan(config)
+  config.sessionCount = sessionPlan.sessionCount
+  config.sessionGapMinutes = sessionPlan.sessionGapMinutes
+  config.sessionGapMs = sessionPlan.sessionGapMs
+  normalizeEvidenceRequirements({
+    minAiUserTurns: config.minAiUserTurns,
+    minCompletedActivities: config.minCompletedActivities,
+  })
+  if (config.sessionCount > 1 && !config.storageStateTemplate) {
+    throw new Error('BETABOT_STORAGE_STATE_TEMPLATE is required when BETABOT_SESSION_COUNT is greater than 1.')
+  }
 }
 
 function truthPressureRules() {
@@ -553,7 +623,7 @@ function extractJson(text) {
   throw new Error(`could not parse JSON from LLM response: ${trimmed.slice(0, 200)}`)
 }
 
-async function callCodex(prompt) {
+async function callCodex(prompt, imagePaths = []) {
   const outputFile = path.join(os.tmpdir(), `betabots-codex-${process.pid}-${Date.now()}-${Math.floor(random() * 100000)}.txt`)
   const args = [
     'exec',
@@ -568,6 +638,7 @@ async function callCodex(prompt) {
     outputFile,
   ]
   if (config.llmModel) args.push('-m', config.llmModel)
+  args.push(...codexImageArgs(imagePaths))
   args.push('-')
   const result = await runProcess(config.codexCommand, args, prompt, config.llmTimeoutMs)
   if (fs.existsSync(outputFile)) {
@@ -578,7 +649,7 @@ async function callCodex(prompt) {
   return result.stdout
 }
 
-async function callOpenRouter(prompt) {
+async function callOpenRouter(prompt, imagePaths = []) {
   if (!config.openrouterApiKey) throw new Error('OPENROUTER_API_KEY or BETABOT_OPENROUTER_API_KEY is required')
   const model = config.llmModel || 'openai/gpt-4.1-mini'
   const controller = new AbortController()
@@ -601,7 +672,7 @@ async function callOpenRouter(prompt) {
             role: 'system',
             content: 'You are a synthetic human/user simulation component. Return only valid JSON. Do not include markdown.',
           },
-          { role: 'user', content: prompt },
+          { role: 'user', content: openRouterUserContent(prompt, imagePaths) },
         ],
         temperature: 0.8,
       }),
@@ -615,13 +686,13 @@ async function callOpenRouter(prompt) {
   }
 }
 
-async function llmJson(task, payload, fallback) {
+async function llmJson(task, payload, fallback, options = {}) {
   if (config.llmProvider === 'none') {
     throw new Error('Thoughtful betabots require an LLM provider; BETABOT_LLM_PROVIDER=none is not allowed.')
   }
   if (llmStats.calls >= config.llmMaxCalls) {
     llmStats.fallbacks += 1
-    return fallback
+    return { ...fallback, _betabotMindFallback: true, _betabotMindError: 'LLM call limit reached' }
   }
 
   llmStats.calls += 1
@@ -645,15 +716,15 @@ ${JSON.stringify(fallback, null, 2)}
 
   try {
     const raw = config.llmProvider === 'openrouter'
-      ? await callOpenRouter(prompt)
-      : await callCodex(prompt)
+      ? await callOpenRouter(prompt, options.imagePaths)
+      : await callCodex(prompt, options.imagePaths)
     const parsed = extractJson(raw)
     return { ...fallback, ...parsed }
   } catch (error) {
     llmStats.failures += 1
     llmStats.fallbacks += 1
     llmStats.errors.push(`${task}: ${error.message}`.slice(0, 500))
-    return fallback
+    return { ...fallback, _betabotMindFallback: true, _betabotMindError: error.message }
   }
 }
 
@@ -761,6 +832,14 @@ function personaAt(index) {
   const technicalComfort = roleObject.technicalComfort || pick(['low', 'medium', 'high'])
   const configuredMinutes = Number(roleObject.attentionSpanMinutes || roleObject.durationMinutes || 0)
   const configuredScreenSize = roleObject.screenSize || roleObject.screen_size
+  const roleEvidenceRequirements = mergeEvidenceRequirements(
+    cohort.evidenceRequirements,
+    roleObject.evidenceRequirements || {},
+    {
+      minAiUserTurns: config.minAiUserTurns,
+      minCompletedActivities: config.minCompletedActivities,
+    },
+  )
   const screenSize = configuredScreenSize
     ? normalizeScreenSizeDistribution([{ category: configuredScreenSize.category || roleObject.viewport || 'custom', devices: [configuredScreenSize] }])[0].devices[0]
     : screenSizeForPersona(index, roleObject.viewport || (role.toLowerCase().includes('mobile') ? 'mobile' : ''))
@@ -775,6 +854,9 @@ function personaAt(index) {
     emotionalBaseline: roleObject.emotionalBaseline || pick(baselines),
     technicalComfort,
     traits: roleObject.traits || [],
+    successSignals: normalizeList(roleObject.successSignals || roleObject.success_signals, []),
+    routes: normalizeRoutes(roleObject.routes || roleObject.journey || cohort.routes),
+    evidenceRequirements: roleEvidenceRequirements,
     viewport: roleObject.viewport || screenSize.category || (role.toLowerCase().includes('mobile') ? 'mobile' : 'desktop'),
     screenSize,
     attentionSpanMinutes: configuredMinutes || clamp(config.minutes + Math.round((random() - 0.5) * 4), config.minMinutes, config.maxMinutes),
@@ -1140,8 +1222,11 @@ function createDestinyState(bots) {
   return {
     enabled: config.destinyEnabled,
     intervalMs: config.destinyIntervalMs,
+    nudgeCooldownMs: Math.max(30000, config.destinyIntervalMs * 2),
     masterPlan: plans,
     nudgesByBotId: Object.fromEntries(bots.map((bot) => [bot.id, []])),
+    botStatusById: Object.fromEntries(bots.map((bot) => [bot.id, 'inactive'])),
+    lastRouteNudgeAtByBotId: Object.fromEntries(bots.map((bot) => [bot.id, {}])),
     rescuedHelpPostIds: [],
     events: [],
     errors: [],
@@ -1173,17 +1258,20 @@ async function initializeDestinyMasterPlan(bots, state, betabookState) {
 }
 
 function addDestinyNudge(state, botId, nudge) {
-  if (!state.enabled) return
-  state.nudgesByBotId[botId] ||= []
-  state.nudgesByBotId[botId].push({ ...nudge, at: nowIso() })
-  state.events.push({ type: 'nudge_created', botId, kind: nudge.kind, at: nowIso() })
+  const result = queueDestinyNudge(state, botId, nudge)
+  state.events.push({
+    type: result.accepted ? 'nudge_created' : 'nudge_rejected',
+    botId,
+    kind: nudge.kind,
+    route: nudge.route || null,
+    reason: result.reason || null,
+    at: nowIso(),
+  })
+  return result
 }
 
 function takeDestinyNudges(state, botId) {
-  if (!state?.enabled) return []
-  const nudges = state.nudgesByBotId[botId] || []
-  state.nudgesByBotId[botId] = []
-  return nudges
+  return takeQueuedDestinyNudges(state, botId)
 }
 
 function runDestinyLoopRescue(bots, state, betabookState) {
@@ -1200,7 +1288,8 @@ function runDestinyLoopRescue(bots, state, betabookState) {
       thought: 'I am stuck in a loop, so I should stop doing the same thing and try a different path.',
       route: pick(genericNudgeRoutes()),
     }
-    addDestinyNudge(state, bot.id, nudge)
+    const queued = addDestinyNudge(state, bot.id, nudge)
+    if (!queued.accepted) continue
     betabookComment(betabookState, {
       postId: post.id,
       authorId: 'destiny',
@@ -1228,12 +1317,14 @@ async function runDestinyPass(bots, state, betabookState) {
   const advice = await llmDestinyLiveAdvice(bots, state, betabookState)
   for (const nudge of (advice.nudges || []).slice(0, 3)) {
     if (!nudge.botId || !botsById.has(nudge.botId)) continue
-    addDestinyNudge(state, nudge.botId, {
+    const queued = addDestinyNudge(state, nudge.botId, {
       kind: nudge.kind || 'think',
       thought: nudge.thought || 'I have a hunch that I should try a different path now.',
       route: nudge.route || undefined,
     })
-    state.events.push({ type: 'llm_live_nudge', botId: nudge.botId, route: nudge.route || null, at: nowIso() })
+    if (queued.accepted) {
+      state.events.push({ type: 'llm_live_nudge', botId: nudge.botId, route: nudge.route || null, at: nowIso() })
+    }
   }
   if (advice.betabookComment) {
     betabookPost(betabookState, {
@@ -1251,6 +1342,7 @@ async function runDestinyPass(bots, state, betabookState) {
     const botA = botsById.get(pair.a)
     const botB = botsById.get(pair.b)
     if (!botA || !botB) continue
+    if (state.botStatusById[pair.a] !== 'active' || state.botStatusById[pair.b] !== 'active') continue
 
     if (pair.intent === 'near_miss') {
       const post = betabookPost(betabookState, {
@@ -1330,76 +1422,68 @@ function startDestiny(bots, state, betabookState) {
     stopped = true
     clearInterval(timer)
     if (currentRun) await currentRun
-    stopped = false
-    await run()
-    stopped = true
     writeDestinyState(state)
     writeBetabookState(betabookState)
   }
 }
 
-function locatorForRole(page, label) {
-  return page.getByRole('link', { name: label })
-    .or(page.getByRole('button', { name: label }))
-    .or(page.getByRole('tab', { name: label }))
-    .first()
-}
-
 async function observe(page) {
   const url = page.url()
   const title = await page.title().catch(() => '')
-  const text = await page.evaluate(() => {
-    const selector = 'h1, h2, h3, h4, p, a, button, label, li, dt, dd, th, td, [role="cell"], [role="gridcell"], [role="status"], [role="alert"]'
-    const seen = new Set()
-    const visible = []
+  const frameTexts = []
+  const framePrimaryTexts = []
+  for (const frame of page.frames()) {
+    const visibleContent = await frame.evaluate(() => {
+      const selector = 'h1, h2, h3, h4, p, a, button, label, li, dt, dd, th, td, [role="cell"], [role="gridcell"], [role="status"], [role="alert"]'
+      const collect = (elements) => {
+        const seen = new Set()
+        const visible = []
+        for (const element of elements) {
+          const rect = element.getBoundingClientRect()
+          const style = window.getComputedStyle(element)
+          const intersectsViewport =
+            rect.width > 0 &&
+            rect.height > 0 &&
+            rect.bottom >= 0 &&
+            rect.right >= 0 &&
+            rect.top <= window.innerHeight &&
+            rect.left <= window.innerWidth
 
-    for (const element of document.querySelectorAll(selector)) {
-      const rect = element.getBoundingClientRect()
-      const style = window.getComputedStyle(element)
-      const intersectsViewport =
-        rect.width > 0 &&
-        rect.height > 0 &&
-        rect.bottom >= 0 &&
-        rect.right >= 0 &&
-        rect.top <= window.innerHeight &&
-        rect.left <= window.innerWidth
+          if (!intersectsViewport || style.visibility === 'hidden' || style.display === 'none') continue
 
-      if (!intersectsViewport || style.visibility === 'hidden' || style.display === 'none') continue
+          const value = String(element.getAttribute('aria-label') || element.textContent || '')
+            .replace(/\s+/g, ' ')
+            .trim()
+          if (!value || seen.has(value)) continue
+          seen.add(value)
+          visible.push(value)
+        }
+        return visible.join(' ')
+      }
 
-      const value = String(element.getAttribute('aria-label') || element.textContent || '')
-        .replace(/\s+/g, ' ')
-        .trim()
-      if (!value || seen.has(value)) continue
-      seen.add(value)
-      visible.push(value)
-    }
-
-    return visible.join(' ')
-  }).catch(() => '')
-  const fallbackText = text || await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
-  return { url, title, text: firstVisibleText(fallbackText) }
-}
-
-async function clickFirst(page, labels) {
-  for (const label of labels) {
-    const locator = locatorForRole(page, label)
-    if (await locator.isVisible({ timeout: 1000 }).catch(() => false)) {
-      try {
-        await locator.click({ timeout: 5000 })
-        return label instanceof RegExp ? label.toString() : label
-      } catch {}
-    }
+      const primaryRoots = [...document.querySelectorAll('main, [role="main"], article')]
+      const primaryElements = primaryRoots.flatMap((root) => [root, ...root.querySelectorAll(selector)])
+      if (primaryElements.length === 0) {
+        primaryElements.push(...[...document.querySelectorAll('h1, h2, h3')].filter((element) => (
+          !element.closest('nav, header, footer, [role="navigation"]')
+        )))
+      }
+      return {
+        text: collect(document.querySelectorAll(selector)),
+        primaryText: collect(primaryElements),
+      }
+    }).catch(() => ({ text: '', primaryText: '' }))
+    if (visibleContent.text) frameTexts.push(visibleContent.text)
+    if (visibleContent.primaryText) framePrimaryTexts.push(visibleContent.primaryText)
   }
-  return null
-}
-
-async function selectByIndex(locator, index) {
-  const count = await locator.count().catch(() => 0)
-  if (count === 0) return false
-  await locator.nth(0).selectOption({ index }).catch(async () => {
-    await locator.nth(0).selectOption({ index: 1 })
-  })
-  return true
+  const text = frameTexts.join(' ')
+  const fallbackText = text || await page.locator('body').innerText({ timeout: 3000 }).catch(() => '')
+  return {
+    url,
+    title,
+    text: firstVisibleText(fallbackText),
+    primaryText: firstVisibleText(framePrimaryTexts.join(' ')),
+  }
 }
 
 function slugifyLabel(label) {
@@ -1424,48 +1508,13 @@ function appendJsonl(file, event) {
   fs.appendFileSync(file, `${JSON.stringify(event)}\n`)
 }
 
-function ideaThemeFor(idea) {
-  const text = String(idea || '').toLowerCase()
-  if (/(proof|diligence|outcome|result|case stud|client|working together|metric|traction|role|status|date|timeline|source|evidence|venture|exit|portfolio|funding|link|speaking reel|event logo|talk topic)/.test(text)) {
-    return 'Proof and diligence layer'
-  }
-  if (/(start here|starter|best essay|recommended|reading path|first-time|newsletter|subscribe|privacy|email frequency|cadence)/.test(text)) {
-    return 'Starter content and subscription trust'
-  }
-  if (/(coming soon|unfinished|breakdown|lightweight brief|hide unfinished)/.test(text)) {
-    return 'Unfinished partnership detail pages'
-  }
-  if (/(next action|next step|cta|contact|engagement|offer|who.*for|what.*expect)/.test(text)) {
-    return 'Clearer next step and offer fit'
-  }
-  if (/(load|skeleton|empty|placeholder|waiting)/.test(text)) {
-    return 'Perceived loading and empty-state risk'
-  }
-  return String(idea || 'Other').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Other'
-}
-
-function buildConfidenceRows(ideaCounts, resultCount) {
-  const themes = new Map()
-  for (const [idea, count] of ideaCounts.entries()) {
-    const theme = ideaThemeFor(idea)
-    const row = themes.get(theme) || { theme, count: 0, examples: [] }
-    row.count += count
-    if (row.examples.length < 3) row.examples.push(idea)
-    themes.set(theme, row)
-  }
-  return [...themes.values()].sort((a, b) => b.count - a.count).map((row) => {
-    const share = resultCount ? row.count / resultCount : 0
-    const tier = row.count >= Math.max(5, Math.ceil(resultCount * 0.25))
-      ? 'high'
-      : row.count >= Math.max(3, Math.ceil(resultCount * 0.1))
-        ? 'medium'
-        : 'low'
-    return { ...row, share, tier }
-  })
-}
-
-async function screenshot(page, bot, step, label = 'screen') {
-  const dir = path.join(config.runDir, 'screenshots', bot.id)
+async function screenshot(page, bot, step, label = 'screen', sessionNumber = 1) {
+  const dir = path.join(
+    config.runDir,
+    'screenshots',
+    bot.id,
+    `session-${String(sessionNumber).padStart(2, '0')}`,
+  )
   fs.mkdirSync(dir, { recursive: true })
   const file = path.join(dir, `${String(step).padStart(3, '0')}-${slugifyLabel(label)}.png`)
   try {
@@ -1520,7 +1569,7 @@ function ideaFrom(bot, observation) {
   return 'Idea: keep the next best action visually obvious after every page transition.'
 }
 
-async function llmBotReflection(bot, observation, phase, fallback, stats = {}, sessionMemory = {}) {
+async function llmBotReflection(bot, observation, phase, fallback, stats = {}, sessionMemory = {}, bodyContext = {}) {
   const truthPressurePayload = {
     enabled: true,
     lifeGoal: bot.lifeGoal,
@@ -1546,8 +1595,17 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
     phase,
     visibleScreen: observation.text.slice(0, 1600),
     title: observation.title,
+    currentUrl: observation.url,
+    screenshotAttached: Boolean(bodyContext.screenshotFile),
+    visibleControls: bodyContext.controls || [],
+    journeyHints: bot.routes.map((route) => ({
+      labels: route.labels.map((label) => label.toString()),
+      mode: route.mode,
+      value: route.value,
+    })),
     sessionMemory,
     continuityInstruction: 'Use session memory as the bot\'s actual prior experience. Do not claim information was never shown when it appeared on an earlier screen; instead distinguish whether it was clear, credible, and available at the moment it was needed.',
+    bodyInstruction: 'Choose exactly one next body action from the current screenshot and visibleControls. For click, fill, or select, copy a targetId exactly. Use scroll, wait, back, or leave when no visible control is honestly worth using. Do not merely narrate an action.',
     truthPressure: truthPressurePayload,
     sessionStats: {
       likes: stats.likes || 0,
@@ -1555,7 +1613,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       messages: stats.messages || 0,
       repeatedScreens: stats.repeatedScreens || 0,
       loopHelpRequests: stats.loopHelpRequests || 0,
-      curiosityActions: stats.curiosityActions || 0,
+      mindActions: stats.mindActions || 0,
       yearsRemaining: stats.yearsRemaining,
       actionsCharged: stats.actionsCharged,
       dollarsCommitted: stats.dollarsCommitted,
@@ -1564,11 +1622,16 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       thought: 'first-person thought',
       opinion: 'first-person reaction/opinion',
       idea: 'Idea: product idea in first person or concise product suggestion',
-      desiredAction: 'one of: continue, like, pass, message, ask_betabook, explore, leave',
+      action: {
+        type: 'one of: click, fill, select, scroll, wait, back, leave',
+        targetId: 'an exact visibleControls id for click/fill/select, otherwise empty',
+        value: 'text to enter, option label/value, scroll direction, or empty',
+      },
+      actionReason: 'one direct first-person reason for this exact action',
       truthfulAssessment: 'direct private judgment about the visible product, with confidence if uncertain',
       lifeCostJustification: 'one sentence weighing the next action cost against the life goal',
     },
-  }, fallback)
+  }, fallback, { imagePaths: bodyContext.screenshotFile ? [bodyContext.screenshotFile] : [] })
 }
 
 async function llmBotShortText(task, bot, context, fallbackText) {
@@ -1656,67 +1719,13 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
   }, fallback)
 }
 
-async function tryCuriosityAction(page, bot, log, actions, stats, force = false, captureEvidence = null) {
-  if (!force && random() > config.curiosityChance) return false
-  if (stats.curiosityActions >= config.maxCuriosityActions) return false
-
-  const observation = await observe(page)
-  const lower = observation.text.toLowerCase()
-  const routeLabels = cohort.routes.flatMap((route) => route.labels || [])
-  const safeLabels = [...new Set([...routeLabels, /filters/i, /read/i, /learn more/i, /details/i, /apply filters/i])]
-  const dangerous = /delete|remove|revoke|sign out|logout|pay|purchase|submit|publish/i
-
-  for (const label of safeLabels.sort(() => random() - 0.5)) {
-    const locator = locatorForRole(page, label)
-    if (await locator.isVisible({ timeout: 600 }).catch(() => false)) {
-      const text = await locator.innerText({ timeout: 500 }).catch(() => String(label))
-      if (dangerous.test(text)) continue
-      await locator.click({ timeout: 2500 }).catch(() => {})
-      actions.push(`curiosity clicked ${label}`)
-      stats.curiosityActions += 1
-      stats.meaningfulSocialActions += hasAny(lower, cohort.keywords.value) ? 1 : 0
-      log(`Curiosity gets me to try "${text || label}" instead of repeating the same path.`)
-      await wait(900 + random() * 2200)
-      if (captureEvidence) await captureEvidence('curiosity-click', await observe(page))
-      return true
-    }
-  }
-
-  const selects = page.locator('select')
-  const selectCount = await selects.count().catch(() => 0)
-  if (selectCount > 0) {
-    const index = Math.floor(random() * Math.min(selectCount, 3))
-    const changed = await selectByIndex(selects.nth(index), 1 + Math.floor(random() * 3)).catch(() => false)
-    if (changed) {
-      actions.push(`curiosity changed select ${index + 1}`)
-      stats.curiosityActions += 1
-      log(`Curiosity makes me change a filter/config option to see whether the product reacts.`)
-      await wait(900 + random() * 2200)
-      if (captureEvidence) await captureEvidence('curiosity-select-changed', await observe(page))
-      return true
-    }
-  }
-
-  const ranges = page.locator('input[type="range"]')
-  const rangeCount = await ranges.count().catch(() => 0)
-  if (rangeCount > 0) {
-    const index = Math.floor(random() * Math.min(rangeCount, 4))
-    await ranges.nth(index).fill(String(20 + Math.floor(random() * 70))).catch(() => {})
-    actions.push(`curiosity adjusted range ${index + 1}`)
-    stats.curiosityActions += 1
-    log(`Curiosity makes me adjust a slider to understand what control I have.`)
-    await wait(900 + random() * 2200)
-    if (captureEvidence) await captureEvidence('curiosity-slider-adjusted', await observe(page))
-    return true
-  }
-
-  return false
-}
-
-async function runBot(browser, bot, runtime = {}) {
+async function runBotSession(browser, bot, runtime = {}, session = {}) {
   const startedAt = Date.now()
+  const sessionNumber = Number(session.sessionNumber || 1)
+  const sessionCount = Number(session.sessionCount || 1)
+  const sessionPhase = sessionNumber === 1 ? 'Discovery' : 'Return'
   const screenSize = bot.screenSize || selectScreenSize(bot.viewport)
-  const storageStatePath = resolveStorageStatePath(config.storageStateTemplate, bot)
+  const storageStatePath = runtime.storageStatePath || resolveStorageStatePath(config.storageStateTemplate, bot)
   const context = await browser.newContext({
     viewport: screenSize.viewport || { width: screenSize.width, height: screenSize.height },
     deviceScaleFactor: screenSize.deviceScaleFactor || 1,
@@ -1733,6 +1742,7 @@ async function runBot(browser, bot, runtime = {}) {
   }
   const page = await context.newPage()
   page.on('response', async (response) => {
+    if (!isProductUrl([config.appUrl, ...config.appOrigins], response.url())) return
     const headers = await response.allHeaders().catch(() => ({}))
     for (const header of detectedMockHeaders(headers)) {
       runtime.detectedMockHeaders?.add(header)
@@ -1740,7 +1750,7 @@ async function runBot(browser, bot, runtime = {}) {
   })
   const notes = []
   const actions = []
-  const mortality = createMortalityLedger(bot)
+  const mortality = runtime.mortality || createMortalityLedger(bot)
   const originalActionPush = actions.push.bind(actions)
   actions.push = (...items) => {
     for (const item of items) {
@@ -1765,12 +1775,14 @@ async function runBot(browser, bot, runtime = {}) {
     repeatedScreens: 0,
     loopHelpRequests: 0,
     loopRescuesFollowed: 0,
-    curiosityActions: 0,
     likes: 0,
     passes: 0,
     messages: 0,
     meaningfulSocialActions: 0,
-    fallbackActionAttempts: 0,
+    browserIssues: 0,
+    externalRequestFailures: 0,
+    mindActions: 0,
+    mindActionFailures: 0,
   }
   let step = 1
   let value = 0
@@ -1778,10 +1790,14 @@ async function runBot(browser, bot, runtime = {}) {
   let lastScreenshot = ''
   let lastObservation = null
   let shouldEndSession = false
+  let goalAssessment = null
   const reflectionTimeoutMs = config.llmTimeoutMs + 5000
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
-  fs.writeFileSync(liveRawFile, `# ${bot.id} — Live Thoughtful Browser Storyline\n\n## Raw Journey\n`)
+  fs.appendFileSync(
+    liveRawFile,
+    `\n## Session ${sessionNumber} — ${sessionPhase}\n`,
+  )
 
   const evidenceRef = () => lastScreenshot ? ` [screen: ${lastScreenshot}]` : ''
   const log = (text, options = {}) => {
@@ -1796,11 +1812,114 @@ async function runBot(browser, bot, runtime = {}) {
       text,
       screenshot: lastScreenshot || null,
       screenHash: lastObservation ? textHash(lastObservation.text) : null,
+      sessionNumber,
     })
   }
+  const browserIssueKeys = new Set()
+  const browserIssueRecovery = createBrowserIssueRecoveryTracker({
+    appOrigins: [config.appUrl, ...config.appOrigins],
+  })
+  const browserRequestIds = new WeakMap()
+  let browserRequestSequence = 0
+  const externalRequestFailureKeys = new Set()
+  const externalRequestFailureDetails = []
+  const recordBrowserIssue = (kind, detail) => {
+    const message = `${kind}: ${String(detail || '').trim()}`
+    if (!detail || browserIssueKeys.has(message)) return
+    browserIssueKeys.add(message)
+    stats.browserIssues += 1
+    errors.push(message)
+    log(`The product reports a browser problem: ${message}`, {
+      type: 'browser-error',
+    })
+  }
+  const recordExternalRequestFailure = (detail) => {
+    const message = String(detail || '').trim()
+    if (!message || externalRequestFailureKeys.has(message)) return
+    externalRequestFailureKeys.add(message)
+    externalRequestFailureDetails.push(message)
+    stats.externalRequestFailures += 1
+    log(`A third-party request failed without being scored as a product defect: ${message}`, {
+      type: 'external-request-failure',
+      noEvidence: true,
+    })
+  }
+  page.on('console', (message) => {
+    if (message.type() !== 'error') return
+    const recovery = trackBrowserConsoleError(browserIssueRecovery, {
+      text: message.text(),
+      url: message.location()?.url,
+    })
+    if (recovery.deferred) return
+    if (recovery.scoring === false) recordExternalRequestFailure(recovery.detail)
+    else recordBrowserIssue('console error', message.text())
+  })
+  page.on('pageerror', (error) => recordBrowserIssue('page error', error.message))
+  page.on('request', (request) => {
+    const requestId = `request-${++browserRequestSequence}`
+    browserRequestIds.set(request, requestId)
+    trackBrowserRequestStart(browserIssueRecovery, {
+      requestId,
+      method: request.method(),
+      url: request.url(),
+      resourceType: request.resourceType(),
+      headers: request.headers(),
+    })
+  })
+  page.on('requestfailed', (request) => {
+    const failure = trackBrowserRequestFailure(browserIssueRecovery, {
+      requestId: browserRequestIds.get(request),
+      method: request.method(),
+      url: request.url(),
+      errorText: request.failure()?.errorText || '',
+      resourceType: request.resourceType(),
+      headers: request.headers(),
+    })
+    if (failure.ignored) return
+    if (failure.deferred) return
+    if (!failure.scoring) recordExternalRequestFailure(failure.detail)
+    else recordBrowserIssue('request failed', failure.detail)
+  })
+  page.on('response', (response) => {
+    const recovery = trackBrowserResponse(browserIssueRecovery, {
+      method: response.request().method(),
+      url: response.url(),
+      status: response.status(),
+    })
+    if (recovery.deferred) return
+    if (response.status() >= 500) {
+      if (recovery.scoring === false) recordExternalRequestFailure(recovery.detail)
+      else recordBrowserIssue('HTTP failure', `${response.status()} ${response.url()}`)
+    }
+  })
+  const bodyActionOptions = {
+    fallbackUrl: config.appUrl,
+    actionTimeoutMs: config.actionTimeoutMs,
+    beforeTargetAction: ({ action, control }) => {
+      if (action.type !== 'click' || !control?.href) return
+      trackNavigationIntent(browserIssueRecovery, {
+        url: control.href,
+        controlName: control.name,
+      })
+    },
+  }
+  const observeProduct = async () => {
+    const observation = await observe(page)
+    trackVisiblePage(browserIssueRecovery, observation)
+    return observation
+  }
   const captureScreenshot = async (label, observation = lastObservation) => {
+    let goalEvidence = null
+    if (observation) {
+      goalEvidence = appendGoalEvidence(seenScreens, {
+        phase: label,
+        url: page.url(),
+        title: observation.title,
+        text: observation.text,
+      })
+    }
     if (config.visualEvidenceMode === 'off') return ''
-    const file = await screenshot(page, bot, step++, label)
+    const file = await screenshot(page, bot, step++, label, sessionNumber)
     lastObservation = observation || lastObservation
     if (!file || !fs.existsSync(file)) {
       appendJsonl(evidenceFile, {
@@ -1811,10 +1930,12 @@ async function runBot(browser, bot, runtime = {}) {
         url: page.url(),
         title: observation?.title || '',
         screenHash: observation ? textHash(observation.text) : null,
+        sessionNumber,
       })
       return ''
     }
     lastScreenshot = path.relative(config.runDir, file)
+    if (goalEvidence) goalEvidence.screenshot = lastScreenshot
     appendJsonl(evidenceFile, {
       type: 'screenshot',
       at: new Date().toISOString(),
@@ -1825,6 +1946,7 @@ async function runBot(browser, bot, runtime = {}) {
       title: observation?.title || '',
       screenHash: observation ? textHash(observation.text) : null,
       visibleText: observation?.text ? observation.text.slice(0, 1400) : '',
+      sessionNumber,
     })
     log(`Screenshot evidence (${label}): ${lastScreenshot}`, { type: 'screenshot-note', noEvidence: true })
     return file
@@ -1896,12 +2018,13 @@ async function runBot(browser, bot, runtime = {}) {
     }
     return true
   }
-  const recordReflection = async (observation, phase) => {
+  const recordReflection = async (observation, phase, bodySnapshot, screenshotFile) => {
     const fallback = {
       thought: think(bot, observation, phase),
       opinion: opinionFrom(bot, observation),
       idea: ideaFrom(bot, observation),
-      desiredAction: 'continue',
+      action: { type: 'wait', targetId: '', value: '' },
+      actionReason: 'I need a moment before I choose another visible action.',
       truthfulAssessment: 'My honest judgment is that I need more evidence before spending much life on this.',
       lifeCostJustification: `One more careful action may be worth ${config.truthPressureActionMonths} month(s) only if it helps ${bot.lifeGoal}`,
     }
@@ -1913,25 +2036,145 @@ async function runBot(browser, bot, runtime = {}) {
       recentThoughts: thoughts.slice(-4),
       recentOpinions: opinions.slice(-4),
       recentActions: actions.slice(-8),
+      previousSessions: runtime.previousSessions || [],
+    }, {
+      controls: bodySnapshot.controls,
+      screenshotFile,
     })
-    recordThought(reflection.thought || fallback.thought)
-    recordOpinion(reflection.opinion || fallback.opinion)
-    recordIdea(reflection.idea || fallback.idea)
-    recordLifeDecision(reflection.lifeCostJustification || reflection.lifeDecision || '')
-    recordTruthAssessment(reflection.truthfulAssessment || reflection.truthAssessment || '')
-    if (reflection.desiredAction) {
-      const desiredAction = String(reflection.desiredAction).toLowerCase()
-      log(`My impulse is to ${reflection.desiredAction}.`)
-      if (/\bpass\b/i.test(desiredAction)) {
-        stats.passes += 1
-        trust -= 25
-      }
-      if (/\b(pass|leave|stop|end|abandon|exit)\b/i.test(desiredAction)) {
-        shouldEndSession = true
-        log(`I follow that impulse and end this session instead of continuing a forced loop.`)
-      }
+    if (reflection._betabotMindFallback) {
+      throw new Error(`LLM mind unavailable: ${reflection._betabotMindError || 'provider fallback'}`)
     }
-    return reflection
+    const decision = normalizeMindDecision(reflection)
+    recordThought(decision.thought || fallback.thought)
+    recordOpinion(decision.opinion || fallback.opinion)
+    recordIdea(decision.idea || fallback.idea)
+    recordLifeDecision(decision.lifeCostJustification)
+    recordTruthAssessment(decision.truthfulAssessment)
+    log(`I decide to ${decision.action.type}${decision.action.targetId ? ` ${decision.action.targetId}` : ''}${decision.actionReason ? ` because ${decision.actionReason}` : ''}.`, { type: 'mind-decision' })
+    return decision
+  }
+  const runMindCycle = async (observation, phase, screenshotFile) => {
+    if (!screenshotFile || !fs.existsSync(screenshotFile)) {
+      stats.mindActionFailures += 1
+      log(`I cannot ground my next action because the current screenshot is unavailable.`, { type: 'mind-action-rejected' })
+      return false
+    }
+    const bodySnapshot = await runStep(
+      'inventory visible controls',
+      () => collectInteractiveControls(page),
+      { controls: [], locators: new Map() },
+      15000,
+    )
+    const decision = await runStep(
+      `think and choose an action during ${phase}`,
+      () => recordReflection(observation, phase, bodySnapshot, screenshotFile),
+      null,
+      reflectionTimeoutMs,
+    )
+    if (!decision) {
+      stats.mindActionFailures += 1
+      return false
+    }
+    const result = await runStep(
+      `execute mind action ${decision.action.type}`,
+      () => executeMindAction(page, bodySnapshot, decision.action, bodyActionOptions),
+      { ok: false, reason: 'body execution failed' },
+      20000,
+    )
+    if (!result.ok) {
+      stats.mindActionFailures += 1
+      log(`My chosen action cannot be performed: ${result.reason}`, { type: 'mind-action-rejected' })
+      return false
+    }
+
+    stats.mindActions += 1
+    log(`My body ${result.description}.`, { type: 'mind-action' })
+    if (runtime.evidenceTracker) {
+      recordEvidenceAction(runtime.evidenceTracker, {
+        action: decision.action,
+        control: result.control,
+        url: page.url(),
+        beforeText: observation.text,
+      })
+    }
+    if (result.ended) {
+      shouldEndSession = true
+      return true
+    }
+    if (['click', 'fill', 'select'].includes(decision.action.type)) {
+      actions.push(result.description)
+      const actionText = `${decision.action.type} ${result.control?.name || ''}`.toLowerCase()
+      if (/\blike\b/.test(actionText)) stats.likes += 1
+      if (/\bpass\b|not interested/.test(actionText)) stats.passes += 1
+      if (/message|send|reply|contact/.test(actionText)) stats.messages += 1
+      if (/like|message|send|reply|contact|save|connect|follow/.test(actionText)) stats.meaningfulSocialActions += 1
+    }
+    return true
+  }
+  const assessGoalCompletion = async (observation) => {
+    appendGoalEvidence(seenScreens, {
+      phase: 'final screen',
+      url: page.url(),
+      title: observation.title,
+      text: observation.text,
+    })
+    const goalContext = buildCrossSessionGoalContext({
+      previousSessions: runtime.previousSessions || [],
+      currentScreens: seenScreens,
+      currentActions: actions,
+      runDir: config.runDir,
+    })
+    const evidenceText = goalContext.evidenceText
+    const literalSignalClaims = bot.successSignals.map((signal) => ({
+      signal,
+      observed: evidenceText.toLowerCase().includes(String(signal).toLowerCase()),
+      evidence: evidenceText.toLowerCase().includes(String(signal).toLowerCase()) ? signal : '',
+    }))
+    const fallback = {
+      achieved: false,
+      confidence: 0,
+      reason: 'The recorded UI journey does not prove that the stated goal was completed.',
+      signalResults: literalSignalClaims,
+    }
+    const assessment = await llmJson('betabot_goal_assessment', {
+      bot: {
+        id: bot.id,
+        role: bot.role,
+        goal: bot.goal,
+        lifeGoal: bot.lifeGoal,
+      },
+      priorSessionActions: goalContext.priorRecordedActions,
+      priorSessionUiEvidence: goalContext.priorRecordedUiEvidence,
+      currentSessionActions: goalContext.currentRecordedActions,
+      currentSessionUiEvidence: goalContext.currentRecordedUiEvidence,
+      recentThoughts: thoughts.slice(-6),
+      recentOpinions: opinions.slice(-6),
+      requiredSuccessSignals: bot.successSignals,
+      instruction: 'Assess the long-term goal from cumulative visible UI and performed actions across prior and current sessions. Mark achieved true only when that recorded evidence proves completion. Keep session chronology honest: priorSessionActions happened earlier and must never be described as current-session behavior; an honest return session may make no new action when earlier visible proof already completed the goal. For every success signal, cite a short verbatim excerpt from priorSessionUiEvidence or currentSessionUiEvidence. A signal without a citation is not observed. Browsing related pages, seeing summary counts, intending to act, thoughts, and errors are not completion evidence.',
+      requestedShape: {
+        achieved: 'boolean',
+        confidence: 'number from 0 to 1',
+        reason: 'one direct sentence grounded in recorded UI evidence',
+        signalResults: [{
+          signal: 'required success signal exactly as supplied',
+          observed: 'boolean',
+          evidence: 'short verbatim excerpt from recordedUiEvidence, or empty string',
+        }],
+      },
+    }, fallback, {
+      imagePaths: goalContext.screenshotPaths.slice(-6),
+    })
+    const priorAchievedAssessment = [...(runtime.previousSessions || [])]
+      .reverse()
+      .map((session) => session?.goalAssessment)
+      .find((candidate) => candidate?.achieved === true) || null
+    return finalizeGoalAssessment({
+      requiredSignals: bot.successSignals,
+      assessment,
+      evidenceText,
+      fallbackReason: fallback.reason,
+      priorAchievedAssessment,
+    })
   }
   const useBetabook = async (reason) => {
     const betabookState = runtime.betabookState
@@ -1964,19 +2207,40 @@ async function runBot(browser, bot, runtime = {}) {
     const destinyState = runtime.destinyState
     const nudges = takeDestinyNudges(destinyState, bot.id)
     for (const nudge of nudges) {
-      destinyMoments.push(nudge.kind)
-      if (nudge.kind === 'loop_rescue') stats.loopRescuesFollowed += 1
       if (nudge.thought) recordThought(nudge.thought)
       if (nudge.route) {
-        await page.goto(`${config.appUrl}${nudge.route}`, { waitUntil: 'commit', timeout: 20000 }).catch((error) => {
-          errors.push(`destiny navigation ${nudge.route}: ${error.message}`)
-        })
-        actions.push(`followed a hunch to ${nudge.route}`)
-        log(`I follow a hunch and check ${nudge.route}.`)
-        const destinyObservation = await observe(page)
+        const bodySnapshot = await collectInteractiveControls(page)
+        const visibleAction = findVisibleDestinyAction(
+          nudge,
+          bodySnapshot.controls,
+          [...bot.routes, ...cohort.routes],
+        )
+        if (!visibleAction) {
+          log(`Destiny suggests another path, but I cannot see a matching control, so I stay on the current screen.`)
+          continue
+        }
+        const result = await executeMindAction(page, bodySnapshot, visibleAction, bodyActionOptions)
+        if (!result.ok) {
+          log(`I cannot follow Destiny through the visible interface: ${result.reason}`)
+          continue
+        }
+        destinyMoments.push(nudge.kind)
+        if (nudge.kind === 'loop_rescue') stats.loopRescuesFollowed += 1
+        actions.push(`followed Destiny through visible control ${result.control?.name || visibleAction.targetId}`)
+        if (runtime.evidenceTracker) {
+          recordEvidenceAction(runtime.evidenceTracker, {
+            action: visibleAction,
+            control: result.control,
+            url: page.url(),
+            beforeText: lastObservation?.text || '',
+          })
+        }
+        log(`I follow a hunch by using the visible ${result.control?.name || 'control'}.`)
+        const destinyObservation = await observeProduct()
+        if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, destinyObservation)
         recordScreenQuality(destinyObservation)
         await captureScreenshot(`destiny ${nudge.route}`, destinyObservation)
-        log(`After following Destiny to ${nudge.route}, I see: ${destinyObservation.text}`)
+        log(`After following Destiny through the interface, I see: ${destinyObservation.text}`)
       }
     }
   }
@@ -1998,142 +2262,107 @@ async function runBot(browser, bot, runtime = {}) {
     })
     await page.goto(config.appUrl, { waitUntil: 'commit', timeout: config.actionTimeoutMs })
     await wait(2500 + random() * 5000)
-    let observation = await observe(page)
+    let observation = await observeProduct()
+    if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
     recordScreenQuality(observation)
-    await captureScreenshot('arrival', observation)
+    let screenshotFile = await captureScreenshot('arrival', observation)
     log(`I see "${observation.title || 'the app'}". ${observation.text}`)
-    seenScreens.push({
-      phase: 'arrival',
-      title: observation.title,
-      visibleText: observation.text.slice(0, 800),
-    })
-    await runStep(
-      'reflect on arrival',
-      () => recordReflection(observation, 'arrival'),
-      undefined,
-      reflectionTimeoutMs
-    )
 
     const sessionMs = bot.attentionSpanMinutes * 60 * 1000
     const maxMoves = clamp(Math.round(bot.attentionSpanMinutes * 4), 8, 360)
-    const routes = cohort.routes
-    const visitedRoutes = new Set()
-    const rememberCurrentRoute = () => {
-      let currentUrl
-      try {
-        currentUrl = new URL(page.url())
-      } catch {
-        return
-      }
-      for (const route of routes) {
-        let targetUrl
-        try {
-          targetUrl = new URL(`${config.appUrl}${route.fallback}`)
-        } catch {
-          continue
-        }
-        const currentPath = currentUrl.pathname.replace(/\/$/, '')
-        const targetPath = targetUrl.pathname.replace(/\/$/, '')
-        const samePath = currentUrl.origin === targetUrl.origin && currentPath === targetPath
-        const sameAnchor = !targetUrl.hash || currentUrl.hash === targetUrl.hash
-        if (samePath && sameAnchor) visitedRoutes.add(route.fallback)
-      }
-    }
+    const sessionStartedAt = Date.now()
+    let consecutiveMindFailures = 0
 
-    for (let move = 0; move < maxMoves && Date.now() - startedAt < sessionMs && !shouldEndSession; move += 1) {
-      const remainingMs = sessionMs - (Date.now() - startedAt)
-      await wait(Math.min(remainingMs, 6000 + random() * 12000))
-      if (Date.now() - startedAt >= sessionMs) break
-      await runStep('follow destiny', followDestiny)
+    for (let move = 0; move < maxMoves && Date.now() - sessionStartedAt < sessionMs && !shouldEndSession; move += 1) {
+      if (move > 0) {
+        const remainingMs = sessionMs - (Date.now() - sessionStartedAt)
+        await wait(Math.min(remainingMs, 6000 + random() * 12000))
+        if (Date.now() - sessionStartedAt >= sessionMs) break
+        await runStep('follow destiny', followDestiny)
+        observation = await observeProduct()
+        if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
+        recordScreenQuality(observation)
+        screenshotFile = await captureScreenshot(`mind-cycle-${move + 1}`, observation)
+        log(`I look again and see: ${observation.text}`)
+      }
       if (move > 0 && move % 3 === 0) await runStep('check Betabook', () => useBetabook('between actions'))
-      rememberCurrentRoute()
-      const route = routes.find((candidate) => !visitedRoutes.has(candidate.fallback))
-      if (!route) {
-        log(`I have inspected each main path once, so I end the session instead of retracing the same navigation.`)
-        break
+      const acted = await runMindCycle(observation, move === 0 ? 'arrival' : 'exploration', screenshotFile)
+      if (!acted) {
+        consecutiveMindFailures += 1
+        if (consecutiveMindFailures >= 3) {
+          errors.push('mind could not produce three consecutive executable actions')
+          log(`My mind and body fail to agree on an executable action three times, so this run cannot represent autonomous behavior.`)
+          break
+        }
+        continue
       }
-      visitedRoutes.add(route.fallback)
-      const clicked = await runStep('click next navigation', () => clickFirst(page, route.labels), null, 15000)
-      if (clicked) {
-        actions.push(`clicked ${clicked}`)
-        log(`I click "${clicked}" because it looks like the next natural thing.`)
-      } else {
-        await runStep(`navigate ${route.fallback}`, () => page.goto(`${config.appUrl}${route.fallback}`, { waitUntil: 'commit', timeout: 20000 }), null, 25000)
-        actions.push(`navigated ${route.fallback}`)
-        log(`I cannot find the obvious link, so I try ${route.fallback} like a determined user using the address bar.`)
-      }
-
-      await wait(2500 + random() * 7000)
-      observation = await observe(page)
-      recordScreenQuality(observation)
-      await captureScreenshot('exploration', observation)
-      log(`I now see: ${observation.text}`)
-      seenScreens.push({
-        phase: 'exploration',
-        title: observation.title,
-        visibleText: observation.text.slice(0, 800),
-      })
-      await runStep(
-        'reflect on exploration',
-        () => recordReflection(observation, 'exploration'),
-        undefined,
-        reflectionTimeoutMs
-      )
+      consecutiveMindFailures = 0
       if (shouldEndSession) break
 
+      await wait(2500 + random() * 7000)
+      observation = await observeProduct()
+      if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
+      const currentFingerprintCount = recordScreenQuality(observation)
+      screenshotFile = await captureScreenshot('post-mind-action', observation)
+      log(`After my action, I see: ${observation.text}`)
       const lower = observation.text.toLowerCase()
-      const currentFingerprintCount = screenCounts.get(screenFingerprint(observation)) || 1
       if (currentFingerprintCount >= config.loopRepeatThreshold) {
         const asked = await runStep('ask Betabook for help', () => askBetabookForHelp(`screen repeated ${currentFingerprintCount} times`, observation), false)
-        if (asked) {
-          trust -= 4
-          await runStep('try curiosity rescue', () => tryCuriosityAction(page, bot, log, actions, stats, true, captureScreenshot), false)
-        }
+        if (asked) trust -= 4
       }
       const noveltyMultiplier = config.strictScoring ? (currentFingerprintCount === 1 ? 1 : currentFingerprintCount === 2 ? 0.35 : 0) : 1
       if (hasAny(lower, cohort.keywords.value)) value += Math.round(12 * noveltyMultiplier)
       if (hasAny(lower, cohort.keywords.trust)) trust += Math.round(8 * noveltyMultiplier)
       if (newKeywordMatches(lower, cohort.keywords.risk, seenRiskKeywords).length > 0) trust -= 20
-      const actedCuriously = await runStep('try curiosity action', () => tryCuriosityAction(page, bot, log, actions, stats, false, captureScreenshot), false)
-      if (actedCuriously) {
-        observation = await observe(page)
-        recordScreenQuality(observation)
-        await captureScreenshot('post-curiosity-action', observation)
-        log(`After the curiosity action, I see: ${observation.text}`)
-      } else if (cohort.requiresSocialAction && stats.fallbackActionAttempts === 0) {
-        stats.fallbackActionAttempts += 1
-        const fallbackLabels = [/^save$/i, /^message$/i, /contact/i]
-        const reserveClicked = await runStep('try fallback action', () => clickFirst(page, fallbackLabels), null, 15000)
-        if (reserveClicked) {
-          actions.push(`clicked ${reserveClicked}`)
-          stats.meaningfulSocialActions += 1
-          log(`I try "${reserveClicked}" and watch whether the app reacts clearly.`)
-          await wait(2500 + random() * 5500)
-          observation = await observe(page)
-          recordScreenQuality(observation)
-          await captureScreenshot(`post-${reserveClicked}`, observation)
-          log(`After trying "${reserveClicked}", I see: ${observation.text}`)
-        }
-      }
     }
+    observation = await observeProduct()
+    if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
+    goalAssessment = await runStep(
+      'assess goal completion',
+      () => assessGoalCompletion(observation),
+      { achieved: false, confidence: 0, reason: 'Goal assessment failed.', signalResults: [] },
+      reflectionTimeoutMs,
+    )
+    log(`Goal completion: ${goalAssessment.achieved ? 'achieved' : 'not achieved'} — ${goalAssessment.reason}`, {
+      type: 'goal-assessment',
+    })
   } catch (error) {
     errors.push(error.message)
     log(`I hit a problem: ${error.message}`)
   } finally {
+    beginBrowserIssueRecoveryShutdown(browserIssueRecovery)
+    try {
+      const storageResult = await persistContextStorageState(context, storageStatePath)
+      if (storageResult.persisted) {
+        log(`My browser state is saved for the next session.`, { type: 'storage-state', noEvidence: true })
+      }
+    } catch (error) {
+      errors.push(`storage state write-back: ${error.message}`)
+      log(`My browser state could not be saved for the next session.`, { type: 'storage-state-error', noEvidence: true })
+    }
     await context.close().catch(() => {})
+    const finalBrowserIssues = finalizeBrowserIssueRecovery(browserIssueRecovery)
+    for (const issue of finalBrowserIssues) {
+      recordBrowserIssue(issue.kind, issue.detail)
+    }
   }
 
-  let score = clamp(value + trust - errors.length * 20, 0, 100)
-  if (config.strictScoring) {
-    score -= Math.min(35, stats.repeatedScreens * 2)
-    if (stats.passes > 0) score -= Math.min(50, stats.passes * 35)
-    if (stats.passes > stats.likes + 3) score -= Math.min(20, (stats.passes - stats.likes - 3) * 2)
-    if (cohort.requiresSocialAction && stats.meaningfulSocialActions === 0) score -= 25
-    if (stats.loopHelpRequests > 0 && stats.loopRescuesFollowed === 0) score -= Math.min(18, stats.loopHelpRequests * 6)
-    if (runtime.destinyState?.enabled && destinyMoments.length === 0) score -= 8
-    if (runtime.betabookState?.enabled && betabookMoments.length === 0) score -= 8
-    score = clamp(score, 0, 100)
-  }
+  let score = scoreSession({
+    value,
+    trust,
+    errors,
+    stats,
+    strictScoring: config.strictScoring,
+    requiresSocialAction: cohort.requiresSocialAction,
+    destinyEnabled: Boolean(runtime.destinyState?.enabled),
+    destinyMoments: destinyMoments.length,
+    betabookEnabled: Boolean(runtime.betabookState?.enabled),
+    betabookMoments: betabookMoments.length,
+    elapsedMs: Date.now() - startedAt,
+    minimumSessionMs: config.minMinutes * 60 * 1000,
+    endedByChoice: shouldEndSession,
+    goalAssessment,
+  })
   const botIntegrity = evaluateEnvironmentIntegrity({
     ...(runtime.environmentIntegrityInput || {}),
     detectedMockHeaders: [...(runtime.detectedMockHeaders || [])],
@@ -2153,7 +2382,130 @@ async function runBot(browser, bot, runtime = {}) {
         ? pick(['understood value but needs more live people', 'found enough value for one session'])
         : pick(endings.slice(1))
 
-  const raw = `# ${bot.id} — Thoughtful Browser Raw Storyline
+  const storyline = `## Session ${sessionNumber} — ${sessionPhase}
+${notes.join('\n')}
+
+### Session outcome
+- End reason: ${endReason}
+- Happiness score: ${score}
+- Goal achieved: ${goalAssessment?.achieved === true ? 'yes' : 'no'}
+- Goal assessment: ${goalAssessment?.reason || 'No assessment available'}
+- Actions: ${actions.length}
+- Screenshots: ${step - 1}
+- Errors: ${errors.length ? errors.join('; ') : 'none'}
+`
+  return {
+    id: bot.id,
+    role: bot.role,
+    sessionNumber,
+    sessionCount,
+    phase: sessionPhase.toLowerCase(),
+    score,
+    endReason,
+    errors,
+    actions: actions.length,
+    actionEvidence: actions,
+    screenshots: step - 1,
+    ideas,
+    thoughts: thoughts.length,
+    opinions: opinions.length,
+    recentThoughts: thoughts.slice(-4),
+    recentOpinions: opinions.slice(-4),
+    screenSize: bot.screenSize,
+    avatar: bot.avatar,
+    betabookMoments: betabookMoments.length,
+    destinyMoments: destinyMoments.length,
+    likes: stats.likes,
+    passes: stats.passes,
+    messages: stats.messages,
+    mindActions: stats.mindActions,
+    mindActionFailures: stats.mindActionFailures,
+    repeatedScreens: stats.repeatedScreens,
+    meaningfulSocialActions: stats.meaningfulSocialActions,
+    loopHelpRequests: stats.loopHelpRequests,
+    loopRescuesFollowed: stats.loopRescuesFollowed,
+    browserIssues: stats.browserIssues,
+    externalRequestFailures: stats.externalRequestFailures,
+    externalRequestFailureDetails,
+    goalAssessment,
+    elapsedSeconds: Math.round((Date.now() - startedAt) / 1000),
+    attentionSpanMinutes: bot.attentionSpanMinutes,
+    lifeGoal: bot.lifeGoal,
+    mortality,
+    storyline,
+    memory: {
+      sessionNumber,
+      endReason,
+      goalAssessment,
+      recentThoughts: thoughts.slice(-4),
+      recentOpinions: opinions.slice(-4),
+      recentActions: actions.slice(-8),
+      recentScreens: seenScreens.slice(-4).map(({ identity, ...entry }) => entry),
+      goalActions: [...actions],
+      goalScreens: seenScreens.map(({ identity, ...entry }) => entry),
+    },
+  }
+}
+
+const SUMMED_RESULT_FIELDS = [
+  'actions',
+  'screenshots',
+  'thoughts',
+  'opinions',
+  'betabookMoments',
+  'destinyMoments',
+  'likes',
+  'passes',
+  'messages',
+  'mindActions',
+  'mindActionFailures',
+  'repeatedScreens',
+  'meaningfulSocialActions',
+  'loopHelpRequests',
+  'loopRescuesFollowed',
+  'browserIssues',
+  'externalRequestFailures',
+  'elapsedSeconds',
+]
+
+function combineBotSessions(bot, sessions, evidenceRequirements, mortality) {
+  const last = sessions[sessions.length - 1] || {}
+  const errors = [...new Set(sessions.flatMap((session) => session.errors || []))]
+  const score = scoreMultiSessionJourney(sessions, evidenceRequirements)
+  const combined = {
+    id: bot.id,
+    role: bot.role,
+    score,
+    endReason: evidenceRequirements.met === false
+      ? 'required product evidence was not completed'
+      : errors.length
+        ? 'hit a bug or dead end'
+        : last.endReason || 'no browser session completed',
+    errors,
+    ideas: sessions.flatMap((session) => session.ideas || []),
+    screenSize: bot.screenSize,
+    avatar: bot.avatar,
+    goalAssessment: last.goalAssessment || null,
+    attentionSpanMinutes: bot.attentionSpanMinutes,
+    lifeGoal: bot.lifeGoal,
+    mortality,
+    sessionsCompleted: sessions.length,
+    sessionResults: sessions.map(({ storyline, memory, mortality: ignoredMortality, ...session }) => session),
+    evidenceRequirements,
+    externalRequestFailureDetails: sessions.flatMap((session) => session.externalRequestFailureDetails || []),
+  }
+  for (const field of SUMMED_RESULT_FIELDS) {
+    combined[field] = sessions.reduce((sum, session) => sum + Number(session[field] || 0), 0)
+  }
+  return combined
+}
+
+function writeCombinedStoryline(bot, sessions, result) {
+  const actions = sessions.flatMap((session) => (
+    (session.actionEvidence || []).map((action) => `- [Session ${session.sessionNumber}] ${action}`)
+  ))
+  const failures = result.evidenceRequirements.failures || []
+  const raw = `# ${bot.id} — Multi-Session Raw Storyline
 
 ## Persona
 - Name: ${bot.name}
@@ -2167,54 +2519,51 @@ async function runBot(browser, bot, runtime = {}) {
 - Avatar seed: ${bot.avatar?.seed || ''}
 - Emotional baseline: ${bot.emotionalBaseline}
 - Technical comfort: ${bot.technicalComfort}
-- Estimated session duration: ${bot.attentionSpanMinutes} minutes
+- Estimated duration per session: ${bot.attentionSpanMinutes} minutes
+- Scheduled sessions: ${config.sessionCount}
 - Visual evidence mode: ${config.visualEvidenceMode}
 - Truth pressure: always on
 
 ## Raw Journey
-${notes.join('\n')}
+${sessions.map((session) => session.storyline).join('\n')}
 
 ## Session End
-- End reason: ${endReason}
-- Happiness score: ${score}
-- Return likelihood: ${score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low'}
-- Trust level: ${trust >= 70 ? 'high' : trust >= 45 ? 'medium' : 'low'}
-- Value understood: ${value >= 35 ? 'yes' : value >= 15 ? 'partial' : 'unclear'}
-- Ideas expressed: ${ideas.length}
-- Thoughts expressed: ${thoughts.length}
-- Opinions expressed: ${opinions.length}
-- Betabook moments: ${betabookMoments.length}
-- Destiny nudges followed: ${destinyMoments.length}
-- Likes sent: ${stats.likes}
-- Passes: ${stats.passes}
-- Messages sent through UI: ${stats.messages}
-- Repeated screen penalty events: ${stats.repeatedScreens}
-- Meaningful social actions: ${stats.meaningfulSocialActions}
-- Fallback actions attempted: ${stats.fallbackActionAttempts}
-- Betabook help requests: ${stats.loopHelpRequests}
-- Destiny loop rescues followed: ${stats.loopRescuesFollowed}
-- Curiosity actions: ${stats.curiosityActions}
-- Life years remaining: ${mortality.yearsRemaining.toFixed(2)}
-- Life years spent on actions: ${mortality.yearsSpentOnActions.toFixed(2)}
-- Life years spent on money: ${mortality.yearsSpentOnMoney.toFixed(2)}
-- Dollars committed: ${mortality.dollarsCommitted}
-- Truth assessments recorded: ${mortality.truthAuditRiskEvents}
-- Mortality status: ${mortality.death ? `dead (${mortality.deathReason})` : 'alive'}
+- End reason: ${result.endReason}
+- Happiness score: ${result.score}
+- Sessions completed: ${result.sessionsCompleted}/${config.sessionCount}
+- Return likelihood: ${result.score >= 70 ? 'high' : result.score >= 50 ? 'medium' : 'low'}
+- Goal achieved in final session: ${result.goalAssessment?.achieved === true ? 'yes' : 'no'}
+- Required product evidence: ${result.evidenceRequirements.met ? 'met' : 'not met'}
+- AI user turns: ${result.evidenceRequirements.observed.aiUserTurns}/${result.evidenceRequirements.requirements.minAiUserTurns}
+- Completed activities: ${result.evidenceRequirements.observed.completedActivities}/${result.evidenceRequirements.requirements.minCompletedActivities}
+- Evidence failures: ${failures.length ? failures.map((failure) => `${failure.key} ${failure.observed}/${failure.required}`).join('; ') : 'none'}
+- Ideas expressed: ${result.ideas.length}
+- Thoughts expressed: ${result.thoughts}
+- Opinions expressed: ${result.opinions}
+- Destiny nudges followed through visible controls: ${result.destinyMoments}
+- Autonomous mind actions executed: ${result.mindActions}
+- Mind actions rejected or failed: ${result.mindActionFailures}
+- Browser issues recorded: ${result.browserIssues}
+- Life years remaining: ${result.mortality.yearsRemaining.toFixed(2)}
+- Life years spent on actions: ${result.mortality.yearsSpentOnActions.toFixed(2)}
+- Life years spent on money: ${result.mortality.yearsSpentOnMoney.toFixed(2)}
+- Dollars committed: ${result.mortality.dollarsCommitted}
+- Truth assessments recorded: ${result.mortality.truthAuditRiskEvents}
+- Mortality status: ${result.mortality.death ? `dead (${result.mortality.deathReason})` : 'alive'}
 
 ## Action Evidence
-${actions.length ? actions.map((action) => `- ${action}`).join('\n') : '- None'}
+${actions.length ? actions.join('\n') : '- None'}
 
 ## Visual Evidence
-- Live raw log: ${path.relative(config.runDir, liveRawFile)}
-- Evidence manifest: ${path.relative(config.runDir, evidenceFile)}
-- Screenshot folder: ${path.relative(config.runDir, path.join(config.runDir, 'screenshots', bot.id))}
-- Screenshots captured: ${step - 1}
+- Live raw log: ${path.join('live', `${bot.id}.md`)}
+- Evidence manifest: ${path.join('evidence', `${bot.id}.jsonl`)}
+- Screenshot folder: ${path.join('screenshots', bot.id)}
+- Screenshots captured: ${result.screenshots}
 
 ## Errors
-${errors.length ? errors.map((error) => `- ${error}`).join('\n') : '- None'}
+${result.errors.length ? result.errors.map((error) => `- ${error}`).join('\n') : '- None'}
 `
   fs.writeFileSync(path.join(config.runDir, 'raw', `${bot.id}.md`), raw)
-  return { id: bot.id, score, endReason, errors, actions: actions.length, screenshots: step - 1, ideas, thoughts: thoughts.length, opinions: opinions.length, screenSize: bot.screenSize, avatar: bot.avatar, betabookMoments: betabookMoments.length, destinyMoments: destinyMoments.length, likes: stats.likes, passes: stats.passes, messages: stats.messages, repeatedScreens: stats.repeatedScreens, meaningfulSocialActions: stats.meaningfulSocialActions, loopHelpRequests: stats.loopHelpRequests, loopRescuesFollowed: stats.loopRescuesFollowed, curiosityActions: stats.curiosityActions, attentionSpanMinutes: bot.attentionSpanMinutes, lifeGoal: bot.lifeGoal, mortality }
 }
 
 async function runPool(items, worker, concurrency) {
@@ -2242,7 +2591,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
     }
   }
   const topIdeas = [...ideaCounts.entries()].sort((a, b) => b[1] - a[1])
-  const confidenceRows = buildConfidenceRows(ideaCounts, results.length).slice(0, 15)
+  const confidenceRows = buildConfidenceRows(results).slice(0, 15)
   const mortalityResults = results.map((result) => result.mortality).filter(Boolean)
   const mortalitySummary = {
     enabled: true,
@@ -2256,6 +2605,13 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
     averageYearsRemaining: Number((mortalityResults.reduce((sum, item) => sum + (item.yearsRemaining || 0), 0) / Math.max(1, mortalityResults.length)).toFixed(4)),
     deaths: mortalityResults.filter((item) => item.death).length,
     truthAuditRiskEvents: mortalityResults.reduce((sum, item) => sum + (item.truthAuditRiskEvents || 0), 0),
+  }
+  const productEvidenceSummary = {
+    passedBots: results.filter((result) => result.evidenceRequirements?.met !== false).length,
+    failedBots: results.filter((result) => result.evidenceRequirements?.met === false).length,
+    aiUserTurns: results.reduce((sum, result) => sum + Number(result.evidenceRequirements?.observed?.aiUserTurns || 0), 0),
+    activityInteractions: results.reduce((sum, result) => sum + Number(result.evidenceRequirements?.observed?.activityInteractions || 0), 0),
+    completedActivities: results.reduce((sum, result) => sum + Number(result.evidenceRequirements?.observed?.completedActivities || 0), 0),
   }
   const summary = {
     config: publicConfig(),
@@ -2290,6 +2646,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
       ...mortalitySummary,
       truthAssessments: mortalitySummary.truthAuditRiskEvents,
     },
+    productEvidence: productEvidenceSummary,
     llm: llmStats,
     elapsedSeconds,
     happy,
@@ -2336,13 +2693,15 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - LLM fallbacks: ${llmStats.fallbacks}
 - Bots: ${results.length}
 - App URL: ${config.appUrl}
-- Estimated minutes per bot: ${config.minutes}
-- Minimum minutes per bot: ${config.minMinutes}
-- Maximum minutes per bot: ${config.maxMinutes}
+- Estimated minutes per bot session: ${config.minutes}
+- Minimum minutes per bot session: ${config.minMinutes}
+- Maximum minutes per bot session: ${config.maxMinutes}
 - Time scale: ${config.timeScale}
 - Requested time scale: ${config.requestedTimeScale}
 - Headless: ${config.headless}
 - Concurrency: ${config.concurrency}
+- Sessions per bot: ${config.sessionCount}
+- Gap between sessions: ${config.sessionGapMinutes} minute(s)
 - Elapsed wall time: ${elapsedSeconds}s
 
 ## Happiness
@@ -2351,9 +2710,11 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - Median score: ${median}
 
 ## Evidence
-- Browser sessions completed: ${results.length}
+- Browser sessions completed: ${results.reduce((sum, result) => sum + Number(result.sessionsCompleted || 0), 0)}
 - Screenshots captured: ${results.reduce((sum, result) => sum + result.screenshots, 0)}
 - UI actions attempted: ${results.reduce((sum, result) => sum + result.actions, 0)}
+- Autonomous mind actions executed: ${results.reduce((sum, result) => sum + (result.mindActions || 0), 0)}
+- Mind actions rejected or failed: ${results.reduce((sum, result) => sum + (result.mindActionFailures || 0), 0)}
 - Thoughts expressed: ${results.reduce((sum, result) => sum + result.thoughts, 0)}
 - Opinions expressed: ${results.reduce((sum, result) => sum + result.opinions, 0)}
 - Ideas expressed: ${results.reduce((sum, result) => sum + (result.ideas || []).length, 0)}
@@ -2366,7 +2727,10 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - Meaningful social actions: ${results.reduce((sum, result) => sum + (result.meaningfulSocialActions || 0), 0)}
 - Betabook help requests: ${results.reduce((sum, result) => sum + (result.loopHelpRequests || 0), 0)}
 - Destiny loop rescues followed: ${results.reduce((sum, result) => sum + (result.loopRescuesFollowed || 0), 0)}
-- Curiosity actions: ${results.reduce((sum, result) => sum + (result.curiosityActions || 0), 0)}
+- Product-evidence requirements met: ${productEvidenceSummary.passedBots}/${results.length}
+- AI user turns verified: ${productEvidenceSummary.aiUserTurns}
+- Activity interactions observed: ${productEvidenceSummary.activityInteractions}
+- Completed activities verified: ${productEvidenceSummary.completedActivities}
 - Error bots: ${errorBots.length}
 
 ## Truth Pressure
@@ -2385,7 +2749,7 @@ ${[
 ${topIdeas.length ? topIdeas.slice(0, 10).map(([idea, count]) => `- ${count} mentions: ${idea}`).join('\n') : '- None'}
 
 ## Confidence Tiers
-${confidenceRows.length ? confidenceRows.map((row) => `- ${row.tier.toUpperCase()} (${row.count}/${results.length} mentions): ${row.theme}${row.examples?.length ? ` — examples: ${row.examples.slice(0, 2).join(' | ')}` : ''}`).join('\n') : '- None'}
+${confidenceRows.length ? confidenceRows.map((row) => `- ${row.tier.toUpperCase()} (${row.botCount}/${results.length} bots, ${row.mentions} mentions): ${row.theme}${row.examples?.length ? ` — examples: ${row.examples.slice(0, 2).join(' | ')}` : ''}`).join('\n') : '- None'}
 
 ## Audience Research Grounding
 - Cohorts should be seeded from real audience evidence when available: analytics segments, search intent, support/sales notes, reviews, social comments, competitor audiences, and public market/category research.
@@ -2419,8 +2783,9 @@ ${destinyState?.enabled
 - Recent errors: ${llmStats.errors.length ? llmStats.errors.slice(-10).join('; ') : 'none'}
 
 ## Interpretation
-- Browser Betabots launched real browser contexts, moved with human-paced waits, captured screenshots, and saved first-person raw thinking.
-- Betabot reflections, social text, Betabook comments, and Destiny planning require an LLM provider. Deterministic fallback text is not a product-quality mind layer.
+  - Browser Betabots launched real browser contexts and repeated a screenshot -> think -> validated action loop at human pace.
+  - Each product action was selected by the persona LLM from the current screenshot and visible-control inventory. Route configuration supplied hints, not a scripted journey.
+  - Betabot decisions, social text, Betabook comments, and Destiny planning require an LLM provider. Deterministic fallback text is not a product-quality mind layer.
 - This mode evaluates comprehension and emotional product quality, not server scale.
 
 ## Error Bots
@@ -2439,6 +2804,12 @@ async function main() {
       .filter((file) => !fs.existsSync(file))
       .map((file) => `missing ${file}`)
     : []
+  if (config.sessionCount > 1) {
+    const resolvedPaths = bots.map((bot) => resolveStorageStatePath(config.storageStateTemplate, bot))
+    if (new Set(resolvedPaths).size !== resolvedPaths.length) {
+      throw new Error('BETABOT_STORAGE_STATE_TEMPLATE must resolve to a unique path for every bot in a multi-session run.')
+    }
+  }
   const integrityProbe = await probeEnvironmentIntegrity({
     requireRealBackend: config.requireRealBackend,
     attestationUrl: config.environmentAttestationUrl,
@@ -2473,9 +2844,13 @@ async function main() {
       confidenceRules: cohort.confidenceRules,
       roles: cohort.roles,
       requiresSocialAction: cohort.requiresSocialAction,
+      evidenceRequirements: cohort.evidenceRequirements,
       routes: cohort.routes.map((route) => ({
         labels: route.labels.map((label) => label.toString()),
+        optionLabels: route.optionLabels.map((label) => label.toString()),
+        value: route.value,
         fallback: route.fallback,
+        mode: route.mode,
       })),
       screenSizeDistribution: cohort.screenSizeDistribution,
       keywords: cohort.keywords,
@@ -2492,21 +2867,57 @@ async function main() {
     headless: config.headless,
     ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
   })
-  const results = []
   const runtimeMockHeaders = new Set(environmentIntegrity.detectedMockHeaders || [])
+  const journeys = new Map(bots.map((bot) => {
+    const liveRawFile = path.join(config.runDir, 'live', `${bot.id}.md`)
+    fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
+    fs.writeFileSync(liveRawFile, `# ${bot.id} — Live Multi-Session Storyline\n`)
+    return [bot.id, {
+      sessions: [],
+      mortality: createMortalityLedger(bot),
+      evidenceTracker: createEvidenceTracker(bot.evidenceRequirements),
+      storageStatePath: resolveStorageStatePath(config.storageStateTemplate, bot),
+    }]
+  }))
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)
   const stopDestiny = startDestiny(bots, destinyState, betabookState)
   try {
-    await runPool(bots, async (bot) => {
-      results.push(await runBot(browser, bot, {
-        betabookState,
-        destinyState,
-        bots,
-        detectedMockHeaders: runtimeMockHeaders,
-        environmentIntegrityInput: integrityInput,
-      }))
-    }, config.concurrency)
+    await runSessionSequence({
+      sessionCount: config.sessionCount,
+      sessionGapMs: config.sessionGapMs,
+      runSession: async (session) => runPool(bots, async (bot) => {
+        const journey = journeys.get(bot.id)
+        setDestinyBotStatus(destinyState, bot.id, 'active')
+        destinyState.events.push({ type: 'bot_session_active', botId: bot.id, sessionNumber: session.sessionNumber, at: nowIso() })
+        try {
+          const sessionResult = await runBotSession(browser, bot, {
+            betabookState,
+            destinyState,
+            bots,
+            detectedMockHeaders: runtimeMockHeaders,
+            environmentIntegrityInput: integrityInput,
+            mortality: journey.mortality,
+            evidenceTracker: journey.evidenceTracker,
+            storageStatePath: journey.storageStatePath,
+            previousSessions: journey.sessions.map((result) => result.memory),
+          }, session)
+          journey.sessions.push(sessionResult)
+        } finally {
+          const status = session.sessionNumber === session.sessionCount ? 'completed' : 'inactive'
+          const transition = setDestinyBotStatus(destinyState, bot.id, status)
+          destinyState.events.push({
+            type: 'bot_session_inactive',
+            botId: bot.id,
+            sessionNumber: session.sessionNumber,
+            status,
+            droppedNudges: transition.droppedNudges,
+            at: nowIso(),
+          })
+        }
+      }, config.concurrency),
+      wait: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+    })
   } finally {
     await stopDestiny()
     await browser.close()
@@ -2514,6 +2925,15 @@ async function main() {
   await stirBetabook(bots, betabookState, 'final wrap-up')
   writeBetabookState(betabookState)
   writeDestinyState(destinyState)
+  const results = bots.map((bot) => {
+    const journey = journeys.get(bot.id)
+    return combineBotSessions(
+      bot,
+      journey.sessions,
+      evaluateEvidenceRequirements(journey.evidenceTracker),
+      journey.mortality,
+    )
+  })
   environmentIntegrity = {
     ...environmentIntegrity,
     ...evaluateEnvironmentIntegrity({
@@ -2523,6 +2943,9 @@ async function main() {
     detectedMockHeaders: [...runtimeMockHeaders],
   }
   const finalResults = applyIntegrityToResults(results, environmentIntegrity)
+  for (const [index, bot] of bots.entries()) {
+    writeCombinedStoryline(bot, journeys.get(bot.id).sessions, finalResults[index])
+  }
   writeAnalysis(finalResults, startedAt, betabookState, destinyState, environmentIntegrity)
   console.log(JSON.stringify({
     runDir: config.runDir,

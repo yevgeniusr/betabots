@@ -26,13 +26,22 @@ For product-quality runs, create audience research first. Read `audience-researc
       "past": "My team loses deals when follow-up is inconsistent, but new tools often create admin work.",
       "discovery": "A colleague mentioned this after we missed a renewal.",
       "goal": "Decide whether the product helps my team follow up without extra meetings.",
-      "lifeGoal": "Build a reputation for choosing tools that protect my team's future."
+      "lifeGoal": "Build a reputation for choosing tools that protect my team's future.",
+      "successSignals": ["Team adoption report", "Permission controls"],
+      "routes": [
+        { "labels": ["dashboard", "pipeline"], "fallback": "/dashboard" },
+        { "labels": ["team", "permissions"], "fallback": "/settings/team" }
+      ]
     },
     {
       "role": "mobile-first account executive",
       "past": "I update deals between calls from my phone and abandon tools that need desktop setup.",
       "goal": "Update one customer record from mobile.",
-      "viewport": "mobile"
+      "viewport": "mobile",
+      "evidenceRequirements": {
+        "minAiUserTurns": 2,
+        "minCompletedActivities": 1
+      }
     }
   ],
   "screenSizeDistribution": [
@@ -57,6 +66,15 @@ For product-quality runs, create audience research first. Read `audience-researc
     { "labels": ["dashboard", "pipeline"], "fallback": "/dashboard" },
     { "labels": ["pricing", "plans"], "fallback": "/pricing" }
   ],
+  "evidenceRequirements": {
+    "minAiUserTurns": 0,
+    "minCompletedActivities": 0,
+    "aiChatUrlPatterns": ["/chat"],
+    "aiSubmitControlPatterns": ["Send message", "Ask AI"],
+    "activityUrlPatterns": ["/activities/", "/verification/quests/"],
+    "activityInteractionPatterns": ["Continue", "Submit evidence"],
+    "activityCompletionPatterns": ["Activity completed", "Verification passed"]
+  },
   "keywords": {
     "value": ["pipeline", "deal", "follow-up", "saved", "report"],
     "trust": ["security", "permissions", "audit", "support"],
@@ -87,14 +105,16 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 - `researchSources`: Optional array of evidence sources used to design the cohort. Use source labels, not secrets.
 - `audienceSegments`: Optional array of weighted audience segments. Each segment can include `name`, `weight`, `evidence`, `jobs`, `objections`, `deviceBias`, `vocabulary`, and `assumptions`.
 - `confidenceRules`: Optional thresholds or notes for mapping repeated findings to high/medium/low confidence.
-- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `lifeGoal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`. For truth-pressure runs, prefer explicit `lifeGoal` values for each important persona; generated defaults are useful but less precise than product-specific stakes.
+- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `lifeGoal`, `successSignals`, role-specific `routes`, role-specific `evidenceRequirements`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`. For truth-pressure runs, prefer explicit `lifeGoal` values for each important persona; generated defaults are useful but less precise than product-specific stakes.
 - `requiresSocialAction`: Set to `true` only when meaningful in-product social action is required for the product to deliver value. Non-social products are not penalized for omitting likes, messages, or equivalent actions.
 - `screenSizeDistribution`: Optional weighted screen-size buckets. Each bucket has `category`, `weight`, and `devices`; each device has `name`, `width`, `height`, optional `deviceScaleFactor`, `isMobile`, `hasTouch`, and `userAgent`. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Override per run with `BETABOT_SCREEN_SIZE_DISTRIBUTION` or legacy alias `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `avatar`: Optional custom avatar object or URL for a persona. If omitted, the runner generates a DiceBear avatar from the persona seed.
 - `names`: Optional reusable first names for generated personas.
 - `discoveries`: Optional discovery circumstances used when a role omits `discovery`.
 - `baselines`: Optional emotional baselines such as `curious`, `skeptical`, or `impatient`.
-- `routes`: UI exploration strategy. `labels` are visible link or button names; `fallback` is a route to try when no visible control is found.
+- `routes`: Optional journey hints shown to the persona mind. `labels`, `mode`, `optionLabels`, and `value` describe controls relevant to the role, but the LLM still chooses each action from the current screenshot and visible-control inventory. `fallback` is retained for cohort compatibility and reporting; it does not drive address-bar navigation. A role can provide its own `routes` (or `journey`) when different personas should notice different workflows.
+- `successSignals`: Visible product text that provides concrete evidence for a role's goal. Missing signals are supplied to the final goal assessment and prevent an unsupported high score.
+- `evidenceRequirements`: Optional run defaults for `minAiUserTurns` and `minCompletedActivities`, plus visible pattern arrays for chat URLs, submit controls, activity URLs, activity controls, and completion signals. A role can override pattern arrays and raise minima, but cannot lower cohort minima. Environment minima (`BETABOT_MIN_AI_USER_TURNS` and `BETABOT_MIN_COMPLETED_ACTIVITIES`) are an additional floor for every role.
 - `keywords.value`: Words that mean the user saw useful product value.
 - `keywords.trust`: Words that increase confidence, safety, or credibility.
 - `keywords.risk`: Words that lower trust.
@@ -135,10 +155,14 @@ If analytics says 70% of visitors are mobile, do not use the generic 50/20/30 mo
 
 ## Route Design
 
-Routes should combine visible affordances and realistic fallback paths:
+Route hints should describe relevant visible affordances without scripting the journey:
 
-- Use visible labels first because real users click UI, not routes.
-- Use fallback paths only as a determined-user behavior.
-- Include routes for onboarding, primary value, settings/account, pricing, help, and each marketplace side when applicable.
+- Use visible accessible labels because the mind can match them to current controls.
+- Treat fallback paths as documentation, not automatic navigation.
+- Use `mode: "action"` for same-page workflow steps such as opening a result, submitting an attestation, or opening a sharing dialog.
+- Use `mode: "select"` with `optionLabels` when the workflow requires choosing a visible option from a labeled control.
+- Use `mode: "fill"` with `value` for text input required to complete a workflow.
+- Include hints for onboarding, primary value, settings/account, pricing, help, and each marketplace side when applicable.
+- Prefer role-specific routes when a shared route list would force personas through screens irrelevant to their permissions or job.
 
 Labels can be plain strings or regex strings such as `"/^start$/i"`.

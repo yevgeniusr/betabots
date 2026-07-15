@@ -19,12 +19,15 @@ Betabots has one official execution model: real-browser, human-speed sessions wi
 
 Use it when the question is comprehension, trust, emotion, taste, copy, interaction quality, onboarding, and whether the product feels usable to an actual person. Betabots open the UI in real browsers, pause, read, think, click, type, hesitate, take screenshots, and save first-person raw thoughts.
 
+Each bot must have a thinking body. Its live session repeats this loop: capture the current screenshot and visible controls, ask the persona LLM for one structured action, validate the action against those controls and safety rules, execute it through the browser, then observe again. Preconfigured routes may orient the mind but must not replace its action choice.
+
 Default rule:
 
 - Betabots must interact through the product surface a person can see.
 - They must not call product APIs, inspect server internals, use hidden implementation maps, or rely on project-specific runner code.
 - Do not replace browser evidence with server-side metrics. A successful API call is not proof that a human understood the product.
 - `BETABOT_LLM_PROVIDER=none` is not valid for product-quality runs and is rejected by the bundled runner.
+- Provider fallback must never drive browser actions. If the LLM cannot choose an executable action, record a mind failure and stop the bot after repeated failures.
 
 ## Research-First Replacement Protocol
 
@@ -52,16 +55,27 @@ To make betabots replace as much early user research as possible, build every se
 ## Environment Integrity
 
 A real-browser session is not proof of a real product when authentication or
-API data is mocked. Product-quality runs should set
+API data is mocked. Product-quality runs must set
 `BETABOT_REQUIRE_REAL_BACKEND=true`, provide
 `BETABOT_ENVIRONMENT_ATTESTATION_URL`, and use Playwright storage state created
 through actual UI login via `BETABOT_STORAGE_STATE_TEMPLATE`.
 
-Detected injected auth, mock response headers, mock/fixture attestation,
+For multi-session runs, set `BETABOT_SESSION_COUNT` and
+`BETABOT_SESSION_GAP_MINUTES`. Storage paths must be unique per bot. The runner
+loads and atomically writes back cookies, localStorage, and IndexedDB after every
+visit, then combines all visits into one first-person storyline.
+
+Missing attestation, detected injected auth, first-party mock response headers, mock/fixture attestation,
 disconnected or non-persistent storage, missing storage state, and failed or
 missing required attestation invalidate the run and force all scores to `0`.
 Mock-backed browser sessions may still be useful for layout smoke testing, but
 their happiness score is intentionally unusable as product evidence.
+
+When interaction depth matters, configure `BETABOT_MIN_AI_USER_TURNS`,
+`BETABOT_MIN_COMPLETED_ACTIVITIES`, or role-level `evidenceRequirements`. Unmet
+requirements cap the bot below `50` and remain distinct from infrastructure
+errors. Destiny must never use direct navigation; it can act only through a
+currently visible control accepted by the normal body validator.
 
 ## Session Rules
 
@@ -95,6 +109,8 @@ Use these bundled scripts from the plugin root:
 - `skills/betabots/scripts/analyze_sessions.py`: aggregate raw Markdown sessions.
 - `skills/betabots/scripts/post_run_questions.cjs`: ask completed bots follow-up questions from their own saved raw session memory and write `post-run-questions.json/md`.
 - `skills/betabots/scripts/thoughtful_browser_betabots.cjs`: run real-browser human-speed sessions with LLM-backed thoughts, screenshots, first-person raw logs, optional Betabook social board via `BETABOT_BETABOOK=true`, and optional Destiny master-plan orchestration via `BETABOT_DESTINY=true`.
+
+The skill/plugin is the host integration layer. The bundled Node process is its cross-host Playwright runtime, not a replacement for the plugin.
 
 Read `references/audience-research.md` before creating a product-quality cohort. Read `references/thoughtful-browser.md` before running browsers. Read `references/cohort-config.md` before creating or adapting app-specific personas. Read `references/session-template.md` when writing raw journey files manually.
 

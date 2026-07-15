@@ -71,6 +71,15 @@ test('real mode fails closed without a valid attestation', () => {
   assert.ok(volatile.reasons.includes('database_not_persistent_postgres'))
 })
 
+test('unverified mode cannot retain a product-quality score', () => {
+  const result = evaluateEnvironmentIntegrity({})
+
+  assert.equal(result.valid, false)
+  assert.equal(result.verified, false)
+  assert.equal(result.scoreCap, 0)
+  assert.ok(result.reasons.includes('environment_unverified'))
+})
+
 test('mock response headers invalidate an otherwise real attestation', () => {
   const result = evaluateEnvironmentIntegrity({
     requireRealBackend: true,

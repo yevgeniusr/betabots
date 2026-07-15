@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Cross-session goal fixture</title></head>
+  <body>
+    <main>
+      <h1>Cross-session goal fixture</h1>
+      <p id="status">Choose the next step.</p>
+      <button id="inspect" type="button">Inspect sample result</button>
+      <button id="pilot" type="button">Open pilot request</button>
+    </main>
+    <script>
+      const status = document.querySelector('#status')
+      const inspect = document.querySelector('#inspect')
+      const pilot = document.querySelector('#pilot')
+      inspect.addEventListener('click', () => {
+        status.textContent = 'Sample verification result inspected with retained evidence.'
+        inspect.disabled = true
+      })
+      pilot.addEventListener('click', () => {
+        status.textContent = 'Pilot request opened for customer support.'
+        pilot.disabled = true
+      })
+    </script>
+  </body>
+</html>

@@ -63,7 +63,7 @@ Betabots can help you answer:
 
 ## Browser Betabots
 
-Betabots launches real browsers and runs human-speed sessions. It is for comprehension, trust, emotion, copy, onboarding, visual UI, and product taste. Each bot records what it sees, thinks, clicks, types, misunderstands, likes, and why it leaves or returns.
+Betabots launches real browsers and runs human-speed sessions. It is for comprehension, trust, emotion, copy, onboarding, visual UI, and product taste. Each bot repeatedly captures its current screen, inventories visible controls, thinks with its persona LLM, chooses one action, executes it, and observes the result. It records what it sees, thinks, clicks, types, misunderstands, likes, and why it leaves or returns.
 
 Betabots must interact through the same visible product surface a person can see. The runner does not call product APIs, use server URLs, load hidden implementation maps, or ship project-specific lifecycle code.
 
@@ -76,13 +76,18 @@ BETABOT_HEADLESS=false \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-By default, browser sessions use real-time pacing (`BETABOT_TIME_SCALE=1`). Lower the scale only for development dry-runs.
+Browser sessions use real-time pacing (`BETABOT_TIME_SCALE=1`). Thoughtful mode clamps lower values back to `1`.
 
-Betabots use an actual LLM mind layer continuously during browser use:
+For return visits, set `BETABOT_SESSION_COUNT` and
+`BETABOT_SESSION_GAP_MINUTES` together with a unique per-bot
+`BETABOT_STORAGE_STATE_TEMPLATE`. The runner writes browser state after every
+visit and produces one combined first-person storyline per bot.
+
+Betabots use an actual multimodal LLM mind layer continuously during browser use. Screenshots and visible-control IDs are sent with each decision so the model chooses the next action instead of merely narrating one:
 
 - `BETABOT_LLM_PROVIDER=codex` uses local Codex CLI with the signed-in ChatGPT/Codex account.
 - `BETABOT_LLM_PROVIDER=openrouter` uses OpenRouter chat completions.
-- `BETABOT_LLM_PROVIDER=none` disables model calls and uses deterministic fallback text for runner debugging only.
+- `BETABOT_LLM_PROVIDER=none` is rejected because a run without a mind is not a Betabot run.
 
 ```bash
 BETABOT_LLM_PROVIDER=codex \
@@ -112,8 +117,8 @@ Because this bypasses the product's authentication flow, Betabots marks the
 environment invalid and caps scores at `0`. Never use injected auth for a report
 that claims a working product.
 
-For a real-backend run, create Playwright storage state through the product's
-actual login UI and require a runtime attestation:
+Every product-quality run must provide a runtime attestation. Authenticated
+products must also create Playwright storage state through the actual login UI:
 
 ```bash
 BETABOT_REQUIRE_REAL_BACKEND=true \
@@ -122,7 +127,8 @@ BETABOT_STORAGE_STATE_TEMPLATE='/tmp/product-auth/{id}.json' \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-The attestation must report real authentication and connected, persistent
+Without an attestation, the browser journey may still run as a layout smoke test,
+but every happiness score is capped at zero. The attestation must report real authentication and connected, persistent
 PostgreSQL storage. Missing or failed attestations, injected auth, explicit mock
 headers, mock/fixture modes, volatile storage, and missing storage-state files
 invalidate the run and force every happiness score to `0`.
@@ -132,6 +138,10 @@ For social products, enable **Betabook** and **Destiny** as separate layers.
 Betabook is a simple Reddit-like board scoped to the current simulation. Betabots can introduce themselves, post coordination or help notes, comment, receive invites, and coordinate outside the product UI while still behaving like independent people.
 
 Destiny is the orchestration layer. It watches the cohort in real time, follows a global master plan, and makes paths cross, almost cross, or intentionally not cross. Destiny can manipulate Betabook and can nudge individual betabots by giving them believable hunches, timing, and actions.
+
+Destiny cannot navigate directly. It may follow a route intention only through a
+matching visible control that passes the same body validation as any other UI
+action.
 
 ```bash
 BETABOT_BETABOOK=true \
@@ -155,7 +165,7 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
 The runner aggregates first-person thoughts and ideas into `analysis.md` and `summary.json`.
-Thoughtful sessions keep thinking tied to product use: each observation can produce a thought, first reaction, similarity/comparison, or idea, but the runner should not spend most of a session in reflection-only mode.
+Thoughtful sessions use a screenshot -> think -> validated action loop. Route configuration gives the mind optional journey hints; it does not script browser movement. A failed LLM action decision is recorded as a mind failure and cannot silently fall back to deterministic navigation.
 By default, Betabots uses a generic cross-product cohort. For domain-specific testing, pass `BETABOT_COHORT_FILE` with roles, pasts, discovery circumstances, routes, value keywords, trust keywords, and idea rules. See `skills/betabots/references/cohort-config.md`.
 
 Truth pressure is always on. Bots treat honesty, attention, and money as scarce survival constraints, and you can tune the ledger costs for a run:
@@ -187,6 +197,12 @@ skills/betabots/references/    Session templates, safety, cohort, and browser gu
 scripts/install-local.sh       Local installer for Codex, Claude, and Cursor
 tests/smoke.sh                 Lightweight validation
 ```
+
+## Plugin And Runtime
+
+Betabots is already packaged as a Codex, Claude Code, Cursor, and Agent Skills plugin. The plugin is the discovery and instruction layer; the bundled Node process is the portable runtime used by those hosts. It owns Playwright browser contexts, human-paced timers, concurrent bot isolation, screenshot files, evidence logs, and deterministic cleanup.
+
+Keeping that runtime out of the host agent prevents one long Codex or Claude conversation from becoming the browser scheduler for every bot. It also makes the same cohort behavior available across hosts. Node is an implementation choice, not a product boundary: another runtime could implement the same screenshot -> decision -> action protocol, but a plugin alone still needs executable code somewhere to keep browsers alive and coordinate them.
 
 ## Install Locally
 
@@ -290,7 +306,7 @@ Optional auth isolation:
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
 - `BETABOT_STORAGE_STATE_TEMPLATE`: Playwright storage-state path template produced by real UI login; supports `{id}`, `{name}`, and `{role}`.
-- `BETABOT_REQUIRE_REAL_BACKEND`: fail closed unless runtime integrity is verified.
+- `BETABOT_REQUIRE_REAL_BACKEND`: require an explicit real-backend attestation; unverified runs score zero even when this flag is omitted.
 - `BETABOT_ENVIRONMENT_ATTESTATION_URL`: JSON endpoint proving real auth and persistent PostgreSQL connectivity.
 - `BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS`: attestation timeout; defaults to `5000`.
 - `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, screen-size distribution, keywords, and idea rules.
@@ -306,24 +322,22 @@ Optional auth isolation:
 - `BETABOT_TRUTH_ACTION_MONTHS=1`: life-months charged per meaningful website action.
 - `BETABOT_TRUTH_DOLLAR_YEARS=1`: life-years charged per committed dollar.
 - `BETABOT_LOOP_REPEAT_THRESHOLD=4`: repeated-screen threshold that makes a stuck bot ask Betabook for help.
-- `BETABOT_CURIOSITY_CHANCE=0.18`: chance per move that a bot tries a safe curiosity action instead of the planned route.
-- `BETABOT_MAX_CURIOSITY_ACTIONS=8`: cap on curiosity clicks/config changes per bot session.
-- `BETABOT_LLM_PROVIDER=codex`: model provider for betabot thoughts, social text, Betabook comments, and Destiny plans. Supports `codex`, `openrouter`, or `none`.
+- `BETABOT_LLM_PROVIDER=codex`: model provider for screenshot-grounded decisions, social text, Betabook comments, and Destiny plans. Supports `codex` or `openrouter`.
 - `BETABOT_LLM_MODEL`: optional provider model override.
 - `BETABOT_CODEX_COMMAND=codex`: Codex CLI command path for the local ChatGPT/Codex provider.
 - `BETABOT_LLM_TIMEOUT_MS=90000`: timeout per model call.
-- `BETABOT_LLM_MAX_CALLS=500`: cap per run before falling back.
+- `BETABOT_LLM_MAX_CALLS=500`: cap per run; further mind decisions fail visibly instead of driving the browser with fallback text.
 - `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`: OpenRouter key when `BETABOT_LLM_PROVIDER=openrouter`.
 - `BETABOT_OPENROUTER_BASE_URL`: optional OpenRouter-compatible base URL.
 
 Persona and role definition:
 
 - The runner accepts `roles` or `personas` as strings or objects.
-- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`.
+- Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `successSignals`, role-specific `routes`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`.
 - Role objects can also define `lifeGoal` for truth pressure. If omitted, the runner derives one from the role.
 - Cohort files can define `screenSizeDistribution`; the default distribution uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs.
 - Generated avatars use DiceBear with a seed derived from persona fields, so the avatar changes when the bot's name, role, past, goal, life goal, traits, emotional baseline, or technical comfort changes.
-- Product-specific routes and words belong in cohort JSON, not in runner code.
+- Product-specific route labels are optional hints to the persona mind; they do not prescribe or execute the journey.
 - Use `skills/betabots/examples/generic-saas.cohort.json` as a portable baseline.
 
 ## Safety

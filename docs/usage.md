@@ -40,6 +40,19 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 Browser sessions require Playwright in the target project or globally. Betabots interact through the visible product surface; they do not call product APIs or use hidden implementation maps.
 
+For return-session research, add:
+
+```bash
+BETABOT_SESSION_COUNT=3 \
+BETABOT_SESSION_GAP_MINUTES=60 \
+BETABOT_STORAGE_STATE_TEMPLATE='/tmp/product-auth/{id}.json' \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The initial state must come from visible UI login. Every visit writes the state
+back for the next cohort round. Use `BETABOT_MIN_AI_USER_TURNS` and
+`BETABOT_MIN_COMPLETED_ACTIVITIES` when a happy result must prove those actions.
+
 Betabots assign each persona a DiceBear avatar. The default style is `bottts-neutral`; set `BETABOT_AVATAR_STYLE` to another DiceBear style slug or style URL to change the visual system.
 
 ## 4. Tune Truth Pressure
@@ -75,6 +88,12 @@ For truth-pressure runs, also inspect:
 - whether positive reactions include evidence and uncertainty instead of flattery.
 
 Do not rely only on aggregate scores. Read representative unhappy and confused bot stories before deciding what to change.
+
+Product-quality scores require a verified real-environment attestation. Runs
+without one remain useful only as layout smoke tests and are scored at zero.
+Required AI turns need a visible response transition on the same chat; required
+activity completions need a new completion transition after a named activity
+control. Echoes, stale completion text, and unrelated iframe clicks do not count.
 
 ## 6. Validate the Repo
 
