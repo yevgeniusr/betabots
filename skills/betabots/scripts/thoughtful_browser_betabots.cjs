@@ -1605,7 +1605,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
     })),
     sessionMemory,
     continuityInstruction: 'Use session memory as the bot\'s actual prior experience. Do not claim information was never shown when it appeared on an earlier screen; instead distinguish whether it was clear, credible, and available at the moment it was needed.',
-    bodyInstruction: 'Choose exactly one next body action from the current screenshot and visibleControls. For click, fill, or select, copy a targetId exactly. Use scroll, wait, back, or leave when no visible control is honestly worth using. Do not merely narrate an action.',
+    bodyInstruction: 'Choose exactly one next body action from the current screenshot and visibleControls. Use click for buttons, radios, and checkboxes; use select only for comboboxes/select controls. For click, fill, or select, copy a targetId exactly. Use scroll, wait, back, or leave when no visible control is honestly worth using. Do not merely narrate an action.',
     truthPressure: truthPressurePayload,
     sessionStats: {
       likes: stats.likes || 0,
