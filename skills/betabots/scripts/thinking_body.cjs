@@ -49,22 +49,25 @@ function validateMindAction(action = {}, controls = []) {
   }
 
   const kind = String(control.kind || '').toLowerCase()
-  if (type === 'fill' && !['textbox', 'searchbox', 'input', 'textarea'].includes(kind)) {
+  const normalizedType = type === 'select' && ['radio', 'checkbox'].includes(kind)
+    ? 'click'
+    : type
+  if (normalizedType === 'fill' && !['textbox', 'searchbox', 'input', 'textarea'].includes(kind)) {
     return { ok: false, reason: `Target ${targetId} cannot accept text.` }
   }
-  if (type === 'select' && !['combobox', 'select'].includes(kind)) {
+  if (normalizedType === 'select' && !['combobox', 'select'].includes(kind)) {
     return { ok: false, reason: `Target ${targetId} is not a selection control.` }
   }
-  if (type === 'fill' && !cleanText(action.value, 500)) {
+  if (normalizedType === 'fill' && !cleanText(action.value, 500)) {
     return { ok: false, reason: `Text action for ${targetId} has no value.` }
   }
-  if (type === 'select' && !cleanText(action.value, 500)) {
+  if (normalizedType === 'select' && !cleanText(action.value, 500)) {
     return { ok: false, reason: `Selection action for ${targetId} has no option value.` }
   }
 
   return {
     ok: true,
-    action: { ...action, type, targetId, value: cleanText(action.value, 500) },
+    action: { ...action, type: normalizedType, targetId, value: cleanText(action.value, 500) },
     control,
   }
 }

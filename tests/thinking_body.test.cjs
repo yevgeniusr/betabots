@@ -87,6 +87,16 @@ test('rejects a selection action without an option value', () => {
   assert.match(result.reason, /option/i)
 })
 
+test('normalizes selecting an exposed radio control to a click', () => {
+  const result = validateMindAction(
+    { type: 'select', targetId: 'control-4', value: '' },
+    [...controls, { id: 'control-4', kind: 'radio', name: 'Billing identity mismatch', disabled: false }],
+  )
+
+  assert.equal(result.ok, true)
+  assert.equal(result.action.type, 'click')
+})
+
 test('allows body-only actions without a target', () => {
   for (const type of ['scroll', 'wait', 'back', 'leave']) {
     assert.equal(validateMindAction({ type }, controls).ok, true)
