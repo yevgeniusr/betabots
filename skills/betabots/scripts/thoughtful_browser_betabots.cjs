@@ -28,6 +28,7 @@ const {
 const {
   destinyGuidanceForMind,
   queueDestinyNudge,
+  requireDestinyDisposition,
   setDestinyBotStatus,
   takeQueuedDestinyNudges,
 } = require('./destiny_actions.cjs')
@@ -68,10 +69,14 @@ const {
   loadPersonaDocument,
   loadPersonaGenerationConfig,
   normalizeGeneratedPersonas,
+  normalizeProductAnalysis,
   normalizeSuppliedPersonas,
+  personaGenerationFingerprint,
+  personaGuidanceEvidence,
   personaGenerationShape,
   resolvePersonaSource,
   shouldProceedWithPersonas,
+  validateApprovedPersonaArtifact,
 } = require('./persona_generation.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
@@ -107,6 +112,7 @@ const config = {
   personaGuidanceFile: process.env.BETABOT_PERSONA_GUIDANCE_FILE || '',
   personaApprovalMode: (process.env.BETABOT_PERSONA_APPROVAL_MODE || 'auto').toLowerCase(),
   personasApproved: String(process.env.BETABOT_PERSONAS_APPROVED || 'false') === 'true',
+  personaPreflightStorageState: process.env.BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE || '',
   audienceResearchFile: process.env.BETABOT_AUDIENCE_RESEARCH_FILE || '',
   cohortOnly: String(process.env.BETABOT_COHORT_ONLY || 'false') === 'true',
   betabookEnabled: betabookRequested,
@@ -390,9 +396,9 @@ const names = cohort.names
 const baselines = cohort.baselines
 const endings = cohort.endings
 
-function applyPersonaDocument(document, source) {
+function applyPersonaDocument(document, source, grounding = {}) {
   const personas = source === 'generated' || source === 'approved-generated'
-    ? normalizeGeneratedPersonas(document, config.count)
+    ? normalizeGeneratedPersonas(document, config.count, grounding)
     : normalizeSuppliedPersonas(document)
   cohort = {
     ...cohort,
@@ -776,7 +782,26 @@ async function inspectVisibleProduct() {
     ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
   })
   try {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+    const previewBot = {
+      id: 'thoughtful-betabot-001',
+      name: 'persona-preflight',
+      role: 'persona-preflight',
+    }
+    const personaConfig = loadPersonaGenerationConfig(process.env, process.cwd(), config.runDir)
+    const storageStatePath = personaConfig.preflightStorageState || resolveStorageStatePath(config.storageStateTemplate, previewBot)
+    if (storageStatePath && !fs.existsSync(storageStatePath)) {
+      throw new Error(`Persona preflight storage state does not exist at ${storageStatePath}. Set BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE to a valid authenticated Playwright state.`)
+    }
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 1000 },
+      ...(storageStatePath ? { storageState: storageStatePath } : {}),
+    })
+    const authToken = authTokenFor(previewBot)
+    if (config.authLocalStorageKey && authToken) {
+      await context.addInitScript(([key, token]) => {
+        window.localStorage.setItem(key, token)
+      }, [config.authLocalStorageKey, authToken])
+    }
     const page = await context.newPage()
     await page.goto(config.appUrl, { waitUntil: 'commit', timeout: config.actionTimeoutMs })
     await page.waitForTimeout(1200)
@@ -799,7 +824,7 @@ async function inspectVisibleProduct() {
 
 async function generatePersonasFromVisibleProduct(personaConfig) {
   const visibleEvidence = await inspectVisibleProduct()
-  const analysis = requireStructuredLlmResult('product_analysis', await llmJson('product_analysis', {
+  const analysis = normalizeProductAnalysis(requireStructuredLlmResult('product_analysis', await llmJson('product_analysis', {
     appUrl: config.appUrl,
     visibleEvidence: {
       url: visibleEvidence.url,
@@ -808,7 +833,7 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
       visibleControls: visibleEvidence.visibleControls,
       screenshotAttached: true,
     },
-    instruction: 'Analyze only visible product evidence. Identify the apparent product, value proposition, workflows, audience signals, trust cues, friction, and important unknowns. Do not infer source-code or backend behavior. Separate visible evidence from uncertainty.',
+    instruction: 'Analyze only visible product evidence. Identify the apparent product, value proposition, workflows, audience signals, trust cues, friction, and important unknowns. Do not infer source-code or backend behavior. Separate visible evidence from uncertainty. Every evidence item must be an exact visible text excerpt or control label copied from visibleEvidence.',
     requestedShape: {
       productName: 'visible product name or a concise descriptive name',
       category: 'product category',
@@ -818,7 +843,7 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
       trustSignals: ['visible trust or credibility signal'],
       frictionRisks: ['visible comprehension, trust, or workflow risk'],
       unknowns: ['important fact the visible product does not establish'],
-      evidence: ['short visible text or control that supports the analysis'],
+      evidence: ['exact visible text excerpt or control label that supports the analysis'],
     },
   }, {
     productName: '',
@@ -830,7 +855,7 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
     frictionRisks: [],
     unknowns: [],
     evidence: [],
-  }, { imagePaths: [visibleEvidence.screenshotFile], mergeFallback: false }))
+  }, { imagePaths: [visibleEvidence.screenshotFile], mergeFallback: false })), visibleEvidence)
 
   const analysisArtifact = {
     schemaVersion: 1,
@@ -853,10 +878,14 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
     userGuidance: personaConfig.guidance || 'No additional user guidance was provided.',
     audienceResearch: cohort.audienceResearch,
     researchSources: cohort.researchSources,
-    instruction: 'Create distinct, psychologically coherent people whose current situation gives them a credible reason to evaluate this visible product now. Ground claims in product evidence or user guidance when possible. Put every unsupported market or life detail in provenance.assumptions. Avoid demographic stereotypes, generic UX-testing roles, and superficial adjective swaps.',
+    instruction: 'Create distinct, psychologically coherent people whose current situation gives them a credible reason to evaluate this visible product now. Every provenance.observedEvidence item must copy one productAnalysis.evidence string exactly. Every provenance.userGuidance item must copy one complete nonempty line from userGuidance exactly; use an empty array when no guidance applies. Ground claims in product evidence or user guidance when possible. Put every unsupported market or life detail in provenance.assumptions. Avoid demographic stereotypes, generic UX-testing roles, and superficial adjective swaps.',
     requestedShape: personaGenerationShape(config.count),
   }, { personas: [] }, { mergeFallback: false }))
-  const personas = normalizeGeneratedPersonas(generatedResult, config.count)
+  const grounding = {
+    productEvidence: analysis.evidence,
+    userGuidance: personaGuidanceEvidence(personaConfig.guidance),
+  }
+  const personas = normalizeGeneratedPersonas(generatedResult, config.count, grounding)
   const proceeded = shouldProceedWithPersonas({
     sourceKind: 'generated',
     approvalMode: personaConfig.approvalMode,
@@ -867,6 +896,8 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
     generatedAt: nowIso(),
     appName: analysis.productName || cohort.appName,
     source: 'generated',
+    inputFingerprint: personaGenerationFingerprint(personaGenerationInputs(personaConfig)),
+    productAnalysisFingerprint: personaGenerationFingerprint(analysisArtifact),
     productAnalysisFile: path.basename(personaConfig.productAnalysisFile),
     guidance: personaConfig.guidance,
     approval: {
@@ -877,7 +908,20 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
     personas,
   }
   fs.writeFileSync(personaConfig.generatedPersonasFile, JSON.stringify(generatedArtifact, null, 2))
-  return { document: generatedArtifact, proceeded }
+  return { document: generatedArtifact, proceeded, grounding }
+}
+
+function personaGenerationInputs(personaConfig) {
+  return {
+    schemaVersion: 1,
+    appUrl: config.appUrl,
+    count: config.count,
+    guidance: personaConfig.guidance,
+    audienceResearch: cohort.audienceResearch,
+    researchSources: cohort.researchSources,
+    llmProvider: config.llmProvider,
+    llmModel: config.llmModel || null,
+  }
 }
 
 async function preparePersonas() {
@@ -893,12 +937,22 @@ async function preparePersonas() {
   }
   if (source.kind === 'approved-generated') {
     const document = loadPersonaDocument(source.file)
-    applyPersonaDocument(document, 'approved-generated')
+    let productAnalysisDocument
+    try {
+      productAnalysisDocument = JSON.parse(fs.readFileSync(personaConfig.productAnalysisFile, 'utf8'))
+    } catch (error) {
+      throw new Error(`Reviewed product analysis could not be loaded at ${personaConfig.productAnalysisFile}: ${error.message}`)
+    }
+    validateApprovedPersonaArtifact(document, personaGenerationInputs(personaConfig), productAnalysisDocument)
+    applyPersonaDocument(document, 'approved-generated', {
+      productEvidence: productAnalysisDocument.analysis?.evidence,
+      userGuidance: personaGuidanceEvidence(personaConfig.guidance),
+    })
     return { personaConfig, sourceKind: source.kind, proceeded: true }
   }
 
   const generated = await generatePersonasFromVisibleProduct(personaConfig)
-  applyPersonaDocument(generated.document, 'generated')
+  applyPersonaDocument(generated.document, 'generated', generated.grounding)
   return {
     personaConfig,
     sourceKind: 'generated',
@@ -1835,7 +1889,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       value: route.value,
     })),
     destinyGuidance: bodyContext.destinyGuidance || [],
-    destinyInstruction: 'Destiny guidance is an optional hunch, not an action command. Judge it from this persona and the visible screen. Follow, reinterpret, or reject it by choosing one normal body action yourself.',
+    destinyInstruction: 'Destiny guidance is an optional hunch, not an action command. When guidance exists, explicitly record whether you follow, reinterpret, or reject it and why, then choose one normal body action yourself.',
     sessionMemory,
     continuityInstruction: 'Use session memory as the bot\'s actual prior experience. Do not claim information was never shown when it appeared on an earlier screen; instead distinguish whether it was clear, credible, and available at the moment it was needed.',
     bodyInstruction: 'Choose exactly one next body action from the current screenshot and visibleControls. Use click for buttons, radios, and checkboxes; use select only for comboboxes/select controls. For click, fill, or select, copy a targetId exactly. Use scroll, wait, back, or leave when no visible control is honestly worth using. Do not merely narrate an action.',
@@ -1861,6 +1915,10 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
         value: 'text to enter, option label/value, scroll direction, or empty',
       },
       actionReason: 'one direct first-person reason for this exact action',
+      destinyDisposition: {
+        decision: 'follow, reinterpret, or reject when destinyGuidance exists; otherwise none',
+        reason: 'first-person reason for that disposition',
+      },
       truthfulAssessment: 'direct private judgment about the visible product, with confidence if uncertain',
       lifeCostJustification: 'one sentence weighing the next action cost against the life goal',
     },
@@ -2052,6 +2110,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
   let goalAssessment = null
   let decisionSequence = 0
   let pendingDestinyGuidance = []
+  let pendingDecisionEvidence = null
   const reflectionTimeoutMs = config.llmTimeoutMs + 5000
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
@@ -2214,6 +2273,24 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     log(`Screenshot evidence (${label}): ${lastScreenshot}`, { type: 'screenshot-note', noEvidence: true })
     return file
   }
+  const recordMindActionResult = (decisionRecord, observation, screenshotRelative = lastScreenshot) => {
+    if (!decisionRecord) return
+    decisionRecord.resultingUrl = page.url()
+    decisionRecord.resultingScreenHash = textHash(observation?.text)
+    decisionRecord.resultingScreenshot = screenshotRelative || null
+    appendJsonl(evidenceFile, {
+      type: 'mind-action-result',
+      at: new Date().toISOString(),
+      elapsed: elapsed(startedAt),
+      decisionId: decisionRecord.decisionId,
+      origin: decisionRecord.origin,
+      url: decisionRecord.resultingUrl,
+      screenHash: decisionRecord.resultingScreenHash,
+      screenshot: decisionRecord.resultingScreenshot,
+      visibleText: observation?.text ? observation.text.slice(0, 1400) : '',
+      sessionNumber,
+    })
+  }
   const recordThought = (thought) => {
     thoughts.push(thought)
     log(`I think: ${thought}`, { type: 'thought' })
@@ -2310,11 +2387,15 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     if (reflection._betabotMindFallback) {
       throw new Error(`LLM mind unavailable: ${reflection._betabotMindError || 'provider fallback'}`)
     }
+    const normalizedDecision = normalizeMindDecision(reflection)
+    const deliveredGuidance = [...pendingDestinyGuidance]
+    const destinyDisposition = requireDestinyDisposition(normalizedDecision, deliveredGuidance)
     const decision = {
-      ...normalizeMindDecision(reflection),
+      ...normalizedDecision,
       decisionId: `${bot.id}-s${sessionNumber}-d${decisionSequence + 1}`,
       origin: 'persona-llm',
-      destinyGuidance: pendingDestinyGuidance,
+      destinyGuidance: deliveredGuidance,
+      destinyDisposition,
     }
     decisionSequence += 1
     pendingDestinyGuidance = []
@@ -2365,15 +2446,30 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     }
 
     stats.mindActions += 1
-    decisionRecords.push({
+    const decisionRecord = {
       decisionId: decision.decisionId,
       origin: decision.origin,
       phase,
       action: decision.action,
       actionReason: decision.actionReason,
       destinyGuidance: decision.destinyGuidance,
+      destinyDisposition: decision.destinyDisposition,
       result: result.description,
-    })
+      executionUrl: page.url(),
+      beforeScreenHash: textHash(observation.text),
+      beforeScreenshot: path.relative(config.runDir, screenshotFile),
+      resultingUrl: null,
+      resultingScreenHash: null,
+      resultingScreenshot: null,
+    }
+    decisionRecords.push(decisionRecord)
+    pendingDecisionEvidence = decisionRecord
+    if (
+      decision.destinyGuidance.some((item) => item.kind === 'loop_rescue') &&
+      ['follow', 'reinterpret'].includes(decision.destinyDisposition.decision)
+    ) {
+      stats.loopRescuesFollowed += 1
+    }
     log(`My body ${result.description}.`, {
       type: 'mind-action',
       decisionId: decision.decisionId,
@@ -2390,6 +2486,8 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
       })
     }
     if (result.ended) {
+      recordMindActionResult(decisionRecord, observation)
+      pendingDecisionEvidence = null
       shouldEndSession = true
       return true
     }
@@ -2578,6 +2676,12 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
       if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, observation)
       const currentFingerprintCount = recordScreenQuality(observation)
       screenshotFile = await captureScreenshot('post-mind-action', observation)
+      recordMindActionResult(
+        pendingDecisionEvidence,
+        observation,
+        screenshotFile ? path.relative(config.runDir, screenshotFile) : null,
+      )
+      pendingDecisionEvidence = null
       log(`After my action, I see: ${observation.text}`)
       const lower = observation.text.toLowerCase()
       if (currentFingerprintCount >= config.loopRepeatThreshold) {

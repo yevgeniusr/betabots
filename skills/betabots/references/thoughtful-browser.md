@@ -122,7 +122,11 @@ runner analyzes the visible product, combines the result with optional
 `BETABOT_PERSONA_GUIDANCE` or `BETABOT_PERSONA_GUIDANCE_FILE`, generates deep
 personas, writes its artifacts, and proceeds. Set
 `BETABOT_PERSONA_APPROVAL_MODE=required` to stop after generation. Resume the
-same `BETABOT_RUN_DIR` with `BETABOT_PERSONAS_APPROVED=true`.
+same `BETABOT_RUN_DIR` with `BETABOT_PERSONAS_APPROVED=true`. Reviewed artifacts
+are reused only when their app, guidance, research/model inputs, and product
+analysis fingerprints match. Use `BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE` for
+an authenticated analysis state; otherwise preflight resolves the regular
+storage-state template for `thoughtful-betabot-001`.
 
 Use `BETABOT_PERSONAS_FILE` for a standalone array or `{ "personas": [...] }`.
 Use `BETABOT_COHORT_FILE` when product keywords, routes, evidence requirements,
@@ -196,6 +200,7 @@ Injected local-storage auth is only for mock-backed UI smoke tests:
 
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before app JavaScript runs.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template with `{id}`, `{name}`, or `{role}` placeholders.
+- `BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE`: authenticated Playwright storage state for the persona-generation product analysis.
 
 Example:
 

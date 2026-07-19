@@ -4,6 +4,7 @@ const assert = require('node:assert/strict')
 const {
   destinyGuidanceForMind,
   queueDestinyNudge,
+  requireDestinyDisposition,
   setDestinyBotStatus,
   takeQueuedDestinyNudges,
 } = require('../skills/betabots/scripts/destiny_actions.cjs')
@@ -29,6 +30,18 @@ test('turns Destiny nudges into advisory mind context without a browser action',
   }])
   assert.equal('action' in guidance[0], false)
   assert.equal('targetId' in guidance[0], false)
+})
+
+test('requires the persona mind to explicitly disposition delivered Destiny guidance', () => {
+  const guidance = [{ kind: 'loop_rescue', route: '/verification' }]
+  assert.deepEqual(requireDestinyDisposition({
+    destinyDisposition: { decision: 'reject', reason: 'The route does not fit the visible screen.' },
+  }, guidance), {
+    decision: 'reject',
+    reason: 'The route does not fit the visible screen.',
+  })
+  assert.throws(() => requireDestinyDisposition({}, guidance), /Destiny disposition/i)
+  assert.deepEqual(requireDestinyDisposition({}, []), { decision: 'none', reason: '' })
 })
 
 test('deduplicates queued route nudges and applies a cooldown after delivery', () => {

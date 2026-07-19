@@ -2,6 +2,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
+const crypto = require('node:crypto')
 
 const GENERATED_PERSONAS_FILENAME = 'generated-personas.json'
 const PRODUCT_ANALYSIS_FILENAME = 'product-analysis.json'
@@ -49,10 +50,42 @@ function loadPersonaGenerationConfig(env = process.env, cwd = process.cwd(), run
     personasFile: resolveFile(cwd, env.BETABOT_PERSONAS_FILE),
     guidanceFile,
     guidance,
+    preflightStorageState: resolveFile(cwd, env.BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE),
     runDir: resolvedRunDir,
     generatedPersonasFile: path.join(resolvedRunDir, GENERATED_PERSONAS_FILENAME),
     productAnalysisFile: path.join(resolvedRunDir, PRODUCT_ANALYSIS_FILENAME),
   }
+}
+
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map(stableValue)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stableValue(value[key])]))
+  }
+  return value
+}
+
+function personaGenerationFingerprint(value) {
+  return crypto.createHash('sha256').update(JSON.stringify(stableValue(value))).digest('hex')
+}
+
+function personaGuidanceEvidence(value) {
+  return String(value || '')
+    .split(/\r?\n/)
+    .map((line) => text(line, 4000))
+    .filter(Boolean)
+}
+
+function validateApprovedPersonaArtifact(document, expectedInputs, productAnalysisDocument) {
+  const expectedInputFingerprint = personaGenerationFingerprint(expectedInputs)
+  if (!document?.inputFingerprint || document.inputFingerprint !== expectedInputFingerprint) {
+    throw new Error('Approved generated personas do not match the reviewed inputs. Regenerate and review them for this app and guidance.')
+  }
+  const expectedAnalysisFingerprint = personaGenerationFingerprint(productAnalysisDocument)
+  if (!document.productAnalysisFingerprint || document.productAnalysisFingerprint !== expectedAnalysisFingerprint) {
+    throw new Error('Approved generated personas do not match the reviewed product analysis. Regenerate and review them.')
+  }
+  return true
 }
 
 function resolvePersonaSource(config) {
@@ -186,7 +219,7 @@ const REQUIRED_GENERATED_LISTS = [
   'abandonmentConditions',
 ]
 
-function normalizeGeneratedPersonas(document, count) {
+function normalizeGeneratedPersonas(document, count, grounding = {}) {
   const source = Array.isArray(document) ? document : document?.personas
   if (!Array.isArray(source) || source.length !== count) {
     throw new Error(`Persona generation must return exactly ${count} personas.`)
@@ -202,10 +235,61 @@ function normalizeGeneratedPersonas(document, count) {
     if (!provenance || typeof provenance !== 'object') {
       throw new Error(`Generated persona ${index + 1} requires provenance.`)
     }
+    if (!Array.isArray(provenance.observedEvidence) || !list(provenance.observedEvidence).length) {
+      throw new Error(`Generated persona ${index + 1} provenance requires observedEvidence.`)
+    }
+    const allowedEvidence = new Set(list(grounding.productEvidence).map((item) => item.toLowerCase()))
+    if (allowedEvidence.size && list(provenance.observedEvidence).some((item) => !allowedEvidence.has(item.toLowerCase()))) {
+      throw new Error(`Generated persona ${index + 1} observedEvidence must cite product analysis evidence exactly.`)
+    }
+    for (const field of ['userGuidance', 'assumptions']) {
+      if (!Array.isArray(provenance[field])) {
+        throw new Error(`Generated persona ${index + 1} provenance requires ${field} as an array.`)
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(grounding, 'userGuidance')) {
+      const allowedGuidance = new Set(list(grounding.userGuidance).map((item) => item.toLowerCase()))
+      if (list(provenance.userGuidance).some((item) => !allowedGuidance.has(item.toLowerCase()))) {
+        throw new Error(`Generated persona ${index + 1} userGuidance must cite actual user guidance exactly.`)
+      }
+    }
     const normalized = normalizePersona(input, index, 'generated')
     normalized.provenance.source = 'generated'
     return normalized
   })
+}
+
+function normalizeProductAnalysis(input = {}, visibleEvidence = null) {
+  const normalized = {
+    productName: text(input.productName, 500),
+    category: text(input.category, 500),
+    visibleValueProposition: text(input.visibleValueProposition, 2000),
+    primaryWorkflows: list(input.primaryWorkflows),
+    visibleAudienceSignals: list(input.visibleAudienceSignals),
+    trustSignals: list(input.trustSignals),
+    frictionRisks: list(input.frictionRisks),
+    unknowns: list(input.unknowns),
+    evidence: list(input.evidence),
+  }
+  for (const field of ['productName', 'category', 'visibleValueProposition']) {
+    if (!normalized[field]) throw new Error(`Product analysis requires ${field}.`)
+  }
+  for (const field of ['primaryWorkflows', 'visibleAudienceSignals', 'evidence']) {
+    if (!normalized[field].length) throw new Error(`Product analysis requires ${field}.`)
+  }
+  if (visibleEvidence) {
+    const visibleText = [
+      text(visibleEvidence.title, 1000),
+      text(visibleEvidence.visibleText, 12000),
+      ...list(visibleEvidence.visibleControls?.map((control) => control?.name)),
+    ].join(' ').toLowerCase()
+    for (const evidence of normalized.evidence) {
+      if (!visibleText.includes(evidence.toLowerCase())) {
+        throw new Error(`Product analysis evidence is not present in the visible interface: ${evidence}`)
+      }
+    }
+  }
+  return normalized
 }
 
 function shouldProceedWithPersonas({ sourceKind, approvalMode, approved }) {
@@ -253,8 +337,12 @@ module.exports = {
   loadPersonaDocument,
   loadPersonaGenerationConfig,
   normalizeGeneratedPersonas,
+  normalizeProductAnalysis,
   normalizeSuppliedPersonas,
+  personaGenerationFingerprint,
+  personaGuidanceEvidence,
   personaGenerationShape,
   resolvePersonaSource,
   shouldProceedWithPersonas,
+  validateApprovedPersonaArtifact,
 }

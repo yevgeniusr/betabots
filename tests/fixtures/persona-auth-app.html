@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Persona Auth Fixture</title>
+</head>
+<body>
+  <main id="app"></main>
+  <script>
+    const token = window.localStorage.getItem('betabots-auth') || ''
+    document.querySelector('#app').innerHTML = token === 'token-thoughtful-betabot-001'
+      ? '<h1>Authenticated workspace</h1><button>Continue</button>'
+      : '<h1>Public sign in shell</h1><button>Sign in</button>'
+  </script>
+</body>
+</html>

@@ -17,6 +17,18 @@ function destinyGuidanceForMind(nudges = [], routes = []) {
   })
 }
 
+function requireDestinyDisposition(decision = {}, guidance = []) {
+  if (!guidance.length) return { decision: 'none', reason: '' }
+  const disposition = decision.destinyDisposition || {}
+  if (!['follow', 'reinterpret', 'reject'].includes(disposition.decision) || !String(disposition.reason || '').trim()) {
+    throw new Error('Mind decision requires a follow, reinterpret, or reject Destiny disposition with a reason.')
+  }
+  return {
+    decision: disposition.decision,
+    reason: String(disposition.reason).trim().slice(0, 1000),
+  }
+}
+
 function setDestinyBotStatus(state, botId, status) {
   if (!['active', 'inactive', 'completed'].includes(status)) {
     throw new Error(`Unsupported Destiny bot status: ${status}`)
@@ -75,6 +87,7 @@ function takeQueuedDestinyNudges(state, botId) {
 module.exports = {
   destinyGuidanceForMind,
   queueDestinyNudge,
+  requireDestinyDisposition,
   setDestinyBotStatus,
   takeQueuedDestinyNudges,
 }

@@ -27,6 +27,23 @@ test('normalizes one structured observe-think-act decision', () => {
   })
 })
 
+test('normalizes an explicit Destiny disposition', () => {
+  const decision = normalizeMindDecision({
+    thought: 'The hunch fits what I can see.',
+    destinyDisposition: { decision: 'reinterpret', reason: 'I will inspect the visible route first.' },
+    action: { type: 'click', targetId: 'control-1' },
+  })
+
+  assert.deepEqual(decision.destinyDisposition, {
+    decision: 'reinterpret',
+    reason: 'I will inspect the visible route first.',
+  })
+  assert.throws(() => normalizeMindDecision({
+    destinyDisposition: { decision: 'obey', reason: 'Destiny said so.' },
+    action: { type: 'wait' },
+  }), /Destiny disposition/i)
+})
+
 test('rejects missing, malformed, and unknown mind actions', () => {
   assert.throws(() => normalizeMindDecision({ thought: 'No action supplied.' }), /action object/i)
   assert.throws(() => normalizeMindDecision({ action: 'click' }), /action object/i)

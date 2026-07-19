@@ -56,6 +56,7 @@ node --test "$ROOT/tests/browser_issue_recovery.test.cjs" >/dev/null
 node --test "$ROOT/tests/request_failure_browser.test.cjs" >/dev/null
 node --test "$ROOT/tests/destiny_actions.test.cjs" >/dev/null
 node --test "$ROOT/tests/persona_generation.test.cjs" >/dev/null
+node --test "$ROOT/tests/persona_generation_runner.test.cjs" >/dev/null
 node --test "$ROOT/tests/social_provenance.test.cjs" >/dev/null
 node --test "$ROOT/tests/product_evidence.test.cjs" >/dev/null
 node --test "$ROOT/tests/vision_payload.test.cjs" >/dev/null
@@ -73,6 +74,7 @@ grep -q "BETABOT_PERSONAS_FILE" "$ROOT/skills/betabots/scripts/thoughtful_browse
 grep -q "BETABOT_PERSONA_GUIDANCE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_PERSONA_APPROVAL_MODE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_PERSONAS_APPROVED" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_BROWSER_EXECUTABLE_PATH" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_REQUIRE_REAL_BACKEND" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_APP_ORIGINS" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"

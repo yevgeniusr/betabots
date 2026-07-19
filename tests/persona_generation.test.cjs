@@ -7,9 +7,12 @@ const path = require('node:path')
 const {
   loadPersonaGenerationConfig,
   normalizeGeneratedPersonas,
+  normalizeProductAnalysis,
   normalizeSuppliedPersonas,
+  personaGenerationFingerprint,
   resolvePersonaSource,
   shouldProceedWithPersonas,
+  validateApprovedPersonaArtifact,
 } = require('../skills/betabots/scripts/persona_generation.cjs')
 
 function deepPersona(overrides = {}) {
@@ -124,6 +127,79 @@ test('requires complete, exact-count generated personas', () => {
   assert.throws(
     () => normalizeGeneratedPersonas({ personas: [deepPersona({ trustThreshold: '' })] }, 1),
     /trustThreshold/i,
+  )
+  assert.throws(
+    () => normalizeGeneratedPersonas({ personas: [deepPersona({ provenance: {} })] }, 1),
+    /observedEvidence/i,
+  )
+  assert.throws(
+    () => normalizeGeneratedPersonas({ personas: [deepPersona({
+      provenance: { observedEvidence: [], userGuidance: [], assumptions: [] },
+    })] }, 1),
+    /observedEvidence/i,
+  )
+  assert.throws(
+    () => normalizeGeneratedPersonas({ personas: [deepPersona()] }, 1, {
+      productEvidence: ['A different visible claim.'],
+    }),
+    /product analysis evidence/i,
+  )
+  assert.throws(
+    () => normalizeGeneratedPersonas({ personas: [deepPersona()] }, 1, {
+      userGuidance: ['Include procurement constraints.'],
+    }),
+    /actual user guidance/i,
+  )
+  assert.throws(
+    () => normalizeGeneratedPersonas({ personas: [deepPersona()] }, 1, {
+      userGuidance: [],
+    }),
+    /actual user guidance/i,
+  )
+})
+
+test('requires substantive visible product analysis', () => {
+  assert.throws(() => normalizeProductAnalysis({}), /productName/i)
+  assert.throws(() => normalizeProductAnalysis({
+    productName: 'Fixture',
+    category: 'tool',
+    visibleValueProposition: 'Helps a user continue.',
+    primaryWorkflows: ['Continue through the flow.'],
+    visibleAudienceSignals: ['People evaluating the flow.'],
+    evidence: [],
+  }), /evidence/i)
+
+  const analysis = normalizeProductAnalysis({
+    productName: 'Fixture',
+    category: 'tool',
+    visibleValueProposition: 'Helps a user continue.',
+    primaryWorkflows: ['Continue through the flow.'],
+    visibleAudienceSignals: ['People evaluating the flow.'],
+    evidence: ['A Continue button is visible.'],
+  })
+  assert.deepEqual(analysis.evidence, ['A Continue button is visible.'])
+  assert.throws(() => normalizeProductAnalysis({ ...analysis, evidence: ['Invented pricing claim.'] }, {
+    visibleText: 'Fixture Continue',
+    visibleControls: [{ name: 'Continue' }],
+  }), /visible interface/i)
+})
+
+test('binds approved generated artifacts to their reviewed inputs and analysis', () => {
+  const inputs = { appUrl: 'https://example.test', count: 1, guidance: 'Include cautious buyers.' }
+  const analysisArtifact = { analysis: { productName: 'Example' }, visibleEvidence: { visibleText: 'Buy carefully.' } }
+  const artifact = {
+    inputFingerprint: personaGenerationFingerprint(inputs),
+    productAnalysisFingerprint: personaGenerationFingerprint(analysisArtifact),
+  }
+
+  assert.doesNotThrow(() => validateApprovedPersonaArtifact(artifact, inputs, analysisArtifact))
+  assert.throws(
+    () => validateApprovedPersonaArtifact(artifact, { ...inputs, guidance: 'Include administrators.' }, analysisArtifact),
+    /reviewed inputs/i,
+  )
+  assert.throws(
+    () => validateApprovedPersonaArtifact(artifact, inputs, { ...analysisArtifact, visibleEvidence: { visibleText: 'Changed.' } }),
+    /product analysis/i,
   )
 })
 

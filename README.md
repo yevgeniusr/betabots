@@ -177,7 +177,9 @@ Persona source priority is `BETABOT_COHORT_FILE`, `BETABOT_PERSONAS_FILE`, an
 approved generated artifact in the same run directory, then generation. Set
 `BETABOT_PERSONA_APPROVAL_MODE=required` to stop after generation for review.
 Resume with the same `BETABOT_RUN_DIR` and `BETABOT_PERSONAS_APPROVED=true`.
-The default approval mode is `auto`, meaning generate and proceed.
+The default approval mode is `auto`, meaning generate and proceed. A reviewed
+artifact is fingerprint-bound to its app URL, guidance, cohort research, model
+configuration, and product-analysis artifact; changed inputs require regeneration.
 
 Generated personas include a concrete life situation, trigger, job to be done,
 prior attempts, stakes, constraints, anxieties, objections, trust threshold,
@@ -324,6 +326,7 @@ Optional auth isolation:
 - `BETABOT_AUTH_LOCAL_STORAGE_KEY`: localStorage key to seed before the app loads.
 - `BETABOT_AUTH_TOKEN_TEMPLATE`: token template; supports `{id}`, `{name}`, and `{role}` placeholders.
 - `BETABOT_STORAGE_STATE_TEMPLATE`: Playwright storage-state path template produced by real UI login; supports `{id}`, `{name}`, and `{role}`.
+- `BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE`: authenticated Playwright storage state used specifically for visible-product analysis. Without it, preflight resolves `BETABOT_STORAGE_STATE_TEMPLATE` for `thoughtful-betabot-001` and fails if the configured file is missing.
 - `BETABOT_REQUIRE_REAL_BACKEND`: require an explicit real-backend attestation; unverified runs score zero even when this flag is omitted.
 - `BETABOT_ENVIRONMENT_ATTESTATION_URL`: JSON endpoint proving real auth and persistent PostgreSQL connectivity.
 - `BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS`: attestation timeout; defaults to `5000`.
@@ -332,7 +335,7 @@ Optional auth isolation:
 - `BETABOT_PERSONA_GUIDANCE`: optional audience, market, exclusion, or research guidance incorporated into generated personas.
 - `BETABOT_PERSONA_GUIDANCE_FILE`: optional text or Markdown file containing persona-generation guidance.
 - `BETABOT_PERSONA_APPROVAL_MODE=auto`: `auto` generates and proceeds; `required` writes artifacts and stops before bot sessions.
-- `BETABOT_PERSONAS_APPROVED=true`: reuse `generated-personas.json` from the same `BETABOT_RUN_DIR` after required review.
+- `BETABOT_PERSONAS_APPROVED=true`: reuse fingerprint-matched `generated-personas.json` and `product-analysis.json` from the same `BETABOT_RUN_DIR` after required review.
 - `BETABOT_SCREEN_SIZE_DISTRIBUTION`: optional JSON array of weighted device buckets for thoughtful browser runs. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Legacy alias: `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `BETABOT_AVATAR_STYLE=bottts-neutral`: DiceBear avatar style slug or style URL for generated bot avatars.
 - `BETABOT_AVATAR_BASE_URL=https://api.dicebear.com/10.x`: DiceBear HTTP API base URL; override for a self-hosted instance.

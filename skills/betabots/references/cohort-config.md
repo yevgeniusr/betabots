@@ -6,6 +6,8 @@ A cohort file is optional. Without `BETABOT_COHORT_FILE` or
 `BETABOT_PERSONAS_FILE`, the runner analyzes the visible product and generates
 deep personas automatically. Use a cohort file when you need curated research,
 route hints, scoring keywords, evidence requirements, or device weights.
+For authenticated products, provide `BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE`
+so visible-product analysis is not based on a public or sign-in shell.
 
 For product-quality runs, create audience research first. Read `audience-research.md`, then encode its segment weights, vocabulary, traffic mix, and assumptions in the cohort file.
 

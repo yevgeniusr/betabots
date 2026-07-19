@@ -19,7 +19,7 @@ process.stdin.on('end', () => {
       trustSignals: ['The main action is plainly labeled.'],
       frictionRisks: ['The initial page does not explain what happens next.'],
       unknowns: ['No pricing or account model is visible.'],
-      evidence: ['The page visibly contains a Continue button.']
+      evidence: ['Continue']
     }
   } else if (prompt.includes('task "persona_generation"')) {
     const countMatch = prompt.match(/"requestedPersonaCount":\s*(\d+)/)
@@ -48,7 +48,7 @@ process.stdin.on('end', () => {
         emotionalBaseline: 'guarded',
         technicalComfort: 'medium',
         provenance: {
-          observedEvidence: ['The page visibly contains a Continue button.'],
+          observedEvidence: ['Continue'],
           userGuidance: prompt.includes('Prioritize skeptical team adoption decisions.')
             ? ['Prioritize skeptical team adoption decisions.']
             : [],

@@ -83,3 +83,56 @@ test('approved resume reuses the reviewed generated persona artifact', () => {
   const cohort = JSON.parse(fs.readFileSync(path.join(runDir, 'cohort.json'), 'utf8'))
   assert.equal(cohort.bots[0].name, 'Reviewed Samira')
 })
+
+test('approved resume rejects changed generation inputs', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-stale-personas-'))
+  const runDir = path.join(temp, 'run')
+  const first = runGenerated(runDir, { BETABOT_PERSONA_APPROVAL_MODE: 'required' })
+  assert.equal(first.status, 0, first.stderr || first.stdout)
+
+  const resumed = runGenerated(runDir, {
+    BETABOT_PERSONA_APPROVAL_MODE: 'required',
+    BETABOT_PERSONAS_APPROVED: 'true',
+    BETABOT_PERSONA_GUIDANCE: 'Use an entirely different audience.',
+    BETABOT_CODEX_COMMAND: path.join(temp, 'mind-must-not-run'),
+  })
+
+  assert.notEqual(resumed.status, 0)
+  assert.match(resumed.stderr, /reviewed inputs/i)
+})
+
+test('approved resume rejects edited provenance that is absent from reviewed evidence', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-false-provenance-'))
+  const runDir = path.join(temp, 'run')
+  const first = runGenerated(runDir, { BETABOT_PERSONA_APPROVAL_MODE: 'required' })
+  assert.equal(first.status, 0, first.stderr || first.stdout)
+  const artifactFile = path.join(runDir, 'generated-personas.json')
+  const reviewed = JSON.parse(fs.readFileSync(artifactFile, 'utf8'))
+  reviewed.personas[0].provenance.observedEvidence = ['A pricing guarantee that was never visible.']
+  fs.writeFileSync(artifactFile, JSON.stringify(reviewed, null, 2))
+
+  const resumed = runGenerated(runDir, {
+    BETABOT_PERSONA_APPROVAL_MODE: 'required',
+    BETABOT_PERSONAS_APPROVED: 'true',
+    BETABOT_CODEX_COMMAND: path.join(temp, 'mind-must-not-run'),
+  })
+
+  assert.notEqual(resumed.status, 0)
+  assert.match(resumed.stderr, /product analysis evidence/i)
+})
+
+test('product preflight receives the configured session authentication', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-persona-auth-'))
+  const runDir = path.join(temp, 'run')
+  const authAppUrl = `file://${path.join(root, 'tests/fixtures/persona-auth-app.html')}`
+  const result = runGenerated(runDir, {
+    BETABOT_APP_URL: authAppUrl,
+    BETABOT_AUTH_LOCAL_STORAGE_KEY: 'betabots-auth',
+    BETABOT_AUTH_TOKEN_TEMPLATE: 'token-{id}',
+  })
+
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const analysis = JSON.parse(fs.readFileSync(path.join(runDir, 'product-analysis.json'), 'utf8'))
+  assert.match(analysis.visibleEvidence.visibleText, /authenticated workspace/i)
+  assert.doesNotMatch(analysis.visibleEvidence.visibleText, /public sign in shell/i)
+})

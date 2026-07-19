@@ -1,6 +1,7 @@
 const BODY_ACTIONS = new Set(['click', 'fill', 'select', 'scroll', 'wait', 'back', 'leave'])
 const TARGET_ACTIONS = new Set(['click', 'fill', 'select'])
 const UNSAFE_CONTROL = /\b(delete|remove|revoke|erase|destroy|sign out|log ?out|pay|purchase|buy|checkout|subscribe|publish|send money|transfer)\b/i
+const DESTINY_DISPOSITIONS = new Set(['follow', 'reinterpret', 'reject', 'none'])
 
 function cleanText(value, limit = 1000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, limit)
@@ -16,6 +17,11 @@ function normalizeMindDecision(value = {}) {
   if (!BODY_ACTIONS.has(requestedType)) {
     throw new Error(`Unknown body action: ${requestedType}`)
   }
+  const sourceDisposition = value.destinyDisposition
+  const destinyDecision = cleanText(sourceDisposition?.decision, 30).toLowerCase() || 'none'
+  if (!DESTINY_DISPOSITIONS.has(destinyDecision)) {
+    throw new Error(`Unknown Destiny disposition: ${destinyDecision}`)
+  }
 
   return {
     thought: cleanText(value.thought),
@@ -24,6 +30,10 @@ function normalizeMindDecision(value = {}) {
     truthfulAssessment: cleanText(value.truthfulAssessment || value.truthAssessment),
     lifeCostJustification: cleanText(value.lifeCostJustification || value.lifeDecision),
     actionReason: cleanText(value.actionReason || sourceAction.reason),
+    destinyDisposition: {
+      decision: destinyDecision,
+      reason: cleanText(sourceDisposition?.reason),
+    },
     action: {
       type: requestedType,
       targetId: cleanText(sourceAction.targetId || sourceAction.target, 120),

@@ -30,7 +30,7 @@ Default rule:
 - Provider fallback must never drive browser actions. If the LLM cannot choose an executable action, record a mind failure and stop the bot after repeated failures.
 - Missing, malformed, and unknown LLM actions are failures. Only an explicit LLM `wait` may wait.
 - Persona-authored social text must carry a successful persona-LLM decision ID. Never publish fallback or templated persona speech.
-- Destiny may add context to the next reflection but must never select or execute a browser control.
+- Destiny may add context to the next reflection but must never select or execute a browser control. The persona mind records whether it followed, reinterpreted, or rejected each delivered hunch.
 
 ## Persona Generation
 
@@ -46,7 +46,11 @@ Persona source priority is `BETABOT_COHORT_FILE`, `BETABOT_PERSONAS_FILE`, an
 approved generated artifact, then new generation. Supplied files are approved.
 To review generated personas first, use a stable `BETABOT_RUN_DIR`, set approval
 mode to `required`, edit/review the artifact, then resume with
-`BETABOT_PERSONAS_APPROVED=true`.
+`BETABOT_PERSONAS_APPROVED=true`. Approval reuse is accepted only when the
+reviewed generation inputs and `product-analysis.json` fingerprints still match.
+For authenticated products, set `BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE` or a
+resolvable `BETABOT_STORAGE_STATE_TEMPLATE` so analysis sees the same product
+surface as the bots.
 
 Deep personas should include life situation, trigger, job to be done, prior
 attempts, stakes, constraints, anxieties, objections, trust threshold, decision

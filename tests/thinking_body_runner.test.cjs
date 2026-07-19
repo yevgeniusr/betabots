@@ -43,11 +43,18 @@ test('runner captures a screenshot, asks the mind, and executes its action', () 
   assert.equal(summary.results[0].decisionRecords[0].origin, 'persona-llm')
   assert.match(summary.results[0].decisionRecords[0].decisionId, /^thoughtful-betabot-001-s1-d1$/)
   assert.equal(summary.results[0].decisionRecords[0].action.type, 'click')
+  assert.match(summary.results[0].decisionRecords[0].resultingScreenshot, /post-mind-action/)
+  assert.equal(summary.results[0].decisionRecords[0].resultingScreenHash.length > 0, true)
   assert.equal(summary.results[0].unprovenancedMindActions, 0)
   assert.ok(evidence.some((event) => (
     event.type === 'mind-action' &&
     event.decisionId === 'thoughtful-betabot-001-s1-d1' &&
     event.origin === 'persona-llm'
+  )))
+  assert.ok(evidence.some((event) => (
+    event.type === 'mind-action-result' &&
+    event.decisionId === 'thoughtful-betabot-001-s1-d1' &&
+    event.screenshot === summary.results[0].decisionRecords[0].resultingScreenshot
   )))
   assert.match(raw, /Screenshot evidence \(arrival\)/)
   assert.match(raw, /I decide to click control-1/)
