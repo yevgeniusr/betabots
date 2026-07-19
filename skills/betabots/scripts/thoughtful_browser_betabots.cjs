@@ -60,6 +60,10 @@ const { codexImageArgs, openRouterUserContent } = require('./vision_payload.cjs'
 const {
   normalizeRouteMode,
 } = require('./route_planning.cjs')
+const {
+  hasPersonaLlmProvenance,
+  requireLlmSocialText,
+} = require('./social_provenance.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -570,6 +574,7 @@ const llmStats = {
   tasks: {},
   errors: [],
 }
+let socialDecisionSequence = 0
 
 function runProcess(command, args, input, timeoutMs) {
   return new Promise((resolve, reject) => {
@@ -727,25 +732,6 @@ ${JSON.stringify(fallback, null, 2)}
     return { ...fallback, _betabotMindFallback: true, _betabotMindError: error.message }
   }
 }
-
-const betabookOpeners = [
-  'Your situation sounds close to mine. Want to compare what we are trying to get from this product?',
-  'I like how you framed the problem. I am looking for clear expectations and a next step that feels worth it.',
-  'Your goal made me pause. Maybe we should check whether the product gives both of us enough signal.',
-]
-
-const betabookReplies = [
-  'That sounds reasonable. I care about clarity, trust, and not wasting time.',
-  'I am interested, but I want one concrete next step instead of vague browsing.',
-  'If this keeps feeling useful, I could see myself coming back later.',
-]
-
-const destinyThoughts = [
-  'I have a hunch that checking another part of the product now will matter.',
-  'Something about this moment makes me want to take one more step instead of leaving.',
-  'I suddenly feel like waiting a little longer could pay off.',
-  'I feel pulled toward doing something concrete rather than browsing forever.',
-]
 
 const avatarBackgrounds = {
   curious: 'b6e3f4',
@@ -1024,8 +1010,23 @@ function writeBetabookState(state) {
   fs.writeFileSync(path.join(config.runDir, 'betabook.json'), JSON.stringify(state, null, 2))
 }
 
+function isPersonaSocialAuthor(state, authorId) {
+  return state?.participants?.some((participant) => participant.id === authorId) || false
+}
+
+function permitSocialWrite(state, input, kind) {
+  if (!isPersonaSocialAuthor(state, input.authorId || input.fromBotId)) return true
+  if (hasPersonaLlmProvenance(input)) return true
+  const authorId = input.authorId || input.fromBotId
+  state.errors.push(`${kind} rejected for ${authorId}: missing persona LLM provenance`)
+  state.events.push({ type: 'social_write_rejected', kind, authorId, at: nowIso() })
+  writeBetabookState(state)
+  return false
+}
+
 function betabookPost(state, input) {
   if (!state?.enabled) return null
+  if (!permitSocialWrite(state, input, 'post')) return null
   const post = {
     id: `post-${String(state.posts.length + 1).padStart(4, '0')}`,
     at: nowIso(),
@@ -1039,6 +1040,8 @@ function betabookPost(state, input) {
     commentCount: 0,
     replyTarget: Number(input.replyTarget || (input.authorId === 'destiny' ? 1 : 2)),
     heat: 1,
+    decisionId: input.decisionId || null,
+    origin: input.origin || (input.authorId === 'destiny' ? 'destiny' : null),
   }
   state.posts.push(post)
   post.heat = betabookPostHeat(state, post)
@@ -1049,6 +1052,7 @@ function betabookPost(state, input) {
 
 function betabookComment(state, input) {
   if (!state?.enabled || !input.postId) return null
+  if (!permitSocialWrite(state, input, 'comment')) return null
   const comment = {
     id: `comment-${String(state.comments.length + 1).padStart(4, '0')}`,
     at: nowIso(),
@@ -1056,6 +1060,8 @@ function betabookComment(state, input) {
     authorId: input.authorId,
     body: input.body || '',
     replyToCommentId: input.replyToCommentId || null,
+    decisionId: input.decisionId || null,
+    origin: input.origin || (input.authorId === 'destiny' ? 'destiny' : null),
   }
   state.comments.push(comment)
   const post = state.posts.find((item) => item.id === comment.postId)
@@ -1072,6 +1078,7 @@ function betabookComment(state, input) {
 
 function betabookInvite(state, input) {
   if (!state?.enabled) return null
+  if (!permitSocialWrite(state, input, 'invite')) return null
   const invite = {
     id: `invite-${String(state.invites.length + 1).padStart(4, '0')}`,
     at: nowIso(),
@@ -1081,6 +1088,8 @@ function betabookInvite(state, input) {
     message: input.message || '',
     status: 'pending',
     postId: input.postId || null,
+    decisionId: input.decisionId || null,
+    origin: input.origin || (input.fromBotId === 'destiny' ? 'destiny' : null),
   }
   state.invites.push(invite)
   state.events.push({ type: 'invite_created', inviteId: invite.id, fromBotId: invite.fromBotId, toBotId: invite.toBotId, at: invite.at })
@@ -1168,25 +1177,34 @@ async function stirBetabook(bots, state, reason) {
   for (const item of candidates) {
     const responder = chooseBetabookResponder(bots, state, item.post)
     if (!responder) continue
-    const body = await llmBotShortText('betabook_thread_reply', responder, {
-      reason,
-      post: {
-        id: item.post.id,
-        channel: item.post.channel,
-        authorId: item.post.authorId,
-        title: item.post.title,
-        body: item.post.body,
-        tags: item.post.tags,
-        commentCount: item.comments.length,
-        heat: item.heat,
-      },
-      recentComments: item.comments.slice(-3),
-      action: 'reply to Betabook with a useful, persona-grounded response that keeps the board alive',
-    }, pick(betabookReplies))
+    let socialDecision
+    try {
+      socialDecision = await llmBotShortText('betabook_thread_reply', responder, {
+        reason,
+        post: {
+          id: item.post.id,
+          channel: item.post.channel,
+          authorId: item.post.authorId,
+          title: item.post.title,
+          body: item.post.body,
+          tags: item.post.tags,
+          commentCount: item.comments.length,
+          heat: item.heat,
+        },
+        recentComments: item.comments.slice(-3),
+        action: 'reply to Betabook with a useful, persona-grounded response that keeps the board alive',
+      })
+    } catch (error) {
+      state.errors.push(`betabook_thread_reply for ${responder.id}: ${error.message}`)
+      state.events.push({ type: 'social_text_failed', task: 'betabook_thread_reply', authorId: responder.id, at: nowIso() })
+      continue
+    }
     betabookComment(state, {
       postId: item.post.id,
       authorId: responder.id,
-      body,
+      body: socialDecision.text,
+      decisionId: socialDecision.decisionId,
+      origin: socialDecision.origin,
     })
     state.events.push({ type: 'thread_stirred', postId: item.post.id, authorId: responder.id, reason, at: nowIso() })
     replies += 1
@@ -1236,6 +1254,10 @@ function createDestinyState(bots) {
 async function initializeDestinyMasterPlan(bots, state, betabookState) {
   if (!state.enabled) return
   const plan = await llmDestinyMasterPlan(bots, state)
+  if (plan._betabotMindFallback) {
+    state.errors.push(`destiny_master_plan: ${plan._betabotMindError || 'LLM provider fallback'}`)
+    return
+  }
   const byId = new Map((plan.threads || []).map((thread) => [thread.id, thread]))
   for (const thread of state.masterPlan) {
     const planned = byId.get(thread.id)
@@ -1290,18 +1312,6 @@ function runDestinyLoopRescue(bots, state, betabookState) {
     }
     const queued = addDestinyNudge(state, bot.id, nudge)
     if (!queued.accepted) continue
-    betabookComment(betabookState, {
-      postId: post.id,
-      authorId: 'destiny',
-      body: `Destiny notices ${bot.name} looping and quietly shifts the timing: try a different surface, then look for one concrete next step.`,
-    })
-    betabookInvite(betabookState, {
-      fromBotId: 'destiny',
-      toBotId: bot.id,
-      kind: 'loop_rescue',
-      message: 'You seem stuck. Try a different part of the product, then make one concrete next move.',
-      postId: post.id,
-    })
     rescued.add(post.id)
     state.events.push({ type: 'loop_rescue_planned', botId: bot.id, postId: post.id, route: nudge.route, at: nowIso() })
   }
@@ -1315,6 +1325,10 @@ async function runDestinyPass(bots, state, betabookState) {
   runDestinyLoopRescue(bots, state, betabookState)
 
   const advice = await llmDestinyLiveAdvice(bots, state, betabookState)
+  if (advice._betabotMindFallback) {
+    state.errors.push(`destiny_live_advice: ${advice._betabotMindError || 'LLM provider fallback'}`)
+    return
+  }
   for (const nudge of (advice.nudges || []).slice(0, 3)) {
     if (!nudge.botId || !botsById.has(nudge.botId)) continue
     const queued = addDestinyNudge(state, nudge.botId, {
@@ -1345,18 +1359,8 @@ async function runDestinyPass(bots, state, betabookState) {
     if (state.botStatusById[pair.a] !== 'active' || state.botStatusById[pair.b] !== 'active') continue
 
     if (pair.intent === 'near_miss') {
-      const post = betabookPost(betabookState, {
-        authorId: 'destiny',
-        channel: 'near-misses',
-        title: `${botA.name} and ${botB.name} almost cross paths`,
-        body: 'Two compatible people are active, but Destiny keeps them in adjacent moments to test whether the product creates enough organic momentum without intervention.',
-        tags: ['near-miss', 'destiny'],
-        replyTarget: 2,
-      })
-      pair.postId = post?.id || null
+      pair.postId = null
       pair.status = 'paths_kept_apart'
-      addDestinyNudge(state, pair.a, { kind: 'think', thought: 'I feel like there are people nearby, but I do not see a clear path to them yet.' })
-      addDestinyNudge(state, pair.b, { kind: 'think', thought: 'I wonder if the app has enough live people for me, because I keep missing the moment.' })
       state.events.push({ type: 'paths_kept_apart', pairId: pair.id, at: nowIso() })
       continue
     }
@@ -1364,11 +1368,29 @@ async function runDestinyPass(bots, state, betabookState) {
     if (!pair.postId) {
       const routeA = pick(genericNudgeRoutes())
       const routeB = pick(genericNudgeRoutes())
+      let postDecision
+      let inviteDecision
+      try {
+        postDecision = await llmBotShortText('betabot_coordination_post', botA, {
+          peer: { id: botB.id, name: botB.name, role: botB.role, goal: botB.goal },
+          action: 'write a natural low-pressure Betabook post about what you are trying to accomplish',
+        })
+        inviteDecision = await llmBotShortText('betabot_coordination_invite', botA, {
+          peer: { id: botB.id, name: botB.name, role: botB.role, goal: botB.goal },
+          post: postDecision.text,
+          action: 'invite this peer to compare notes in one natural sentence',
+        })
+      } catch (error) {
+        betabookState.errors.push(`coordination for ${botA.id}: ${error.message}`)
+        continue
+      }
       const post = betabookPost(betabookState, {
         authorId: pair.a,
         channel: 'coordination',
         title: `${botA.name} is looking for a useful next step`,
-        body: `${botA.name} wants a low-pressure way to keep exploring and seems compatible with ${botB.name}'s goal.`,
+        body: postDecision.text,
+        decisionId: postDecision.decisionId,
+        origin: postDecision.origin,
         tags: ['coordination', 'destiny-surface'],
         replyTarget: 2,
       })
@@ -1377,11 +1399,13 @@ async function runDestinyPass(bots, state, betabookState) {
         fromBotId: pair.a,
         toBotId: pair.b,
         kind: 'cross_paths',
-        message: `${botA.name} looks compatible. Maybe compare notes before leaving.`,
+        message: inviteDecision.text,
+        decisionId: inviteDecision.decisionId,
+        origin: inviteDecision.origin,
         postId: pair.postId,
       })
-      addDestinyNudge(state, pair.a, { kind: 'think', thought: pick(destinyThoughts), route: routeA })
-      addDestinyNudge(state, pair.b, { kind: 'think', thought: pick(destinyThoughts), route: routeB })
+      addDestinyNudge(state, pair.a, { kind: 'think', thought: '', route: routeA })
+      addDestinyNudge(state, pair.b, { kind: 'think', thought: '', route: routeB })
       state.events.push({ type: 'paths_set_to_cross', pairId: pair.id, postId: pair.postId, at: nowIso() })
     }
   }
@@ -1636,7 +1660,7 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
   }, fallback, { imagePaths: bodyContext.screenshotFile ? [bodyContext.screenshotFile] : [] })
 }
 
-async function llmBotShortText(task, bot, context, fallbackText) {
+async function llmBotShortText(task, bot, context) {
   const result = await llmJson(task, {
     bot: {
       id: bot.id,
@@ -1654,8 +1678,14 @@ async function llmBotShortText(task, bot, context, fallbackText) {
     },
     context,
     requestedShape: { text: 'short first-person human text, no markdown' },
-  }, { text: fallbackText })
-  return String(result.text || fallbackText).replace(/\s+/g, ' ').trim().slice(0, 500)
+  }, { text: '' })
+  const text = requireLlmSocialText(result)
+  socialDecisionSequence += 1
+  return {
+    text,
+    decisionId: `social-${bot.id}-${socialDecisionSequence}`,
+    origin: 'persona-llm',
+  }
 }
 
 async function llmDestinyMasterPlan(bots, state) {
@@ -2002,16 +2032,18 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     if (!runtime.betabookState?.enabled) return false
     if (stats.loopHelpRequests >= 3) return false
     stats.loopHelpRequests += 1
-    const body = await llmBotShortText('betabot_help_request', bot, {
+    const socialDecision = await llmBotShortText('betabot_help_request', bot, {
       reason,
       visibleScreen: observation.text.slice(0, 1200),
       action: 'ask other simulated users for help on Betabook because I am stuck',
-    }, `I keep landing on the same kind of screen. Reason: ${reason}. Current screen starts with: "${observation.text.slice(0, 220)}"`)
+    })
     const post = betabookPost(runtime.betabookState, {
       authorId: bot.id,
       channel: 'help',
       title: `${bot.name} feels stuck`,
-      body,
+      body: socialDecision.text,
+      decisionId: socialDecision.decisionId,
+      origin: socialDecision.origin,
       tags: ['loop-help', 'stuck', bot.role],
       replyTarget: 2,
     })
@@ -2212,16 +2244,18 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     log(`I check Betabook ${reason}: ${summary}`)
     acknowledgeBetabookInvites(betabookState, bot, log)
     if (digest.posts[0]) {
-      const body = await llmBotShortText('betabot_betabook_comment', bot, {
+      const socialDecision = await llmBotShortText('betabot_betabook_comment', bot, {
         reason,
         post: digest.posts[0],
         recentComments: digest.posts[0].recentComments || [],
         inviteSummary: inviteText,
-      }, `This is relevant to me because I am here as ${bot.role}.`)
+      })
       betabookComment(betabookState, {
         postId: digest.posts[0].id,
         authorId: bot.id,
-        body,
+        body: socialDecision.text,
+        decisionId: socialDecision.decisionId,
+        origin: socialDecision.origin,
       })
       const replies = await stirBetabook(runtime.bots || [bot], betabookState, `${bot.name} checked Betabook`)
       if (replies) betabookMoments.push(`${replies} more Betabook repl${replies === 1 ? 'y' : 'ies'} followed`)
@@ -2247,14 +2281,23 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     log(`My life goal is: ${bot.lifeGoal}`)
     log(`I have ${config.truthPressureStartingYears} life-years. Each meaningful action costs ${config.truthPressureActionMonths} month(s); each committed dollar costs ${config.truthPressureDollarYears} year(s).`)
     if (authToken) log(`I have my own isolated test account for this session.`)
-    betabookPost(runtime.betabookState, {
-      authorId: bot.id,
-      channel: 'introductions',
-      title: `${bot.name} arrives`,
-      body: `${bot.name} is a ${bot.role}. Goal: ${bot.goal}`,
-      tags: ['arrival', bot.role],
-      replyTarget: 1,
-    })
+    if (runtime.betabookState?.enabled) {
+      await runStep('write a Betabook introduction', async () => {
+        const socialDecision = await llmBotShortText('betabot_introduction', bot, {
+          action: 'introduce yourself naturally on Betabook without describing yourself as a test persona',
+        })
+        return betabookPost(runtime.betabookState, {
+          authorId: bot.id,
+          channel: 'introductions',
+          title: `${bot.name} arrives`,
+          body: socialDecision.text,
+          decisionId: socialDecision.decisionId,
+          origin: socialDecision.origin,
+          tags: ['arrival', bot.role],
+          replyTarget: 1,
+        })
+      }, null, reflectionTimeoutMs)
+    }
     await page.goto(config.appUrl, { waitUntil: 'commit', timeout: config.actionTimeoutMs })
     await wait(2500 + random() * 5000)
     let observation = await observeProduct()
