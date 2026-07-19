@@ -1,4 +1,5 @@
 .DS_Store
 node_modules/
+.worktrees/
 .betabots/runs/
 .env
