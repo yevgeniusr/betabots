@@ -2,7 +2,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 
 const {
-  findVisibleDestinyAction,
+  destinyGuidanceForMind,
   queueDestinyNudge,
   setDestinyBotStatus,
   takeQueuedDestinyNudges,
@@ -15,51 +15,20 @@ const routes = [
   },
 ]
 
-test('turns a Destiny route intention into a click on a visible matching control', () => {
-  const action = findVisibleDestinyAction(
-    { route: '/verification' },
-    [
-      { id: 'control-1', kind: 'link', name: 'Dashboard', disabled: false },
-      { id: 'control-2', kind: 'link', name: 'Verification', disabled: false },
-    ],
-    routes,
-  )
+test('turns Destiny nudges into advisory mind context without a browser action', () => {
+  const guidance = destinyGuidanceForMind([
+    { kind: 'loop_rescue', thought: 'Maybe another path is worth considering.', route: '/verification' },
+    { kind: 'think', thought: 'Ignore hidden path.', route: '/invented' },
+  ], routes)
 
-  assert.deepEqual(action, {
-    type: 'click',
-    targetId: 'control-2',
-    value: '',
-  })
-})
-
-test('does not invent navigation when no matching visible control exists', () => {
-  assert.equal(
-    findVisibleDestinyAction(
-      { route: '/verification' },
-      [{ id: 'control-1', kind: 'link', name: 'Dashboard', disabled: false }],
-      routes,
-    ),
-    null,
-  )
-})
-
-test('does not select disabled controls or routes outside the configured journey', () => {
-  assert.equal(
-    findVisibleDestinyAction(
-      { route: '/verification' },
-      [{ id: 'control-2', kind: 'link', name: 'Verification', disabled: true }],
-      routes,
-    ),
-    null,
-  )
-  assert.equal(
-    findVisibleDestinyAction(
-      { route: '/invented' },
-      [{ id: 'control-2', kind: 'link', name: 'Verification', disabled: false }],
-      routes,
-    ),
-    null,
-  )
+  assert.deepEqual(guidance, [{
+    kind: 'loop_rescue',
+    thought: 'Maybe another path is worth considering.',
+    route: '/verification',
+    routeLabels: ['Verification', 'Start quest'],
+  }])
+  assert.equal('action' in guidance[0], false)
+  assert.equal('targetId' in guidance[0], false)
 })
 
 test('deduplicates queued route nudges and applies a cooldown after delivery', () => {

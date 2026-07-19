@@ -26,7 +26,7 @@ const {
   normalizeMindDecision,
 } = require('./thinking_body.cjs')
 const {
-  findVisibleDestinyAction,
+  destinyGuidanceForMind,
   queueDestinyNudge,
   setDestinyBotStatus,
   takeQueuedDestinyNudges,
@@ -1603,6 +1603,8 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       mode: route.mode,
       value: route.value,
     })),
+    destinyGuidance: bodyContext.destinyGuidance || [],
+    destinyInstruction: 'Destiny guidance is an optional hunch, not an action command. Judge it from this persona and the visible screen. Follow, reinterpret, or reject it by choosing one normal body action yourself.',
     sessionMemory,
     continuityInstruction: 'Use session memory as the bot\'s actual prior experience. Do not claim information was never shown when it appeared on an earlier screen; instead distinguish whether it was clear, credible, and available at the moment it was needed.',
     bodyInstruction: 'Choose exactly one next body action from the current screenshot and visibleControls. Use click for buttons, radios, and checkboxes; use select only for comboboxes/select controls. For click, fill, or select, copy a targetId exactly. Use scroll, wait, back, or leave when no visible control is honestly worth using. Do not merely narrate an action.',
@@ -1793,6 +1795,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
   let shouldEndSession = false
   let goalAssessment = null
   let decisionSequence = 0
+  let pendingDestinyGuidance = []
   const reflectionTimeoutMs = config.llmTimeoutMs + 5000
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
@@ -2042,6 +2045,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     }, {
       controls: bodySnapshot.controls,
       screenshotFile,
+      destinyGuidance: pendingDestinyGuidance,
     })
     if (reflection._betabotMindFallback) {
       throw new Error(`LLM mind unavailable: ${reflection._betabotMindError || 'provider fallback'}`)
@@ -2050,8 +2054,10 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
       ...normalizeMindDecision(reflection),
       decisionId: `${bot.id}-s${sessionNumber}-d${decisionSequence + 1}`,
       origin: 'persona-llm',
+      destinyGuidance: pendingDestinyGuidance,
     }
     decisionSequence += 1
+    pendingDestinyGuidance = []
     recordThought(decision.thought || fallback.thought)
     recordOpinion(decision.opinion || fallback.opinion)
     recordIdea(decision.idea || fallback.idea)
@@ -2101,6 +2107,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
       phase,
       action: decision.action,
       actionReason: decision.actionReason,
+      destinyGuidance: decision.destinyGuidance,
       result: result.description,
     })
     log(`My body ${result.description}.`, { type: 'mind-action' })
@@ -2223,42 +2230,13 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
   const followDestiny = async () => {
     const destinyState = runtime.destinyState
     const nudges = takeDestinyNudges(destinyState, bot.id)
-    for (const nudge of nudges) {
-      if (nudge.thought) recordThought(nudge.thought)
-      if (nudge.route) {
-        const bodySnapshot = await collectInteractiveControls(page)
-        const visibleAction = findVisibleDestinyAction(
-          nudge,
-          bodySnapshot.controls,
-          [...bot.routes, ...cohort.routes],
-        )
-        if (!visibleAction) {
-          log(`Destiny suggests another path, but I cannot see a matching control, so I stay on the current screen.`)
-          continue
-        }
-        const result = await executeMindAction(page, bodySnapshot, visibleAction, bodyActionOptions)
-        if (!result.ok) {
-          log(`I cannot follow Destiny through the visible interface: ${result.reason}`)
-          continue
-        }
-        destinyMoments.push(nudge.kind)
-        if (nudge.kind === 'loop_rescue') stats.loopRescuesFollowed += 1
-        actions.push(`followed Destiny through visible control ${result.control?.name || visibleAction.targetId}`)
-        if (runtime.evidenceTracker) {
-          recordEvidenceAction(runtime.evidenceTracker, {
-            action: visibleAction,
-            control: result.control,
-            url: page.url(),
-            beforeText: lastObservation?.text || '',
-          })
-        }
-        log(`I follow a hunch by using the visible ${result.control?.name || 'control'}.`)
-        const destinyObservation = await observeProduct()
-        if (runtime.evidenceTracker) recordEvidenceObservation(runtime.evidenceTracker, destinyObservation)
-        recordScreenQuality(destinyObservation)
-        await captureScreenshot(`destiny ${nudge.route}`, destinyObservation)
-        log(`After following Destiny through the interface, I see: ${destinyObservation.text}`)
-      }
+    const guidance = destinyGuidanceForMind(nudges, [...bot.routes, ...cohort.routes])
+    if (guidance.length) {
+      pendingDestinyGuidance.push(...guidance)
+      destinyMoments.push(...guidance.map((item) => item.kind))
+      log(`Destiny adds ${guidance.length} optional hunch${guidance.length === 1 ? '' : 'es'} for my next reflection.`, {
+        type: 'destiny-guidance',
+      })
     }
   }
 

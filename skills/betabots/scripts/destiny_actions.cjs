@@ -1,22 +1,20 @@
 'use strict'
 
-function matchesLabel(label, text) {
-  if (label instanceof RegExp) {
-    label.lastIndex = 0
-    return label.test(text)
-  }
-  return String(text || '').toLowerCase().includes(String(label || '').toLowerCase())
+function readableRouteLabel(label) {
+  return label instanceof RegExp ? label.source : String(label || '')
 }
 
-function findVisibleDestinyAction(nudge = {}, controls = [], routes = []) {
-  const route = routes.find((candidate) => candidate.fallback === nudge.route)
-  if (!route) return null
-  const labels = Array.isArray(route.labels) ? route.labels : []
-  const control = controls.find((candidate) => (
-    !candidate.disabled && labels.some((label) => matchesLabel(label, candidate.name))
-  ))
-  if (!control) return null
-  return { type: 'click', targetId: control.id, value: '' }
+function destinyGuidanceForMind(nudges = [], routes = []) {
+  return nudges.flatMap((nudge) => {
+    const route = routes.find((candidate) => candidate.fallback === nudge.route)
+    if (nudge.route && !route) return []
+    return [{
+      kind: String(nudge.kind || 'think'),
+      thought: String(nudge.thought || '').trim().slice(0, 500),
+      route: route?.fallback || '',
+      routeLabels: (route?.labels || []).map(readableRouteLabel).filter(Boolean),
+    }]
+  })
 }
 
 function setDestinyBotStatus(state, botId, status) {
@@ -75,7 +73,7 @@ function takeQueuedDestinyNudges(state, botId) {
 }
 
 module.exports = {
-  findVisibleDestinyAction,
+  destinyGuidanceForMind,
   queueDestinyNudge,
   setDestinyBotStatus,
   takeQueuedDestinyNudges,
