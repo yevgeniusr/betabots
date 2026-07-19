@@ -67,7 +67,10 @@ job scheduler.
 
 ## LLM Minds
 
-Thoughtful mode uses actual multimodal LLM calls for screenshot-grounded action decisions, thoughts, opinions, ideas, social messages, Betabook help/comment text, and Destiny planning. The LLM mind layer is mandatory; the bundled runner rejects `BETABOT_LLM_PROVIDER=none`.
+Thoughtful mode uses actual multimodal LLM calls for visible product analysis,
+persona generation, screenshot-grounded action decisions, thoughts, opinions,
+ideas, social messages, Betabook help/comment text, and Destiny planning. The LLM
+mind layer is mandatory; the bundled runner rejects `BETABOT_LLM_PROVIDER=none`.
 
 Default provider:
 
@@ -113,6 +116,18 @@ Provider knobs:
 Always inspect `summary.json -> llm.failures`, `llm.fallbacks`, and each result's `mindActionFailures`. Unsupported local Codex model names make action decisions fail visibly; repeated failures stop that bot instead of allowing deterministic text to move the browser.
 
 ## Cohort Configuration
+
+The default is product-grounded generation. With no cohort or persona file, the
+runner analyzes the visible product, combines the result with optional
+`BETABOT_PERSONA_GUIDANCE` or `BETABOT_PERSONA_GUIDANCE_FILE`, generates deep
+personas, writes its artifacts, and proceeds. Set
+`BETABOT_PERSONA_APPROVAL_MODE=required` to stop after generation. Resume the
+same `BETABOT_RUN_DIR` with `BETABOT_PERSONAS_APPROVED=true`.
+
+Use `BETABOT_PERSONAS_FILE` for a standalone array or `{ "personas": [...] }`.
+Use `BETABOT_COHORT_FILE` when product keywords, routes, evidence requirements,
+or screen distribution also need configuration. Both supplied forms are treated
+as approved.
 
 Thoughtful mode is app-agnostic when you pass a research-backed cohort file:
 
@@ -258,7 +273,13 @@ BETABOT_DESTINY=true \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-The runner writes `destiny.json` with the master plan, interventions, path-crossing states, nudges, and errors. Destiny never changes the address bar. A route intention can be followed only when its configured accessible label matches a currently visible control and the normal body safety validator accepts that control. When no matching control is visible, the nudge is recorded but not counted as followed. If Destiny repeatedly has to force crossings that should happen organically, treat that as product evidence: real users may also fail to find relevant people, content, inventory, or next steps.
+The runner writes `destiny.json` with the master plan, interventions,
+path-crossing states, nudges, and errors. Destiny never changes the address bar
+or derives an action from a route. Route labels are included as advisory context
+in the next persona reflection; only the persona LLM may choose a matching
+visible control. If repeated hints do not help people cross paths organically,
+treat that as product evidence: real users may also fail to find relevant people,
+content, inventory, or next steps.
 
 ## Strict Scoring
 
@@ -325,18 +346,16 @@ reference an exact visible control ID. The runtime rejects invented, disabled,
 destructive, payment, and type-incompatible targets before Playwright executes
 anything.
 
-Configured routes are optional hints included in the decision context. They do
-not move the browser. When a screen repeats past `BETABOT_LOOP_REPEAT_THRESHOLD`,
+Configured routes and Destiny nudges are optional hints included in the decision
+context. They do not move the browser or choose a control. When a screen repeats past `BETABOT_LOOP_REPEAT_THRESHOLD`,
 the bot can post a `loop-help` request in Betabook instead of pretending the loop
 is fine. Three consecutive decisions that cannot be executed stop the session
 and mark the run as non-autonomous.
 
-Destiny watches Betabook help posts and can rescue the bot by:
-
-- commenting on the help post;
-- sending a Betabook invite;
-- nudging the bot toward a different part of the product;
-- reducing the score if the bot stays stuck.
+Destiny watches Betabook help posts and can place a bounded hunch or route hint
+in the bot's next reflection. The persona LLM decides whether that hint is worth
+following through the same validated action contract. Destiny itself never
+executes the control.
 
 Useful knob:
 

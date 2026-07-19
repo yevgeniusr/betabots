@@ -99,12 +99,18 @@ test('normalizes legacy supplied personas and labels inferred depth', () => {
     name: 'Lee',
     role: 'privacy-sensitive learner',
     past: 'I have been surprised by invasive products before.',
-    goal: 'See whether I can practice without exposing private material.',
+    discovery_circumstance: 'A friend sent me a practice link.',
+    goal_today: 'See whether I can practice without exposing private material.',
     lifeGoal: 'Keep control of my identity.',
+    technical_comfort: 'low',
+    attention_span_minutes: 7,
   }])
 
   assert.equal(personas[0].jobToBeDone, 'See whether I can practice without exposing private material.')
   assert.equal(personas[0].lifeSituation, 'I have been surprised by invasive products before.')
+  assert.equal(personas[0].trigger, 'A friend sent me a practice link.')
+  assert.equal(personas[0].technicalComfort, 'low')
+  assert.equal(personas[0].attentionSpanMinutes, 7)
   assert.equal(personas[0].provenance.source, 'supplied')
   assert.ok(personas[0].provenance.assumptions.length > 0)
 })

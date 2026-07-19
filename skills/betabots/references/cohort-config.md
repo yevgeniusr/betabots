@@ -2,6 +2,11 @@
 
 Betabot personas are defined by a cohort JSON file. The same thoughtful browser runner can test any application when the cohort file describes the product domain, audience research, user roles, routes, value signals, trust signals, and idea rules.
 
+A cohort file is optional. Without `BETABOT_COHORT_FILE` or
+`BETABOT_PERSONAS_FILE`, the runner analyzes the visible product and generates
+deep personas automatically. Use a cohort file when you need curated research,
+route hints, scoring keywords, evidence requirements, or device weights.
+
 For product-quality runs, create audience research first. Read `audience-research.md`, then encode its segment weights, vocabulary, traffic mix, and assumptions in the cohort file.
 
 ## Minimal Example
@@ -105,7 +110,13 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 - `researchSources`: Optional array of evidence sources used to design the cohort. Use source labels, not secrets.
 - `audienceSegments`: Optional array of weighted audience segments. Each segment can include `name`, `weight`, `evidence`, `jobs`, `objections`, `deviceBias`, `vocabulary`, and `assumptions`.
 - `confidenceRules`: Optional thresholds or notes for mapping repeated findings to high/medium/low confidence.
-- `roles` or `personas`: Array of strings or objects. Objects can define `role`, `name`, `past`, `discovery`, `goal`, `lifeGoal`, `successSignals`, role-specific `routes`, role-specific `evidenceRequirements`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`. For truth-pressure runs, prefer explicit `lifeGoal` values for each important persona; generated defaults are useful but less precise than product-specific stakes.
+- `roles` or `personas`: Array of strings or objects. Objects can define legacy fields `role`, `name`, `past`, `discovery`, `goal`, and `lifeGoal`, plus the deep fields below. They may also define `successSignals`, role-specific `routes`, role-specific `evidenceRequirements`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`.
+- `identity`, `lifeSituation`, `trigger`, `jobToBeDone`: The coherent situation that explains who this person is, why they arrived now, and what progress they seek.
+- `priorAttempts`, `stakes`, `constraints`, `anxieties`, `objections`: Arrays that make the persona's alternatives, risk, and resistance concrete.
+- `trustThreshold`, `decisionCriteria`, `abandonmentConditions`: Evidence required to continue, standards for choosing, and explicit reasons to leave.
+- `vocabulary`, `digitalHabits`, `socialContext`: Language, device/workflow habits, and people or institutions influencing the decision.
+- `successEvidence`: Visible evidence that would prove the job to be done advanced. It also seeds legacy `successSignals` when those are omitted.
+- `provenance`: Object with `observedEvidence`, `userGuidance`, and `assumptions`. Generated personas require this distinction; supplied legacy personas are normalized and missing depth is labeled as assumed.
 - `requiresSocialAction`: Set to `true` only when meaningful in-product social action is required for the product to deliver value. Non-social products are not penalized for omitting likes, messages, or equivalent actions.
 - `screenSizeDistribution`: Optional weighted screen-size buckets. Each bucket has `category`, `weight`, and `devices`; each device has `name`, `width`, `height`, optional `deviceScaleFactor`, `isMobile`, `hasTouch`, and `userAgent`. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Override per run with `BETABOT_SCREEN_SIZE_DISTRIBUTION` or legacy alias `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `avatar`: Optional custom avatar object or URL for a persona. If omitted, the runner generates a DiceBear avatar from the persona seed.

@@ -91,8 +91,8 @@ function normalizeProvenance(value, source, assumptions = []) {
 function normalizePersona(input = {}, index = 0, source = 'supplied') {
   const assumptions = []
   const lifeSituation = text(input.lifeSituation || input.life_situation || input.past)
-  const trigger = text(input.trigger || input.discoveryTrigger || input.discovery)
-  const jobToBeDone = text(input.jobToBeDone || input.job_to_be_done || input.goal)
+  const trigger = text(input.trigger || input.discoveryTrigger || input.discovery || input.discovery_circumstance)
+  const jobToBeDone = text(input.jobToBeDone || input.job_to_be_done || input.goal || input.goal_today)
   const priorAttempts = list(input.priorAttempts || input.prior_attempts)
   const stakes = list(input.stakes)
   const constraints = list(input.constraints)
@@ -146,6 +146,10 @@ function normalizePersona(input = {}, index = 0, source = 'supplied') {
     goal: text(input.goal || jobToBeDone),
     lifeGoal,
     successSignals: list(input.successSignals || input.success_signals || successEvidence),
+    emotionalBaseline: text(input.emotionalBaseline || input.emotional_baseline),
+    technicalComfort: text(input.technicalComfort || input.technical_comfort),
+    screenSize: input.screenSize || input.screen_size,
+    attentionSpanMinutes: input.attentionSpanMinutes || input.attention_span_minutes,
     provenance: normalizeProvenance(input.provenance, source, assumptions),
   }
 }

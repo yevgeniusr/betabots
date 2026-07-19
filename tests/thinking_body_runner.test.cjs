@@ -33,6 +33,8 @@ test('runner captures a screenshot, asks the mind, and executes its action', () 
   assert.equal(result.status, 0, result.stderr || result.stdout)
   const summary = JSON.parse(fs.readFileSync(path.join(runDir, 'summary.json'), 'utf8'))
   const raw = fs.readFileSync(path.join(runDir, 'raw/thoughtful-betabot-001.md'), 'utf8')
+  const evidence = fs.readFileSync(path.join(runDir, 'evidence/thoughtful-betabot-001.jsonl'), 'utf8')
+    .trim().split('\n').map((line) => JSON.parse(line))
   assert.equal(summary.results[0].mindActions, 1)
   assert.equal(summary.results[0].actions, 1)
   assert.equal(summary.results[0].screenshots, 2)
@@ -41,6 +43,12 @@ test('runner captures a screenshot, asks the mind, and executes its action', () 
   assert.equal(summary.results[0].decisionRecords[0].origin, 'persona-llm')
   assert.match(summary.results[0].decisionRecords[0].decisionId, /^thoughtful-betabot-001-s1-d1$/)
   assert.equal(summary.results[0].decisionRecords[0].action.type, 'click')
+  assert.equal(summary.results[0].unprovenancedMindActions, 0)
+  assert.ok(evidence.some((event) => (
+    event.type === 'mind-action' &&
+    event.decisionId === 'thoughtful-betabot-001-s1-d1' &&
+    event.origin === 'persona-llm'
+  )))
   assert.match(raw, /Screenshot evidence \(arrival\)/)
   assert.match(raw, /I decide to click control-1/)
   assert.match(raw, /My body clicked Continue/)

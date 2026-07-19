@@ -146,22 +146,71 @@ def screen_category_plan(count: int, distribution: list[dict], rng: random.Rando
     return categories
 
 
+def first_person(fragment: str) -> str:
+    replacements = {
+        "has ": "have ",
+        "is ": "am ",
+        "opens ": "open ",
+        "arrives ": "arrive ",
+        "gets ": "get ",
+        "worries ": "worry ",
+        "wants ": "want ",
+        "expects ": "expect ",
+    }
+    normalized = fragment
+    for prefix, replacement in replacements.items():
+        if normalized.startswith(prefix):
+            normalized = replacement + normalized[len(prefix):]
+            break
+    return f"I {normalized}."
+
+
 def persona(index: int, rng: random.Random, screen_distribution: list[dict], screen_plan: list[str]) -> dict:
     role = ROLES[index % len(ROLES)] if index < len(ROLES) else rng.choice(ROLES)
     screen_size = select_screen_size(screen_distribution, rng, screen_plan[index])
+    past = rng.choice(PASTS)
+    trigger = rng.choice(CIRCUMSTANCES)
+    goal = rng.choice(GOALS)
+    emotion = rng.choice(EMOTIONS)
+    attention_span = rng.randint(3, 18)
     return {
         "id": f"metabot-{index + 1:02d}",
         "name": rng.choice(["Maya", "Leo", "Sam", "Nina", "Omar", "Iris", "Theo", "Jules", "Rae", "Max"]),
         "age": rng.randint(19, 54),
         "role": role,
-        "past": rng.choice(PASTS),
-        "discovery_circumstance": rng.choice(CIRCUMSTANCES),
-        "goal_today": rng.choice(GOALS),
-        "emotional_baseline": rng.choice(EMOTIONS),
+        "identity": f"I am approaching this decision as: {role}.",
+        "lifeSituation": first_person(past),
+        "trigger": first_person(trigger),
+        "jobToBeDone": f"I need to {goal}.",
+        "priorAttempts": [first_person(past)],
+        "stakes": ["I do not want to waste limited attention or trust on another weak option."],
+        "constraints": [f"I have roughly {attention_span} minutes of attention for this visit."],
+        "anxieties": ["I may commit attention before the product proves it understands my situation."],
+        "objections": ["Generic promises will not be enough for me to continue."],
+        "trustThreshold": "I need one visible, specific result tied to an action I chose.",
+        "decisionCriteria": ["A clear next step", "Specific visible value", "No unexpected risk"],
+        "vocabulary": ["worth my time", "clear next step", "specific result"],
+        "digitalHabits": [f"I am using a {screen_size['category']} device for this visit."],
+        "socialContext": "Someone I trust may hear whether this experience was worth recommending.",
+        "successEvidence": ["A visible result that directly advances today's goal."],
+        "abandonmentConditions": ["The next step stays vague", "The product asks for trust before showing value"],
+        "provenance": {
+            "source": "standalone-seeded-generator",
+            "observedEvidence": [],
+            "userGuidance": [],
+            "assumptions": [
+                "This persona was generated without visible product analysis.",
+                "All life context and decision psychology are synthetic assumptions.",
+            ],
+        },
+        "past": past,
+        "discovery_circumstance": trigger,
+        "goal_today": goal,
+        "emotional_baseline": emotion,
         "technical_comfort": rng.choice(TECH),
         "viewport": screen_size["category"],
         "screen_size": screen_size,
-        "attention_span_minutes": rng.randint(3, 18),
+        "attention_span_minutes": attention_span,
         "likely_endings": rng.sample(ENDINGS, 3),
         "must_not_know": [
             "source code",

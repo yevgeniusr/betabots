@@ -49,7 +49,9 @@ process.stdin.on('end', () => {
         technicalComfort: 'medium',
         provenance: {
           observedEvidence: ['The page visibly contains a Continue button.'],
-          userGuidance: ['Use the supplied persona guidance when present.'],
+          userGuidance: prompt.includes('Prioritize skeptical team adoption decisions.')
+            ? ['Prioritize skeptical team adoption decisions.']
+            : [],
           assumptions: ['This evaluator is accountable to a skeptical team.']
         }
       }))

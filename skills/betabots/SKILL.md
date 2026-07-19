@@ -28,6 +28,31 @@ Default rule:
 - Do not replace browser evidence with server-side metrics. A successful API call is not proof that a human understood the product.
 - `BETABOT_LLM_PROVIDER=none` is not valid for product-quality runs and is rejected by the bundled runner.
 - Provider fallback must never drive browser actions. If the LLM cannot choose an executable action, record a mind failure and stop the bot after repeated failures.
+- Missing, malformed, and unknown LLM actions are failures. Only an explicit LLM `wait` may wait.
+- Persona-authored social text must carry a successful persona-LLM decision ID. Never publish fallback or templated persona speech.
+- Destiny may add context to the next reflection but must never select or execute a browser control.
+
+## Persona Generation
+
+When no personas are supplied, the official default is to generate and proceed:
+
+1. Open the product in a browser and capture visible text, controls, URL, title, and screenshot.
+2. Ask the LLM for an evidence-bounded product analysis.
+3. Combine it with `BETABOT_PERSONA_GUIDANCE` or `BETABOT_PERSONA_GUIDANCE_FILE`.
+4. Generate the requested count of deep personas and write `product-analysis.json` and `generated-personas.json`.
+5. Proceed automatically unless `BETABOT_PERSONA_APPROVAL_MODE=required`.
+
+Persona source priority is `BETABOT_COHORT_FILE`, `BETABOT_PERSONAS_FILE`, an
+approved generated artifact, then new generation. Supplied files are approved.
+To review generated personas first, use a stable `BETABOT_RUN_DIR`, set approval
+mode to `required`, edit/review the artifact, then resume with
+`BETABOT_PERSONAS_APPROVED=true`.
+
+Deep personas should include life situation, trigger, job to be done, prior
+attempts, stakes, constraints, anxieties, objections, trust threshold, decision
+criteria, vocabulary, digital habits, social context, success evidence,
+abandonment conditions, and provenance that separates visible evidence, user
+guidance, and assumptions.
 
 ## Research-First Replacement Protocol
 
@@ -74,8 +99,8 @@ their happiness score is intentionally unusable as product evidence.
 When interaction depth matters, configure `BETABOT_MIN_AI_USER_TURNS`,
 `BETABOT_MIN_COMPLETED_ACTIVITIES`, or role-level `evidenceRequirements`. Unmet
 requirements cap the bot below `50` and remain distinct from infrastructure
-errors. Destiny must never use direct navigation; it can act only through a
-currently visible control accepted by the normal body validator.
+errors. Destiny must never use direct navigation or choose a control; its nudges
+are advisory context that the persona LLM can follow or reject.
 
 ## Session Rules
 
@@ -94,6 +119,8 @@ currently visible control accepted by the normal body validator.
 Create `.betabots/runs/YYYYMMDD-HHMMSS/` or `.metabot/runs/YYYYMMDD-HHMMSS/` with:
 
 - `cohort.json`: personas and configuration.
+- `product-analysis.json` and `product-analysis.png`: visible evidence used for generated personas.
+- `generated-personas.json`: generated deep personas, guidance, provenance, and approval state.
 - `audience-research.md` or `audience-research.json`: sources, segment weights, traffic assumptions, vocabulary, intent, objections, and device mix.
 - `raw/<bot-id>.md`: first-person multi-session storylines.
 - `summary.json`: machine-readable metrics.

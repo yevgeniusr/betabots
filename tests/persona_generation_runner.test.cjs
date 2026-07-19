@@ -45,6 +45,7 @@ test('generates product-grounded personas and proceeds automatically by default'
   assert.equal(generated.approval.mode, 'auto')
   assert.equal(generated.approval.proceeded, true)
   assert.equal(generated.personas[0].trustThreshold, 'I need a visible state change tied directly to my action.')
+  assert.deepEqual(generated.personas[0].provenance.userGuidance, ['Prioritize skeptical team adoption decisions.'])
   assert.equal(cohort.bots[0].name, 'Samira Khan')
   assert.equal(cohort.bots[0].provenance.source, 'generated')
 })

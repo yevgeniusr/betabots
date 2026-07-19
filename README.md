@@ -68,9 +68,9 @@ Betabots launches real browsers and runs human-speed sessions. It is for compreh
 Betabots must interact through the same visible product surface a person can see. The runner does not call product APIs, use server URLs, load hidden implementation maps, or ship project-specific lifecycle code.
 
 ```bash
-BETABOT_COHORT_FILE=skills/betabots/examples/generic-saas.cohort.json \
 BETABOT_APP_URL=http://localhost:5173 \
 BETABOT_THOUGHTFUL_COUNT=5 \
+BETABOT_PERSONA_GUIDANCE='Include skeptical evaluators with concrete workplace stakes.' \
 BETABOT_THOUGHTFUL_MINUTES=8 \
 BETABOT_HEADLESS=false \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
@@ -139,9 +139,9 @@ Betabook is a simple Reddit-like board scoped to the current simulation. Betabot
 
 Destiny is the orchestration layer. It watches the cohort in real time, follows a global master plan, and makes paths cross, almost cross, or intentionally not cross. Destiny can manipulate Betabook and can nudge individual betabots by giving them believable hunches, timing, and actions.
 
-Destiny cannot navigate directly. It may follow a route intention only through a
-matching visible control that passes the same body validation as any other UI
-action.
+Destiny cannot navigate or select a control directly. Its route intentions and
+hunches are advisory context in the next persona reflection. The persona LLM may
+follow, reinterpret, or reject them through the normal validated action path.
 
 ```bash
 BETABOT_BETABOOK=true \
@@ -166,7 +166,25 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 The runner aggregates first-person thoughts and ideas into `analysis.md` and `summary.json`.
 Thoughtful sessions use a screenshot -> think -> validated action loop. Route configuration gives the mind optional journey hints; it does not script browser movement. A failed LLM action decision is recorded as a mind failure and cannot silently fall back to deterministic navigation.
-By default, Betabots uses a generic cross-product cohort. For domain-specific testing, pass `BETABOT_COHORT_FILE` with roles, pasts, discovery circumstances, routes, value keywords, trust keywords, and idea rules. See `skills/betabots/references/cohort-config.md`.
+
+When no cohort or persona file is supplied, Betabots first inspects the visible
+product, asks the LLM for a product analysis, combines that analysis with optional
+user guidance, generates deep personas, writes `product-analysis.json` and
+`generated-personas.json`, and proceeds automatically. Set guidance with
+`BETABOT_PERSONA_GUIDANCE` or `BETABOT_PERSONA_GUIDANCE_FILE`.
+
+Persona source priority is `BETABOT_COHORT_FILE`, `BETABOT_PERSONAS_FILE`, an
+approved generated artifact in the same run directory, then generation. Set
+`BETABOT_PERSONA_APPROVAL_MODE=required` to stop after generation for review.
+Resume with the same `BETABOT_RUN_DIR` and `BETABOT_PERSONAS_APPROVED=true`.
+The default approval mode is `auto`, meaning generate and proceed.
+
+Generated personas include a concrete life situation, trigger, job to be done,
+prior attempts, stakes, constraints, anxieties, objections, trust threshold,
+decision criteria, vocabulary, digital habits, social context, success evidence,
+abandonment conditions, and evidence/assumption provenance. For a fully curated
+run, pass `BETABOT_COHORT_FILE` or `BETABOT_PERSONAS_FILE`. See
+`skills/betabots/references/cohort-config.md`.
 
 Truth pressure is always on. Bots treat honesty, attention, and money as scarce survival constraints, and you can tune the ledger costs for a run:
 
@@ -310,19 +328,24 @@ Optional auth isolation:
 - `BETABOT_ENVIRONMENT_ATTESTATION_URL`: JSON endpoint proving real auth and persistent PostgreSQL connectivity.
 - `BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS`: attestation timeout; defaults to `5000`.
 - `BETABOT_COHORT_FILE`: optional JSON file defining product-specific personas, roles, routes, screen-size distribution, keywords, and idea rules.
+- `BETABOT_PERSONAS_FILE`: optional JSON array or object with `personas`; supplied personas are treated as approved and inherit the remaining cohort defaults.
+- `BETABOT_PERSONA_GUIDANCE`: optional audience, market, exclusion, or research guidance incorporated into generated personas.
+- `BETABOT_PERSONA_GUIDANCE_FILE`: optional text or Markdown file containing persona-generation guidance.
+- `BETABOT_PERSONA_APPROVAL_MODE=auto`: `auto` generates and proceeds; `required` writes artifacts and stops before bot sessions.
+- `BETABOT_PERSONAS_APPROVED=true`: reuse `generated-personas.json` from the same `BETABOT_RUN_DIR` after required review.
 - `BETABOT_SCREEN_SIZE_DISTRIBUTION`: optional JSON array of weighted device buckets for thoughtful browser runs. Defaults to 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs. Legacy alias: `BETABOT_VIEWPORT_DISTRIBUTION`.
 - `BETABOT_AVATAR_STYLE=bottts-neutral`: DiceBear avatar style slug or style URL for generated bot avatars.
 - `BETABOT_AVATAR_BASE_URL=https://api.dicebear.com/10.x`: DiceBear HTTP API base URL; override for a self-hosted instance.
-- `BETABOT_COHORT_ONLY=true`: writes `cohort.json` and exits without launching browsers; useful for auditing persona and screen-size seeding.
+- `BETABOT_COHORT_ONLY=true`: writes `cohort.json` and exits before bot sessions. Without a supplied cohort/persona file, the visible-product generation preflight still launches a browser first.
 - `BETABOT_BETABOOK=true`: enables the run-scoped Reddit-like social board for bot-to-bot posts, comments, and invites.
-- `BETABOT_DESTINY=true`: enables the master-plan layer that makes paths cross, not cross, or almost cross.
+- `BETABOT_DESTINY=true`: enables the master-plan layer that makes paths cross, not cross, or almost cross; nudges are persona-LLM context and never execute controls directly.
 - `BETABOT_DESTINY_INTERVAL_MS`: interval for Destiny to inspect the cohort and apply interventions.
 - `BETABOT_STRICT_SCORING=true`: default; discounts repeated screens and penalizes pass-heavy behavior. Social-action scoring applies only when the cohort sets `requiresSocialAction: true`.
 - `BETABOT_TRUTH_YEARS=100`: starting life-years per bot for always-on truth pressure.
 - `BETABOT_TRUTH_ACTION_MONTHS=1`: life-months charged per meaningful website action.
 - `BETABOT_TRUTH_DOLLAR_YEARS=1`: life-years charged per committed dollar.
 - `BETABOT_LOOP_REPEAT_THRESHOLD=4`: repeated-screen threshold that makes a stuck bot ask Betabook for help.
-- `BETABOT_LLM_PROVIDER=codex`: model provider for screenshot-grounded decisions, social text, Betabook comments, and Destiny plans. Supports `codex` or `openrouter`.
+- `BETABOT_LLM_PROVIDER=codex`: model provider for visible product analysis, persona generation, screenshot-grounded decisions, social text, Betabook comments, and Destiny plans. Supports `codex` or `openrouter`.
 - `BETABOT_LLM_MODEL`: optional provider model override.
 - `BETABOT_CODEX_COMMAND=codex`: Codex CLI command path for the local ChatGPT/Codex provider.
 - `BETABOT_LLM_TIMEOUT_MS=90000`: timeout per model call.
@@ -334,6 +357,7 @@ Persona and role definition:
 
 - The runner accepts `roles` or `personas` as strings or objects.
 - Role objects can define `role`, `name`, `past`, `discovery`, `goal`, `successSignals`, role-specific `routes`, `traits`, `emotionalBaseline`, `technicalComfort`, `viewport`, `screenSize`, `avatar`, and `attentionSpanMinutes`.
+- Deep persona fields are `identity`, `lifeSituation`, `trigger`, `jobToBeDone`, `priorAttempts`, `stakes`, `constraints`, `anxieties`, `objections`, `trustThreshold`, `decisionCriteria`, `vocabulary`, `digitalHabits`, `socialContext`, `successEvidence`, `abandonmentConditions`, and `provenance`.
 - Role objects can also define `lifeGoal` for truth pressure. If omitted, the runner derives one from the role.
 - Cohort files can define `screenSizeDistribution`; the default distribution uses 50% mobile phones, 20% tablets, and 30% desktop/laptop PCs.
 - Generated avatars use DiceBear with a seed derived from persona fields, so the avatar changes when the bot's name, role, past, goal, life goal, traits, emotional baseline, or technical comfort changes.

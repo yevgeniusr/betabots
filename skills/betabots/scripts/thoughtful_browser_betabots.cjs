@@ -1877,6 +1877,22 @@ async function llmBotShortText(task, bot, context) {
       goal: bot.goal,
       lifeGoal: bot.lifeGoal,
       emotionalBaseline: bot.emotionalBaseline,
+      identity: bot.identity,
+      lifeSituation: bot.lifeSituation,
+      trigger: bot.trigger,
+      jobToBeDone: bot.jobToBeDone,
+      priorAttempts: bot.priorAttempts,
+      stakes: bot.stakes,
+      constraints: bot.constraints,
+      anxieties: bot.anxieties,
+      objections: bot.objections,
+      trustThreshold: bot.trustThreshold,
+      decisionCriteria: bot.decisionCriteria,
+      vocabulary: bot.vocabulary,
+      digitalHabits: bot.digitalHabits,
+      socialContext: bot.socialContext,
+      abandonmentConditions: bot.abandonmentConditions,
+      provenance: bot.provenance,
     },
     truthPressure: {
       enabled: true,
@@ -2055,6 +2071,8 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
       screenshot: lastScreenshot || null,
       screenHash: lastObservation ? textHash(lastObservation.text) : null,
       sessionNumber,
+      decisionId: options.decisionId || null,
+      origin: options.origin || null,
     })
   }
   const browserIssueKeys = new Set()
@@ -2302,7 +2320,11 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     recordIdea(decision.idea || fallback.idea)
     recordLifeDecision(decision.lifeCostJustification)
     recordTruthAssessment(decision.truthfulAssessment)
-    log(`I decide to ${decision.action.type}${decision.action.targetId ? ` ${decision.action.targetId}` : ''}${decision.actionReason ? ` because ${decision.actionReason}` : ''}.`, { type: 'mind-decision' })
+    log(`I decide to ${decision.action.type}${decision.action.targetId ? ` ${decision.action.targetId}` : ''}${decision.actionReason ? ` because ${decision.actionReason}` : ''}.`, {
+      type: 'mind-decision',
+      decisionId: decision.decisionId,
+      origin: decision.origin,
+    })
     return decision
   }
   const runMindCycle = async (observation, phase, screenshotFile) => {
@@ -2349,7 +2371,11 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
       destinyGuidance: decision.destinyGuidance,
       result: result.description,
     })
-    log(`My body ${result.description}.`, { type: 'mind-action' })
+    log(`My body ${result.description}.`, {
+      type: 'mind-action',
+      decisionId: decision.decisionId,
+      origin: decision.origin,
+    })
     if (runtime.evidenceTracker) {
       recordEvidenceAction(runtime.evidenceTracker, {
         decisionId: decision.decisionId,
@@ -2766,6 +2792,23 @@ function writeCombinedStoryline(bot, sessions, result) {
 - Discovery circumstance: ${bot.discovery}
 - Goal today: ${bot.goal}
 - Life goal: ${bot.lifeGoal}
+- Identity: ${bot.identity}
+- Life situation: ${bot.lifeSituation}
+- Trigger: ${bot.trigger}
+- Job to be done: ${bot.jobToBeDone}
+- Prior attempts: ${bot.priorAttempts.join(' | ') || 'not supplied'}
+- Stakes: ${bot.stakes.join(' | ') || 'not supplied'}
+- Constraints: ${bot.constraints.join(' | ') || 'not supplied'}
+- Anxieties: ${bot.anxieties.join(' | ') || 'not supplied'}
+- Objections: ${bot.objections.join(' | ') || 'not supplied'}
+- Trust threshold: ${bot.trustThreshold || 'not supplied'}
+- Decision criteria: ${bot.decisionCriteria.join(' | ') || 'not supplied'}
+- Vocabulary: ${bot.vocabulary.join(' | ') || 'not supplied'}
+- Digital habits: ${bot.digitalHabits.join(' | ') || 'not supplied'}
+- Social context: ${bot.socialContext || 'not supplied'}
+- Success evidence: ${bot.successEvidence.join(' | ') || 'not supplied'}
+- Abandonment conditions: ${bot.abandonmentConditions.join(' | ') || 'not supplied'}
+- Persona provenance: ${JSON.stringify(bot.provenance)}
 - Avatar: ${bot.avatar?.url || ''}
 - Avatar style: ${bot.avatar?.style || ''}
 - Avatar seed: ${bot.avatar?.seed || ''}
@@ -2792,7 +2835,7 @@ ${sessions.map((session) => session.storyline).join('\n')}
 - Ideas expressed: ${result.ideas.length}
 - Thoughts expressed: ${result.thoughts}
 - Opinions expressed: ${result.opinions}
-- Destiny nudges followed through visible controls: ${result.destinyMoments}
+- Destiny nudges presented to persona reflection: ${result.destinyMoments}
 - Autonomous mind actions executed: ${result.mindActions}
 - Mind actions rejected or failed: ${result.mindActionFailures}
 - Browser issues recorded: ${result.browserIssues}
@@ -2966,12 +3009,13 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - Screenshots captured: ${results.reduce((sum, result) => sum + result.screenshots, 0)}
 - UI actions attempted: ${results.reduce((sum, result) => sum + result.actions, 0)}
 - Autonomous mind actions executed: ${results.reduce((sum, result) => sum + (result.mindActions || 0), 0)}
+- Unprovenanced mind actions: ${results.reduce((sum, result) => sum + (result.unprovenancedMindActions || 0), 0)}
 - Mind actions rejected or failed: ${results.reduce((sum, result) => sum + (result.mindActionFailures || 0), 0)}
 - Thoughts expressed: ${results.reduce((sum, result) => sum + result.thoughts, 0)}
 - Opinions expressed: ${results.reduce((sum, result) => sum + result.opinions, 0)}
 - Ideas expressed: ${results.reduce((sum, result) => sum + (result.ideas || []).length, 0)}
 - Betabook moments: ${results.reduce((sum, result) => sum + (result.betabookMoments || 0), 0)}
-- Destiny nudges followed: ${results.reduce((sum, result) => sum + (result.destinyMoments || 0), 0)}
+- Destiny nudges presented to persona reflection: ${results.reduce((sum, result) => sum + (result.destinyMoments || 0), 0)}
 - Likes sent through UI: ${results.reduce((sum, result) => sum + (result.likes || 0), 0)}
 - Passes through UI: ${results.reduce((sum, result) => sum + (result.passes || 0), 0)}
 - Messages sent through UI: ${results.reduce((sum, result) => sum + (result.messages || 0), 0)}
@@ -3005,7 +3049,7 @@ ${confidenceRows.length ? confidenceRows.map((row) => `- ${row.tier.toUpperCase(
 
 ## Audience Research Grounding
 - Cohorts should be seeded from real audience evidence when available: analytics segments, search intent, support/sales notes, reviews, social comments, competitor audiences, and public market/category research.
-- Use generic personas only for smoke tests. For product-quality runs, each major persona should trace back to a research source or observed segment.
+- For product-quality runs, each major persona should trace claims to visible evidence, user guidance, or a named research source; assumptions must remain labeled.
 - Weight screen-size distribution and role count according to the researched traffic mix when known.
 
 ## Betabook

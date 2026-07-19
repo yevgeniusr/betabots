@@ -3,6 +3,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python3 "$ROOT/skills/betabots/scripts/generate_cohort.py" --count 3 --seed 42 --product "Smoke app" >/tmp/betabots-cohort.json
 python3 -m json.tool /tmp/betabots-cohort.json >/dev/null
+python3 - <<'PY'
+import json
+from pathlib import Path
+persona = json.loads(Path('/tmp/betabots-cohort.json').read_text())['personas'][0]
+for field in ('lifeSituation', 'trigger', 'jobToBeDone', 'trustThreshold', 'decisionCriteria', 'abandonmentConditions', 'provenance'):
+    assert persona[field], field
+PY
 python3 -m json.tool "$ROOT/skills/betabots/examples/generic-saas.cohort.json" >/dev/null
 mkdir -p /tmp/betabots-raw
 cat >/tmp/betabots-raw/bot.md <<'MD'
@@ -28,6 +35,8 @@ node --check "$ROOT/skills/betabots/scripts/thinking_body.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/session_scheduler.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/browser_issue_recovery.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/destiny_actions.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/persona_generation.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/social_provenance.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/product_evidence.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/vision_payload.cjs" >/dev/null
 node --test "$ROOT/tests/environment_integrity.test.cjs" >/dev/null
@@ -46,6 +55,8 @@ node --test "$ROOT/tests/session_state_browser.test.cjs" >/dev/null
 node --test "$ROOT/tests/browser_issue_recovery.test.cjs" >/dev/null
 node --test "$ROOT/tests/request_failure_browser.test.cjs" >/dev/null
 node --test "$ROOT/tests/destiny_actions.test.cjs" >/dev/null
+node --test "$ROOT/tests/persona_generation.test.cjs" >/dev/null
+node --test "$ROOT/tests/social_provenance.test.cjs" >/dev/null
 node --test "$ROOT/tests/product_evidence.test.cjs" >/dev/null
 node --test "$ROOT/tests/vision_payload.test.cjs" >/dev/null
 node --check "$ROOT/web/server.cjs" >/dev/null
@@ -58,6 +69,10 @@ grep -q "BETABOT_DESTINY" "$ROOT/skills/betabots/scripts/thoughtful_browser_beta
 grep -q "BETABOT_AVATAR_STYLE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "bottts-neutral" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_LLM_PROVIDER" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_PERSONAS_FILE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_PERSONA_GUIDANCE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_PERSONA_APPROVAL_MODE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_PERSONAS_APPROVED" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_BROWSER_EXECUTABLE_PATH" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_REQUIRE_REAL_BACKEND" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_APP_ORIGINS" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
@@ -84,6 +99,7 @@ grep -q "codexImageArgs" "$ROOT/skills/betabots/scripts/thoughtful_browser_betab
 grep -q "openRouterUserContent" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 ! grep -q "page.goto.*route.fallback" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 ! grep -q "page.goto.*nudge.route" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+! grep -q "findVisibleDestinyAction" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callCodex" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "callOpenRouter" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 ! grep -R -E 'BETABOT_MORTAL_TRUTH|mortalTruth|config\.mortalTruthEnabled|Mortal truth mode|mortal-truth mode|non-mortal-truth|Mortal Truth|Truth Notes' "$ROOT/README.md" "$ROOT/docs" "$ROOT/skills/betabots" "$ROOT/web" >/dev/null
