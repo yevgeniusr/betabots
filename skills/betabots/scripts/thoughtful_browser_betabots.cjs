@@ -64,6 +64,15 @@ const {
   hasPersonaLlmProvenance,
   requireLlmSocialText,
 } = require('./social_provenance.cjs')
+const {
+  loadPersonaDocument,
+  loadPersonaGenerationConfig,
+  normalizeGeneratedPersonas,
+  normalizeSuppliedPersonas,
+  personaGenerationShape,
+  resolvePersonaSource,
+  shouldProceedWithPersonas,
+} = require('./persona_generation.cjs')
 
 const destinyRequested = String(process.env.BETABOT_DESTINY || 'false') === 'true'
 const betabookRequested = destinyRequested || String(process.env.BETABOT_BETABOOK || 'false') === 'true'
@@ -93,6 +102,11 @@ const config = {
   environmentAttestationUrl: process.env.BETABOT_ENVIRONMENT_ATTESTATION_URL || '',
   environmentAttestationTimeoutMs: Number(process.env.BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS || 5000),
   cohortFile: process.env.BETABOT_COHORT_FILE || '',
+  personasFile: process.env.BETABOT_PERSONAS_FILE || '',
+  personaGuidance: process.env.BETABOT_PERSONA_GUIDANCE || '',
+  personaGuidanceFile: process.env.BETABOT_PERSONA_GUIDANCE_FILE || '',
+  personaApprovalMode: (process.env.BETABOT_PERSONA_APPROVAL_MODE || 'auto').toLowerCase(),
+  personasApproved: String(process.env.BETABOT_PERSONAS_APPROVED || 'false') === 'true',
   audienceResearchFile: process.env.BETABOT_AUDIENCE_RESEARCH_FILE || '',
   cohortOnly: String(process.env.BETABOT_COHORT_ONLY || 'false') === 'true',
   betabookEnabled: betabookRequested,
@@ -338,7 +352,7 @@ function loadAudienceResearchFile() {
   }
 }
 
-function loadCohortConfig() {
+function loadCohortConfig(personasOverride = null, sourceOverride = '') {
   let override = {}
   let source = 'built-in generic default'
   if (config.cohortFile) {
@@ -357,7 +371,7 @@ function loadCohortConfig() {
     names: normalizeList(override.names, defaultCohort.names),
     baselines: normalizeList(override.baselines, defaultCohort.baselines),
     discoveries: normalizeList(override.discoveries, defaultCohort.discoveries),
-    roles: normalizeList(override.roles || override.personas, defaultCohort.roles),
+    roles: normalizeSuppliedPersonas(personasOverride || normalizeList(override.roles || override.personas, defaultCohort.roles)),
     requiresSocialAction: Boolean(override.requiresSocialAction ?? defaultCohort.requiresSocialAction),
     routes: normalizeRoutes(override.routes || defaultCohort.routes),
     evidenceRequirements: normalizeEvidenceRequirements(override.evidenceRequirements || {}),
@@ -365,16 +379,31 @@ function loadCohortConfig() {
     keywords: { ...defaultCohort.keywords, ...(override.keywords || {}) },
     ideaRules: normalizeList(override.ideaRules || override.ideas, defaultCohort.ideaRules),
     endings: normalizeList(override.endings, defaultCohort.endings),
-    source,
+    source: sourceOverride || source,
   }
   return cohort
 }
 
-const cohort = loadCohortConfig()
-const roles = cohort.roles
+let cohort = loadCohortConfig()
+let roles = cohort.roles
 const names = cohort.names
 const baselines = cohort.baselines
 const endings = cohort.endings
+
+function applyPersonaDocument(document, source) {
+  const personas = source === 'generated' || source === 'approved-generated'
+    ? normalizeGeneratedPersonas(document, config.count)
+    : normalizeSuppliedPersonas(document)
+  cohort = {
+    ...cohort,
+    appName: document.appName || document.productName || cohort.appName,
+    roles: personas,
+    source,
+  }
+  roles = cohort.roles
+  screenSizePlan = buildScreenSizePlan(config.count)
+  return personas
+}
 
 function genericNudgeRoutes() {
   const cohortRoutes = cohort.routes.map((route) => route.fallback).filter(Boolean)
@@ -492,7 +521,7 @@ function userAgentForScreen(screenSize) {
   if (screenSize.category === 'tablet') return 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
   return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36'
 }
-const screenSizePlan = buildScreenSizePlan(config.count)
+let screenSizePlan = buildScreenSizePlan(config.count)
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms * config.timeScale)))
 const hasAny = (text, keywords) => normalizeList(keywords, []).some((keyword) => text.includes(String(keyword).toLowerCase()))
 
@@ -733,6 +762,150 @@ ${JSON.stringify(fallback, null, 2)}
   }
 }
 
+function requireStructuredLlmResult(task, result) {
+  if (result?._betabotMindFallback) {
+    throw new Error(`${task} LLM unavailable: ${result._betabotMindError || 'provider fallback'}`)
+  }
+  return result
+}
+
+async function inspectVisibleProduct() {
+  const playwright = await requirePlaywright()
+  const browser = await playwright.chromium.launch({
+    headless: config.headless,
+    ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
+  })
+  try {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+    const page = await context.newPage()
+    await page.goto(config.appUrl, { waitUntil: 'commit', timeout: config.actionTimeoutMs })
+    await page.waitForTimeout(1200)
+    const screenshotFile = path.join(config.runDir, 'product-analysis.png')
+    await page.screenshot({ path: screenshotFile, fullPage: false, timeout: 45000 })
+    const bodyText = await page.locator('body').innerText({ timeout: 10000 }).catch(() => '')
+    const bodySnapshot = await collectInteractiveControls(page)
+    return {
+      capturedAt: nowIso(),
+      url: page.url(),
+      title: await page.title().catch(() => ''),
+      visibleText: firstVisibleText(bodyText).slice(0, 5000),
+      visibleControls: bodySnapshot.controls,
+      screenshotFile,
+    }
+  } finally {
+    await browser.close()
+  }
+}
+
+async function generatePersonasFromVisibleProduct(personaConfig) {
+  const visibleEvidence = await inspectVisibleProduct()
+  const analysis = requireStructuredLlmResult('product_analysis', await llmJson('product_analysis', {
+    appUrl: config.appUrl,
+    visibleEvidence: {
+      url: visibleEvidence.url,
+      title: visibleEvidence.title,
+      visibleText: visibleEvidence.visibleText,
+      visibleControls: visibleEvidence.visibleControls,
+      screenshotAttached: true,
+    },
+    instruction: 'Analyze only visible product evidence. Identify the apparent product, value proposition, workflows, audience signals, trust cues, friction, and important unknowns. Do not infer source-code or backend behavior. Separate visible evidence from uncertainty.',
+    requestedShape: {
+      productName: 'visible product name or a concise descriptive name',
+      category: 'product category',
+      visibleValueProposition: 'what the visible product appears to help people do',
+      primaryWorkflows: ['workflow visible or strongly signaled in the interface'],
+      visibleAudienceSignals: ['audience signaled by visible language or workflows'],
+      trustSignals: ['visible trust or credibility signal'],
+      frictionRisks: ['visible comprehension, trust, or workflow risk'],
+      unknowns: ['important fact the visible product does not establish'],
+      evidence: ['short visible text or control that supports the analysis'],
+    },
+  }, {
+    productName: '',
+    category: '',
+    visibleValueProposition: '',
+    primaryWorkflows: [],
+    visibleAudienceSignals: [],
+    trustSignals: [],
+    frictionRisks: [],
+    unknowns: [],
+    evidence: [],
+  }, { imagePaths: [visibleEvidence.screenshotFile] }))
+
+  const analysisArtifact = {
+    schemaVersion: 1,
+    capturedAt: visibleEvidence.capturedAt,
+    appUrl: config.appUrl,
+    visibleEvidence: {
+      url: visibleEvidence.url,
+      title: visibleEvidence.title,
+      visibleText: visibleEvidence.visibleText,
+      visibleControls: visibleEvidence.visibleControls,
+      screenshot: path.basename(visibleEvidence.screenshotFile),
+    },
+    analysis,
+  }
+  fs.writeFileSync(personaConfig.productAnalysisFile, JSON.stringify(analysisArtifact, null, 2))
+
+  const generatedResult = requireStructuredLlmResult('persona_generation', await llmJson('persona_generation', {
+    requestedPersonaCount: config.count,
+    productAnalysis: analysis,
+    userGuidance: personaConfig.guidance || 'No additional user guidance was provided.',
+    audienceResearch: cohort.audienceResearch,
+    researchSources: cohort.researchSources,
+    instruction: 'Create distinct, psychologically coherent people whose current situation gives them a credible reason to evaluate this visible product now. Ground claims in product evidence or user guidance when possible. Put every unsupported market or life detail in provenance.assumptions. Avoid demographic stereotypes, generic UX-testing roles, and superficial adjective swaps.',
+    requestedShape: personaGenerationShape(config.count),
+  }, { personas: [] }))
+  const personas = normalizeGeneratedPersonas(generatedResult, config.count)
+  const proceeded = shouldProceedWithPersonas({
+    sourceKind: 'generated',
+    approvalMode: personaConfig.approvalMode,
+    approved: personaConfig.approved,
+  })
+  const generatedArtifact = {
+    schemaVersion: 1,
+    generatedAt: nowIso(),
+    appName: analysis.productName || cohort.appName,
+    source: 'generated',
+    productAnalysisFile: path.basename(personaConfig.productAnalysisFile),
+    guidance: personaConfig.guidance,
+    approval: {
+      mode: personaConfig.approvalMode,
+      approved: personaConfig.approved,
+      proceeded,
+    },
+    personas,
+  }
+  fs.writeFileSync(personaConfig.generatedPersonasFile, JSON.stringify(generatedArtifact, null, 2))
+  return { document: generatedArtifact, proceeded }
+}
+
+async function preparePersonas() {
+  const personaConfig = loadPersonaGenerationConfig(process.env, process.cwd(), config.runDir)
+  const source = resolvePersonaSource(personaConfig)
+  if (source.kind === 'cohort') {
+    return { personaConfig, sourceKind: source.kind, proceeded: true }
+  }
+  if (source.kind === 'supplied') {
+    const document = loadPersonaDocument(source.file)
+    applyPersonaDocument(document, 'supplied')
+    return { personaConfig, sourceKind: source.kind, proceeded: true }
+  }
+  if (source.kind === 'approved-generated') {
+    const document = loadPersonaDocument(source.file)
+    applyPersonaDocument(document, 'approved-generated')
+    return { personaConfig, sourceKind: source.kind, proceeded: true }
+  }
+
+  const generated = await generatePersonasFromVisibleProduct(personaConfig)
+  applyPersonaDocument(generated.document, 'generated')
+  return {
+    personaConfig,
+    sourceKind: 'generated',
+    proceeded: generated.proceeded,
+  }
+}
+
 const avatarBackgrounds = {
   curious: 'b6e3f4',
   guarded: 'd1d4f9',
@@ -840,6 +1013,23 @@ function personaAt(index) {
     emotionalBaseline: roleObject.emotionalBaseline || pick(baselines),
     technicalComfort,
     traits: roleObject.traits || [],
+    identity: roleObject.identity || role,
+    lifeSituation: roleObject.lifeSituation || roleObject.past || '',
+    trigger: roleObject.trigger || roleObject.discovery || '',
+    jobToBeDone: roleObject.jobToBeDone || roleObject.goal || '',
+    priorAttempts: roleObject.priorAttempts || [],
+    stakes: roleObject.stakes || [],
+    constraints: roleObject.constraints || [],
+    anxieties: roleObject.anxieties || [],
+    objections: roleObject.objections || [],
+    trustThreshold: roleObject.trustThreshold || '',
+    decisionCriteria: roleObject.decisionCriteria || [],
+    vocabulary: roleObject.vocabulary || [],
+    digitalHabits: roleObject.digitalHabits || [],
+    socialContext: roleObject.socialContext || '',
+    successEvidence: roleObject.successEvidence || roleObject.successSignals || [],
+    abandonmentConditions: roleObject.abandonmentConditions || [],
+    provenance: roleObject.provenance || { source: cohort.source, assumptions: [] },
     successSignals: normalizeList(roleObject.successSignals || roleObject.success_signals, []),
     routes: normalizeRoutes(roleObject.routes || roleObject.journey || cohort.routes),
     evidenceRequirements: roleEvidenceRequirements,
@@ -1614,6 +1804,23 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       lifeGoal: bot.lifeGoal,
       emotionalBaseline: bot.emotionalBaseline,
       technicalComfort: bot.technicalComfort,
+      identity: bot.identity,
+      lifeSituation: bot.lifeSituation,
+      trigger: bot.trigger,
+      jobToBeDone: bot.jobToBeDone,
+      priorAttempts: bot.priorAttempts,
+      stakes: bot.stakes,
+      constraints: bot.constraints,
+      anxieties: bot.anxieties,
+      objections: bot.objections,
+      trustThreshold: bot.trustThreshold,
+      decisionCriteria: bot.decisionCriteria,
+      vocabulary: bot.vocabulary,
+      digitalHabits: bot.digitalHabits,
+      socialContext: bot.socialContext,
+      successEvidence: bot.successEvidence,
+      abandonmentConditions: bot.abandonmentConditions,
+      provenance: bot.provenance,
     },
     appName: cohort.appName,
     phase,
@@ -2838,11 +3045,60 @@ ${errorBots.length ? errorBots.map((bot) => `- ${bot.id}: ${bot.errors.join('; '
 `)
 }
 
+function writeCohortSnapshot(bots, environmentIntegrity, personaPreparation) {
+  fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
+    config: publicConfig(),
+    environmentIntegrity,
+    personaGeneration: {
+      source: personaPreparation.sourceKind,
+      approvalMode: personaPreparation.personaConfig.approvalMode,
+      approved: personaPreparation.personaConfig.approved,
+      proceeded: personaPreparation.proceeded,
+      guidanceFile: personaPreparation.personaConfig.guidanceFile || '',
+    },
+    cohort: {
+      appName: cohort.appName,
+      source: cohort.source,
+      audienceResearchFile: config.audienceResearchFile || '',
+      audienceResearch: cohort.audienceResearch,
+      researchSources: cohort.researchSources,
+      audienceSegments: cohort.audienceSegments,
+      confidenceRules: cohort.confidenceRules,
+      roles: cohort.roles,
+      requiresSocialAction: cohort.requiresSocialAction,
+      evidenceRequirements: cohort.evidenceRequirements,
+      routes: cohort.routes.map((route) => ({
+        labels: route.labels.map((label) => label.toString()),
+        optionLabels: route.optionLabels.map((label) => label.toString()),
+        value: route.value,
+        fallback: route.fallback,
+        mode: route.mode,
+      })),
+      screenSizeDistribution: cohort.screenSizeDistribution,
+      keywords: cohort.keywords,
+      ideaRules: cohort.ideaRules,
+    },
+    bots,
+  }, null, 2))
+}
+
 async function main() {
   const startedAt = Date.now()
   validateRunConfig()
   mkdirs()
+  const personaPreparation = await preparePersonas()
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
+  if (!personaPreparation.proceeded) {
+    writeCohortSnapshot(bots, null, personaPreparation)
+    console.log(JSON.stringify({
+      runDir: config.runDir,
+      bots: bots.length,
+      approvalRequired: true,
+      generatedPersonasFile: personaPreparation.personaConfig.generatedPersonasFile,
+      resumeWith: 'BETABOT_PERSONAS_APPROVED=true using the same BETABOT_RUN_DIR',
+    }, null, 2))
+    return
+  }
   const storageStateErrors = config.storageStateTemplate
     ? bots
       .map((bot) => resolveStorageStatePath(config.storageStateTemplate, bot))
@@ -2876,33 +3132,7 @@ async function main() {
   const betabookState = createBetabookState(bots)
   const destinyState = createDestinyState(bots)
   await initializeDestinyMasterPlan(bots, destinyState, betabookState)
-  fs.writeFileSync(path.join(config.runDir, 'cohort.json'), JSON.stringify({
-    config: publicConfig(),
-    environmentIntegrity,
-    cohort: {
-      appName: cohort.appName,
-      source: cohort.source,
-      audienceResearchFile: config.audienceResearchFile || '',
-      audienceResearch: cohort.audienceResearch,
-      researchSources: cohort.researchSources,
-      audienceSegments: cohort.audienceSegments,
-      confidenceRules: cohort.confidenceRules,
-      roles: cohort.roles,
-      requiresSocialAction: cohort.requiresSocialAction,
-      evidenceRequirements: cohort.evidenceRequirements,
-      routes: cohort.routes.map((route) => ({
-        labels: route.labels.map((label) => label.toString()),
-        optionLabels: route.optionLabels.map((label) => label.toString()),
-        value: route.value,
-        fallback: route.fallback,
-        mode: route.mode,
-      })),
-      screenSizeDistribution: cohort.screenSizeDistribution,
-      keywords: cohort.keywords,
-      ideaRules: cohort.ideaRules,
-    },
-    bots,
-  }, null, 2))
+  writeCohortSnapshot(bots, environmentIntegrity, personaPreparation)
   if (config.cohortOnly) {
     console.log(JSON.stringify({ runDir: config.runDir, bots: bots.length, cohortOnly: true }, null, 2))
     return
