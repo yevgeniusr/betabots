@@ -1764,6 +1764,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
   const ideas = []
   const thoughts = []
   const opinions = []
+  const decisionRecords = []
   const seenScreens = []
   const betabookMoments = []
   const destinyMoments = []
@@ -1791,6 +1792,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
   let lastObservation = null
   let shouldEndSession = false
   let goalAssessment = null
+  let decisionSequence = 0
   const reflectionTimeoutMs = config.llmTimeoutMs + 5000
 
   fs.mkdirSync(path.dirname(liveRawFile), { recursive: true })
@@ -2044,7 +2046,12 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     if (reflection._betabotMindFallback) {
       throw new Error(`LLM mind unavailable: ${reflection._betabotMindError || 'provider fallback'}`)
     }
-    const decision = normalizeMindDecision(reflection)
+    const decision = {
+      ...normalizeMindDecision(reflection),
+      decisionId: `${bot.id}-s${sessionNumber}-d${decisionSequence + 1}`,
+      origin: 'persona-llm',
+    }
+    decisionSequence += 1
     recordThought(decision.thought || fallback.thought)
     recordOpinion(decision.opinion || fallback.opinion)
     recordIdea(decision.idea || fallback.idea)
@@ -2088,9 +2095,19 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     }
 
     stats.mindActions += 1
+    decisionRecords.push({
+      decisionId: decision.decisionId,
+      origin: decision.origin,
+      phase,
+      action: decision.action,
+      actionReason: decision.actionReason,
+      result: result.description,
+    })
     log(`My body ${result.description}.`, { type: 'mind-action' })
     if (runtime.evidenceTracker) {
       recordEvidenceAction(runtime.evidenceTracker, {
+        decisionId: decision.decisionId,
+        origin: decision.origin,
         action: decision.action,
         control: result.control,
         url: page.url(),
@@ -2420,6 +2437,8 @@ ${notes.join('\n')}
     messages: stats.messages,
     mindActions: stats.mindActions,
     mindActionFailures: stats.mindActionFailures,
+    decisionRecords,
+    unprovenancedMindActions: Math.max(0, stats.mindActions - decisionRecords.length),
     repeatedScreens: stats.repeatedScreens,
     meaningfulSocialActions: stats.meaningfulSocialActions,
     loopHelpRequests: stats.loopHelpRequests,
@@ -2493,6 +2512,11 @@ function combineBotSessions(bot, sessions, evidenceRequirements, mortality) {
     sessionResults: sessions.map(({ storyline, memory, mortality: ignoredMortality, ...session }) => session),
     evidenceRequirements,
     externalRequestFailureDetails: sessions.flatMap((session) => session.externalRequestFailureDetails || []),
+    decisionRecords: sessions.flatMap((session) => session.decisionRecords || []),
+    unprovenancedMindActions: sessions.reduce(
+      (sum, session) => sum + Number(session.unprovenancedMindActions || 0),
+      0,
+    ),
   }
   for (const field of SUMMED_RESULT_FIELDS) {
     combined[field] = sessions.reduce((sum, session) => sum + Number(session[field] || 0), 0)

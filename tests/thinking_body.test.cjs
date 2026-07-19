@@ -27,6 +27,13 @@ test('normalizes one structured observe-think-act decision', () => {
   })
 })
 
+test('rejects missing, malformed, and unknown mind actions', () => {
+  assert.throws(() => normalizeMindDecision({ thought: 'No action supplied.' }), /action object/i)
+  assert.throws(() => normalizeMindDecision({ action: 'click' }), /action object/i)
+  assert.throws(() => normalizeMindDecision({ action: {} }), /action type/i)
+  assert.throws(() => normalizeMindDecision({ action: { type: 'hover' } }), /unknown body action/i)
+})
+
 test('accepts an action against a compatible visible control', () => {
   const result = validateMindAction(
     { type: 'fill', targetId: 'control-2', value: 'Hello there' },

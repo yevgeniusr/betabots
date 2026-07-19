@@ -7,11 +7,15 @@ function cleanText(value, limit = 1000) {
 }
 
 function normalizeMindDecision(value = {}) {
-  const sourceAction = value.action && typeof value.action === 'object'
-    ? value.action
-    : { type: value.desiredAction }
-  const requestedType = cleanText(sourceAction.type || 'wait', 30).toLowerCase()
-  const type = BODY_ACTIONS.has(requestedType) ? requestedType : 'wait'
+  if (!value.action || typeof value.action !== 'object' || Array.isArray(value.action)) {
+    throw new Error('Mind decision must include an action object.')
+  }
+  const sourceAction = value.action
+  const requestedType = cleanText(sourceAction.type, 30).toLowerCase()
+  if (!requestedType) throw new Error('Mind decision action type is required.')
+  if (!BODY_ACTIONS.has(requestedType)) {
+    throw new Error(`Unknown body action: ${requestedType}`)
+  }
 
   return {
     thought: cleanText(value.thought),
@@ -21,7 +25,7 @@ function normalizeMindDecision(value = {}) {
     lifeCostJustification: cleanText(value.lifeCostJustification || value.lifeDecision),
     actionReason: cleanText(value.actionReason || sourceAction.reason),
     action: {
-      type,
+      type: requestedType,
       targetId: cleanText(sourceAction.targetId || sourceAction.target, 120),
       value: cleanText(sourceAction.value, 500),
     },
