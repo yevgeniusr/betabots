@@ -753,7 +753,7 @@ ${JSON.stringify(fallback, null, 2)}
       ? await callOpenRouter(prompt, options.imagePaths)
       : await callCodex(prompt, options.imagePaths)
     const parsed = extractJson(raw)
-    return { ...fallback, ...parsed }
+    return options.mergeFallback === false ? parsed : { ...fallback, ...parsed }
   } catch (error) {
     llmStats.failures += 1
     llmStats.fallbacks += 1
@@ -830,7 +830,7 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
     frictionRisks: [],
     unknowns: [],
     evidence: [],
-  }, { imagePaths: [visibleEvidence.screenshotFile] }))
+  }, { imagePaths: [visibleEvidence.screenshotFile], mergeFallback: false }))
 
   const analysisArtifact = {
     schemaVersion: 1,
@@ -855,7 +855,7 @@ async function generatePersonasFromVisibleProduct(personaConfig) {
     researchSources: cohort.researchSources,
     instruction: 'Create distinct, psychologically coherent people whose current situation gives them a credible reason to evaluate this visible product now. Ground claims in product evidence or user guidance when possible. Put every unsupported market or life detail in provenance.assumptions. Avoid demographic stereotypes, generic UX-testing roles, and superficial adjective swaps.',
     requestedShape: personaGenerationShape(config.count),
-  }, { personas: [] }))
+  }, { personas: [] }, { mergeFallback: false }))
   const personas = normalizeGeneratedPersonas(generatedResult, config.count)
   const proceeded = shouldProceedWithPersonas({
     sourceKind: 'generated',
@@ -1864,7 +1864,10 @@ async function llmBotReflection(bot, observation, phase, fallback, stats = {}, s
       truthfulAssessment: 'direct private judgment about the visible product, with confidence if uncertain',
       lifeCostJustification: 'one sentence weighing the next action cost against the life goal',
     },
-  }, fallback, { imagePaths: bodyContext.screenshotFile ? [bodyContext.screenshotFile] : [] })
+  }, fallback, {
+    imagePaths: bodyContext.screenshotFile ? [bodyContext.screenshotFile] : [],
+    mergeFallback: false,
+  })
 }
 
 async function llmBotShortText(task, bot, context) {
@@ -1901,7 +1904,7 @@ async function llmBotShortText(task, bot, context) {
     },
     context,
     requestedShape: { text: 'short first-person human text, no markdown' },
-  }, { text: '' })
+  }, { text: '' }, { mergeFallback: false })
   const text = requireLlmSocialText(result)
   socialDecisionSequence += 1
   return {
@@ -1941,7 +1944,7 @@ async function llmDestinyMasterPlan(bots, state) {
       summary: 'one sentence master plan',
       threads: [{ id: 'thread id', intent: 'cross_paths or near_miss', reason: 'why Destiny wants this' }],
     },
-  }, fallback)
+  }, fallback, { mergeFallback: false })
 }
 
 async function llmDestinyLiveAdvice(bots, state, betabookState) {
@@ -1971,7 +1974,7 @@ async function llmDestinyLiveAdvice(bots, state, betabookState) {
       nudges: [{ botId: 'bot id', kind: 'think or loop_rescue', thought: 'believable hunch', route: routeExamples.join(' or ') || '/' }],
       betabookComment: 'optional Destiny comment for the run, empty string if none',
     },
-  }, fallback)
+  }, fallback, { mergeFallback: false })
 }
 
 async function runBotSession(browser, bot, runtime = {}, session = {}) {

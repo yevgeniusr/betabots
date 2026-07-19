@@ -55,6 +55,38 @@ test('runner captures a screenshot, asks the mind, and executes its action', () 
   assert.match(raw, /Screenshot evidence \(post-mind-action\)/)
 })
 
+test('runner rejects a successful LLM response that omits its action', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-missing-action-runner-'))
+  const runDir = path.join(temp, 'run')
+  const result = spawnSync(process.execPath, [
+    path.join(root, 'skills/betabots/scripts/thoughtful_browser_betabots.cjs'),
+  ], {
+    cwd: temp,
+    encoding: 'utf8',
+    timeout: 30000,
+    env: {
+      ...process.env,
+      BETABOT_APP_URL: `file://${path.join(root, 'tests/fixtures/thinking-body-app.html')}`,
+      BETABOT_COHORT_FILE: path.join(root, 'tests/fixtures/thinking-body-cohort.json'),
+      BETABOT_RUN_DIR: runDir,
+      BETABOT_THOUGHTFUL_COUNT: '1',
+      BETABOT_HEADLESS: 'true',
+      BETABOT_LLM_PROVIDER: 'codex',
+      BETABOT_CODEX_COMMAND: path.join(root, 'tests/fixtures/fake-missing-action-mind.cjs'),
+      BETABOT_LLM_TIMEOUT_MS: '5000',
+      BETABOT_ACTION_TIMEOUT_MS: '5000',
+    },
+  })
+
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const summary = JSON.parse(fs.readFileSync(path.join(runDir, 'summary.json'), 'utf8'))
+  const raw = fs.readFileSync(path.join(runDir, 'raw/thoughtful-betabot-001.md'), 'utf8')
+  assert.equal(summary.results[0].mindActions, 0)
+  assert.ok(summary.results[0].mindActionFailures >= 1)
+  assert.deepEqual(summary.results[0].decisionRecords, [])
+  assert.doesNotMatch(raw, /My body waited/i)
+})
+
 test('runner executes multiple return sessions, checkpoints state, and combines the storyline', () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-multi-session-runner-'))
   const runDir = path.join(temp, 'run')
