@@ -22,7 +22,7 @@ function isExcluded(relativePath) {
   if (!relativePath) return false
   if (excludedFiles.has(path.basename(relativePath))) return true
   if (/\.log$/i.test(relativePath)) return true
-  return relativePath.split(path.sep).some((part) => excludedNames.has(part))
+  return relativePath.split(/[\\/]+/).some((part) => excludedNames.has(part))
 }
 
 function listTrackedFiles(source) {
@@ -43,36 +43,51 @@ function listTrackedFiles(source) {
     .filter((file) => file.relative && !file.relative.startsWith('..') && !isExcluded(file.relative))
 }
 
-function copyTrackedTree(source, destination) {
-  fs.rmSync(destination, { recursive: true, force: true })
-  fs.mkdirSync(destination, { recursive: true })
+function assertSafeRelative(relativePath) {
+  if (!relativePath || path.isAbsolute(relativePath)) {
+    throw new Error(`Refusing to install unsafe path ${relativePath}`)
+  }
+  if (relativePath.split(/[\\/]+/).includes('..')) {
+    throw new Error(`Refusing to install path that traverses outside the install root: ${relativePath}`)
+  }
+}
+
+function assertInsideDirectory(parent, child) {
+  const relative = path.relative(parent, child)
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`Refusing to install outside destination: ${child}`)
+  }
+}
+
+function preflightTrackedTree(source) {
   const trackedFiles = listTrackedFiles(source)
   if (trackedFiles && trackedFiles.length > 0) {
+    const entries = []
     for (const file of trackedFiles) {
+      assertSafeRelative(file.relative)
       const sourceStat = fs.lstatSync(file.source)
       if (sourceStat.isSymbolicLink()) {
         throw new Error(`Refusing to install symlink ${file.relative}. Betabots local installs copy regular tracked files only.`)
       }
-      const target = path.join(destination, file.relative)
-      fs.mkdirSync(path.dirname(target), { recursive: true })
-      fs.copyFileSync(file.source, target)
-      fs.chmodSync(target, sourceStat.mode)
+      if (!sourceStat.isFile()) {
+        throw new Error(`Refusing to install non-file tracked path ${file.relative}. Betabots local installs copy regular tracked files only.`)
+      }
+      entries.push({ source: file.source, relative: file.relative, mode: sourceStat.mode })
     }
-    return
+    return entries
   }
 
+  const entries = []
   const stack = ['']
   while (stack.length) {
     const relative = stack.pop()
     const currentSource = path.join(source, relative)
-    const currentDestination = path.join(destination, relative)
     for (const entry of fs.readdirSync(currentSource, { withFileTypes: true })) {
       const childRelative = path.join(relative, entry.name)
       if (isExcluded(childRelative)) continue
+      assertSafeRelative(childRelative)
       const childSource = path.join(source, childRelative)
-      const childDestination = path.join(destination, childRelative)
       if (entry.isDirectory()) {
-        fs.mkdirSync(childDestination, { recursive: true })
         stack.push(childRelative)
       } else if (entry.isSymbolicLink()) {
         throw new Error(`Refusing to install symlink ${childRelative}. Betabots local installs copy regular files only.`)
@@ -81,10 +96,61 @@ function copyTrackedTree(source, destination) {
         if (sourceStat.isSymbolicLink()) {
           throw new Error(`Refusing to install symlink ${childRelative}. Betabots local installs copy regular files only.`)
         }
-        fs.mkdirSync(path.dirname(childDestination), { recursive: true })
-        fs.copyFileSync(childSource, childDestination)
-        fs.chmodSync(childDestination, sourceStat.mode)
+        entries.push({ source: childSource, relative: childRelative, mode: sourceStat.mode })
       }
+    }
+  }
+  return entries
+}
+
+function copyPreflightedTree(entries, destination) {
+  const destinationRoot = path.resolve(destination)
+  fs.mkdirSync(destinationRoot, { recursive: true })
+  for (const entry of entries) {
+    const target = path.resolve(destinationRoot, entry.relative)
+    assertInsideDirectory(destinationRoot, target)
+    fs.mkdirSync(path.dirname(target), { recursive: true })
+    fs.copyFileSync(entry.source, target)
+    fs.chmodSync(target, entry.mode)
+  }
+}
+
+function replaceDirectory(staged, destination) {
+  const destinationParent = path.dirname(destination)
+  const destinationName = path.basename(destination)
+  const backup = path.join(destinationParent, `.betabots-install-${destinationName}-backup-${process.pid}-${Date.now()}`)
+
+  if (!fs.existsSync(destination)) {
+    fs.renameSync(staged, destination)
+    return
+  }
+
+  fs.renameSync(destination, backup)
+  try {
+    fs.renameSync(staged, destination)
+  } catch (error) {
+    if (!fs.existsSync(destination) && fs.existsSync(backup)) {
+      fs.renameSync(backup, destination)
+    }
+    throw error
+  }
+  fs.rmSync(backup, { recursive: true, force: true })
+}
+
+function installTrackedTree(source, destination, afterCopy) {
+  const entries = preflightTrackedTree(source)
+  const destinationParent = path.dirname(destination)
+  const destinationName = path.basename(destination)
+  fs.mkdirSync(destinationParent, { recursive: true })
+  let staged = fs.mkdtempSync(path.join(destinationParent, `.betabots-install-${destinationName}-`))
+  try {
+    copyPreflightedTree(entries, staged)
+    afterCopy(staged)
+    replaceDirectory(staged, destination)
+    staged = null
+  } finally {
+    if (staged) {
+      fs.rmSync(staged, { recursive: true, force: true })
     }
   }
 }
@@ -97,7 +163,9 @@ function run(command, commandArgs, options = {}) {
     stdio: options.stdio || 'inherit',
   })
   if (result.status !== 0) {
-    process.exit(result.status || 1)
+    const error = new Error(`${command} ${commandArgs.join(' ')} failed with exit ${result.status || 1}`)
+    error.status = result.status || 1
+    throw error
   }
 }
 
@@ -137,13 +205,11 @@ function maybeRunCli(command, commandArgs) {
 }
 
 function copySkill(destination) {
-  copyTrackedTree(path.join(root, 'skills', 'betabots'), destination)
-  installRuntimeDeps(destination)
+  installTrackedTree(path.join(root, 'skills', 'betabots'), destination, installRuntimeDeps)
 }
 
 function copyPlugin(destination) {
-  copyTrackedTree(root, destination)
-  installRuntimeDeps(path.join(destination, 'skills', 'betabots'))
+  installTrackedTree(root, destination, (staged) => installRuntimeDeps(path.join(staged, 'skills', 'betabots')))
 }
 
 function installCodex() {
@@ -175,8 +241,13 @@ if (!['all', 'codex', 'claude', 'cursor'].includes(target)) {
   process.exit(2)
 }
 
-if (target === 'all' || target === 'codex') installCodex()
-if (target === 'all' || target === 'claude') installClaude()
-if (target === 'all' || target === 'cursor') installCursor()
+try {
+  if (target === 'all' || target === 'codex') installCodex()
+  if (target === 'all' || target === 'claude') installClaude()
+  if (target === 'all' || target === 'cursor') installCursor()
 
-console.log(`Installed ${name} locally for ${target}. Restart/new thread required for agents to load updated skills.`)
+  console.log(`Installed ${name} locally for ${target}. Restart/new thread required for agents to load updated skills.`)
+} catch (error) {
+  console.error(error.message)
+  process.exit(error.status || 1)
+}

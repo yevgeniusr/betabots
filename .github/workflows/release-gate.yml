@@ -1,0 +1,58 @@
+name: Release Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release/v0.1.0
+  push:
+    branches:
+      - main
+      - release/v0.1.0
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies
+        run: node scripts/install-deps.cjs --all
+
+      - name: Install Chromium
+        run: node scripts/install-browsers.cjs
+
+      - name: Run smoke test without NODE_PATH
+        run: env -u NODE_PATH tests/smoke.sh
+
+  clean-install:
+    name: Clean install (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+        node:
+          - 18.x
+          - 20.x
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Run isolated release verifier without NODE_PATH
+        run: env -u NODE_PATH npm run verify:clean-install

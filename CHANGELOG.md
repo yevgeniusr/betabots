@@ -13,12 +13,14 @@ First stable release candidate for local Betabots skill/plugin installs.
 - Chromium-only browser install command for the pinned Playwright runtime.
 - Clean-install verifier that copies the repository to a temporary directory, uses an isolated `HOME`, installs host skill and plugin copies, installs and launches Chromium, and runs smoke without inherited `NODE_PATH`.
 - Installer safety checks that reject tracked symlinks instead of dereferencing or recreating them in local skill/plugin directories.
+- Release Gate GitHub Actions workflow that runs the full clean-install verifier on Ubuntu and macOS with supported Node 18 and Node 20 runtimes.
 - Linux browser-install option for Playwright system dependencies on minimal images.
 - Release notes suitable for `gh release create`.
 
 ### Changed
 
 - Local installation now installs the Betabots runtime dependency tree inside each copied skill directory for Codex, Agent Skills, Claude Code, and Cursor.
+- Local installation now stages each copied install and its dependency tree in a temporary sibling before replacing an existing destination, preserving previous installs on validation, copy, or npm failure.
 - Browser runner resolves Playwright from the copied skill runtime before falling back to the caller environment.
 - Browser click, fill, and select body actions use a bounded 5 second default timeout again, with `BETABOT_BODY_ACTION_TIMEOUT_MS` available for explicit overrides.
 

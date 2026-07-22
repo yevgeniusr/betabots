@@ -33,14 +33,16 @@ tests/smoke.sh
 5. If install behavior changed, run the clean-install verifier:
 
 ```bash
-npm run verify:clean-install
+env -u NODE_PATH npm run verify:clean-install
 ```
 
 The default verifier copies a fresh tracked tree, uses an isolated `HOME` and npm cache, installs dependencies from lockfiles with lifecycle scripts disabled, installs Chromium for Playwright 1.61.1, launches Chromium, checks standalone and plugin-embedded skill runtimes, and runs smoke without inherited `NODE_PATH`.
 
 For local iteration only, `node scripts/verify-clean-install.cjs --skip-browser-install` reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated.
 
-6. If plugin manifests changed, also run the plugin validator when available:
+6. Release-blocking PRs must pass the `Release Gate` GitHub Actions workflow. Its required `Clean install` matrix runs `env -u NODE_PATH npm run verify:clean-install` on Ubuntu and macOS with supported Node 18 and Node 20 runtimes, so CI exercises dependency installation, isolated `HOME` and npm cache, Chromium install and launch, smoke, and copied standalone/plugin runtime checks.
+
+7. If plugin manifests changed, also run the plugin validator when available:
 
 ```bash
 python3 /Users/mac/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
