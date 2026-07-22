@@ -20,6 +20,8 @@ It is inspired by the multi-harness plugin layout of [Superpowers](https://githu
 
 ## Status
 
+Current release candidate: `0.1.0`.
+
 Betabots is free and open-source software under the [GNU Affero General Public License v3.0 or later](LICENSE).
 
 AGPLv3 allows personal and commercial use, copying, modification, and redistribution. If someone distributes a modified version or runs a modified version as a network service for others, they must provide the corresponding source code under the same license.
@@ -29,6 +31,8 @@ AGPLv3 allows personal and commercial use, copying, modification, and redistribu
 ```bash
 git clone https://github.com/yevgeniusr/betabots.git
 cd betabots
+node scripts/install-deps.cjs --all
+node scripts/install-browsers.cjs
 tests/smoke.sh
 scripts/install-local.sh all
 ```
@@ -214,7 +218,9 @@ skills/betabots/SKILL.md       Main Betabots skill
 skills/betabots/scripts/       Cohort, analysis, and browser-run scripts
 skills/betabots/examples/      Reusable generic cohort files
 skills/betabots/references/    Session templates, safety, cohort, and browser guidance
-scripts/install-local.sh       Local installer for Codex, Claude, and Cursor
+scripts/install-local.sh       Local installer for Codex, Agent Skills, Claude, and Cursor
+scripts/install-deps.cjs       Deterministic dependency installer from lockfiles
+scripts/install-browsers.cjs   Chromium-only Playwright browser installer
 tests/smoke.sh                 Lightweight validation
 ```
 
@@ -231,8 +237,17 @@ Clone and install into local agent runtimes:
 ```bash
 git clone https://github.com/yevgeniusr/betabots.git
 cd betabots
+node scripts/install-deps.cjs --all
+node scripts/install-browsers.cjs
+tests/smoke.sh
 scripts/install-local.sh all
 ```
+
+`node scripts/install-deps.cjs --all` installs the pinned repository test dependencies and copied-skill runtime dependencies from committed lockfiles. It does not copy or reuse any sibling `node_modules` directory.
+
+`node scripts/install-browsers.cjs` installs Playwright Chromium for the pinned Playwright revision. Playwright downloads Chrome for Testing, Chrome Headless Shell, and FFmpeg for Chromium support; it does not download Firefox or WebKit. Disk and network use varies by platform and Playwright revision. To use an existing Chrome or Chromium executable instead, set `BETABOT_BROWSER_EXECUTABLE_PATH`.
+
+On minimal Linux images, Chromium may also need OS packages. Run `node scripts/install-browsers.cjs --with-deps` in images where Playwright reports missing system libraries; this may invoke the platform package manager.
 
 Install a single runtime:
 
@@ -246,25 +261,22 @@ Start a new agent thread after installation so the runtime reloads skills/plugin
 
 ## Codex
 
-The installer copies the plugin to `~/plugins/betabots`, updates the personal Codex marketplace at `~/.agents/plugins/marketplace.json`, runs `codex plugin add betabots@personal` when available, and mirrors the skill into `~/.codex/skills/betabots`.
+The installer copies the plugin to `~/plugins/betabots`, updates the personal Codex marketplace at `~/.agents/plugins/marketplace.json`, runs `codex plugin add betabots@personal` when available, mirrors the skill into `~/.codex/skills/betabots` and `~/.agents/skills/betabots`, and installs the pinned runtime dependencies into each copied skill.
 
-Manual install:
+Command-line install:
 
 ```bash
-mkdir -p ~/plugins
-cp -R . ~/plugins/betabots
-codex plugin add betabots@personal
+scripts/install-local.sh codex
 ```
 
 ## Claude Code
 
-The installer copies the plugin to `~/.claude/plugins/local/betabots`, registers that local marketplace with Claude, installs `betabots@betabots-dev` when available, and mirrors the skill into `~/.claude/skills/betabots`.
+The installer copies the plugin to `~/.claude/plugins/local/betabots`, registers that local marketplace with Claude, installs `betabots@betabots-dev` when available, mirrors the skill into `~/.claude/skills/betabots`, and installs the pinned runtime dependencies into each copied skill.
 
-Manual install:
+Command-line install:
 
 ```bash
-claude plugin marketplace add /path/to/betabots
-claude plugin install betabots@betabots-dev --scope user
+scripts/install-local.sh claude
 ```
 
 For one-off testing without installing:
@@ -275,7 +287,7 @@ claude --plugin-dir /path/to/betabots -p "Use betabots to plan a cohort for this
 
 ## Cursor
 
-The installer copies the plugin to `~/.cursor/plugins/betabots` and mirrors the skill into both `~/.cursor/skills/betabots` and `~/.cursor/skills-cursor/betabots` for local discovery.
+The installer copies the plugin to `~/.cursor/plugins/betabots`, mirrors the skill into both `~/.cursor/skills/betabots` and `~/.cursor/skills-cursor/betabots` for local discovery, and installs the pinned runtime dependencies into each copied skill.
 
 Cursor marketplace support varies by build. If your Cursor build supports chat plugin commands, you can also install from the repository after publishing:
 
@@ -308,10 +320,9 @@ BETABOT_HEADLESS=false \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-Browser sessions require Playwright to be available in the target project or globally.
-If Playwright is installed but its expected bundled browser revision is not,
-set `BETABOT_BROWSER_EXECUTABLE_PATH` to an existing Chromium or Chrome
-executable.
+Browser sessions use the pinned Playwright runtime installed by `node scripts/install-deps.cjs --all` or `scripts/install-local.sh all`.
+If Playwright's expected Chromium revision is not installed, run `node scripts/install-browsers.cjs`.
+Set `BETABOT_BROWSER_EXECUTABLE_PATH` to an existing Chromium or Chrome executable to use a system browser instead.
 
 Open the read-only local dashboard for run artifacts:
 
@@ -378,9 +389,16 @@ Persona and role definition:
 ## Validate
 
 ```bash
+node scripts/install-deps.cjs --all
+node scripts/install-browsers.cjs
 tests/smoke.sh
+node scripts/verify-clean-install.cjs --skip-browser-install
 python3 /Users/mac/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
 ```
+
+Use `--skip-browser-install` only when the machine has already installed Chromium for the pinned Playwright revision. With this flag, the verifier reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated. Omit it to let the clean-install verifier run the Chromium install command.
+
+On minimal Linux images, run `node scripts/install-browsers.cjs --with-deps` before smoke if Playwright reports missing system libraries.
 
 ## License
 

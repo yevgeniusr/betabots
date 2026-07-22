@@ -24,6 +24,10 @@ MD
 python3 "$ROOT/skills/betabots/scripts/analyze_sessions.py" /tmp/betabots-raw >/tmp/betabots-analysis.md
 grep -q "Sessions analyzed: 1" /tmp/betabots-analysis.md
 node --check "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs" >/dev/null
+node --check "$ROOT/scripts/install.cjs" >/dev/null
+node --check "$ROOT/scripts/install-deps.cjs" >/dev/null
+node --check "$ROOT/scripts/install-browsers.cjs" >/dev/null
+node --check "$ROOT/scripts/verify-clean-install.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/environment_integrity.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/screen_identity.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/keyword_scoring.cjs" >/dev/null

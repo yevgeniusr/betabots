@@ -240,9 +240,13 @@ async function visibleAriaOptions(page, value, exact) {
   return matches
 }
 
-async function selectAriaOption(page, locator, value) {
+function actionTimeoutMs(options = {}) {
+  return options.actionTimeoutMs || 15000
+}
+
+async function selectAriaOption(page, locator, value, options = {}) {
   const expanded = await locator.getAttribute('aria-expanded').catch(() => null)
-  if (expanded !== 'true') await locator.click({ timeout: 5000 })
+  if (expanded !== 'true') await locator.click({ timeout: actionTimeoutMs(options) })
 
   let matches = []
   for (let attempt = 0; attempt < 4 && matches.length === 0; attempt += 1) {
@@ -253,18 +257,18 @@ async function selectAriaOption(page, locator, value) {
   if (matches.length !== 1) {
     throw new Error(`Expected one visible option named "${value}", found ${matches.length}.`)
   }
-  await matches[0].click({ timeout: 5000 })
+  await matches[0].click({ timeout: actionTimeoutMs(options) })
 }
 
-async function performTargetAction(page, locator, action) {
-  if (action.type === 'click') await locator.click({ timeout: 5000 })
-  if (action.type === 'fill') await locator.fill(action.value, { timeout: 5000 })
+async function performTargetAction(page, locator, action, options = {}) {
+  if (action.type === 'click') await locator.click({ timeout: actionTimeoutMs(options) })
+  if (action.type === 'fill') await locator.fill(action.value, { timeout: actionTimeoutMs(options) })
   if (action.type === 'select') {
     const tagName = await locator.evaluate((element) => element.tagName.toLowerCase())
     if (tagName === 'select') {
       await locator.selectOption({ label: action.value }).catch(() => locator.selectOption(action.value))
     } else {
-      await selectAriaOption(page, locator, action.value)
+      await selectAriaOption(page, locator, action.value, options)
     }
   }
 }
@@ -301,7 +305,7 @@ async function retrySemanticTarget(page, originalControl, action, originalReason
   }
   try {
     await options.beforeTargetAction?.({ action: revalidated.action, control: revalidated.control })
-    await performTargetAction(page, locator, revalidated.action)
+    await performTargetAction(page, locator, revalidated.action, options)
     return successfulTargetAction(revalidated.action, revalidated.control, true)
   } catch (error) {
     return {
@@ -381,7 +385,7 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
       let matches = await visibleAriaOptions(page, optionValue, true)
       if (matches.length === 0) matches = await visibleAriaOptions(page, optionValue, false)
       if (matches.length === 1) {
-        await matches[0].click({ timeout: 5000 })
+        await matches[0].click({ timeout: actionTimeoutMs(options) })
         return {
           ok: true,
           description: `selected ${cleanText(requestedAction.targetId || requestedAction.target || optionValue, 180)}`,
@@ -437,7 +441,7 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
   }
   try {
     await options.beforeTargetAction?.({ action, control: validated.control })
-    await performTargetAction(page, locator, action)
+    await performTargetAction(page, locator, action, options)
     return successfulTargetAction(action, validated.control)
   } catch (error) {
     if (!transientLocatorFailure(error)) {

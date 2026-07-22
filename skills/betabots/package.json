@@ -1,0 +1,16 @@
+{
+  "name": "@betabots/runtime",
+  "version": "0.1.0",
+  "description": "Bundled runtime dependencies for the Betabots skill.",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install:chromium": "node node_modules/playwright/cli.js install chromium"
+  },
+  "dependencies": {
+    "playwright": "1.61.1"
+  }
+}

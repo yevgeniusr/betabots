@@ -7,6 +7,9 @@ This guide summarizes the normal Betabots workflow. The README contains the full
 ```bash
 git clone https://github.com/yevgeniusr/betabots.git
 cd betabots
+node scripts/install-deps.cjs --all
+node scripts/install-browsers.cjs
+tests/smoke.sh
 scripts/install-local.sh all
 ```
 
@@ -38,7 +41,11 @@ BETABOT_HEADLESS=false \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
-Browser sessions require Playwright in the target project or globally. Betabots interact through the visible product surface; they do not call product APIs or use hidden implementation maps.
+Browser sessions use the pinned Playwright runtime installed by the Betabots dependency installer or local installer. Betabots interact through the visible product surface; they do not call product APIs or use hidden implementation maps.
+
+`node scripts/install-browsers.cjs` installs Chrome for Testing, Chrome Headless Shell, and FFmpeg for Chromium support. It does not install Firefox or WebKit. If Chromium cannot be installed on a machine, set `BETABOT_BROWSER_EXECUTABLE_PATH` to an existing Chrome or Chromium executable.
+
+On minimal Linux images, run `node scripts/install-browsers.cjs --with-deps` when Playwright reports missing system libraries. That path may invoke the platform package manager.
 
 With no cohort or persona file, the default startup flow is visible product
 analysis -> deep persona generation -> browser sessions. It writes
@@ -135,3 +142,11 @@ control. Echoes, stale completion text, and unrelated iframe clicks do not count
 ```bash
 tests/smoke.sh
 ```
+
+For release checks, run the clean-install verifier from a prepared machine that already has Chromium for the pinned Playwright revision:
+
+```bash
+node scripts/verify-clean-install.cjs --skip-browser-install
+```
+
+With `--skip-browser-install`, the verifier reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated. Omit the flag to let the verifier run the Chromium install command.

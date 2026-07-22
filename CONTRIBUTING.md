@@ -17,13 +17,28 @@ This means:
 
 1. Fork or branch from the current default branch.
 2. Keep changes focused on one behavior, script, doc area, or integration.
-3. Run the smoke test before opening a pull request:
+3. Install dependencies and Chromium:
+
+```bash
+node scripts/install-deps.cjs --all
+node scripts/install-browsers.cjs
+```
+
+4. Run the smoke test before opening a pull request:
 
 ```bash
 tests/smoke.sh
 ```
 
-4. If plugin manifests changed, also run the plugin validator when available:
+5. If install behavior changed, run the clean-install verifier:
+
+```bash
+node scripts/verify-clean-install.cjs --skip-browser-install
+```
+
+With `--skip-browser-install`, the verifier reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated. Omit the flag when the machine has not already installed Chromium for the pinned Playwright revision.
+
+6. If plugin manifests changed, also run the plugin validator when available:
 
 ```bash
 python3 /Users/mac/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .

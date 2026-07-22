@@ -777,7 +777,7 @@ function requireStructuredLlmResult(task, result) {
 
 async function inspectVisibleProduct() {
   const playwright = await requirePlaywright()
-  const browser = await playwright.chromium.launch({
+  const browser = await launchChromium(playwright, {
     headless: config.headless,
     ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
   })
@@ -1187,8 +1187,11 @@ function chargeLife(ledger, kind, amount, reason) {
 }
 
 async function requirePlaywright() {
+  const scriptRequire = createRequire(__filename)
   const localRequire = createRequire(path.join(process.cwd(), 'package.json'))
   const attempts = [
+    () => scriptRequire('playwright'),
+    () => scriptRequire('@playwright/test'),
     () => require('playwright'),
     () => require('@playwright/test'),
     () => localRequire('playwright'),
@@ -1200,8 +1203,27 @@ async function requirePlaywright() {
     } catch {}
   }
 
-  console.error('Playwright is required for thoughtful mode. Install it in the target project or run: npm install -D playwright')
+  console.error('Playwright is required for Betabots browser mode.')
+  console.error('From the repository, run: node scripts/install-deps.cjs --all')
+  console.error('For an installed skill copy, rerun: scripts/install-local.sh all')
   process.exit(2)
+}
+
+async function launchChromium(playwright, options) {
+  try {
+    return await playwright.chromium.launch(options)
+  } catch (error) {
+    const message = String(error && error.message ? error.message : error)
+    if (/Executable doesn't exist|browserType\.launch|playwright install|Please run the following command/i.test(message)) {
+      console.error('Playwright Chromium is required for Betabots browser mode.')
+      console.error('Install only Chromium after installing dependencies:')
+      console.error('  node scripts/install-browsers.cjs')
+      console.error('For an installed skill copy, run its local Playwright installer:')
+      console.error('  node ~/.codex/skills/betabots/node_modules/playwright/cli.js install chromium')
+      console.error('Or set BETABOT_BROWSER_EXECUTABLE_PATH to an existing Chrome/Chromium executable.')
+    }
+    throw error
+  }
 }
 
 function mkdirs() {
@@ -3289,7 +3311,7 @@ async function main() {
     return
   }
   const playwright = await requirePlaywright()
-  const browser = await playwright.chromium.launch({
+  const browser = await launchChromium(playwright, {
     headless: config.headless,
     ...(config.browserExecutablePath ? { executablePath: config.browserExecutablePath } : {}),
   })

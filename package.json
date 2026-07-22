@@ -1,0 +1,23 @@
+{
+  "name": "betabots",
+  "version": "0.1.0",
+  "description": "Synthetic human beta cohorts for product discovery, multi-session usability, and live social-graph simulation.",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yevgeniusr/betabots.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install:deps": "node scripts/install-deps.cjs --all",
+    "install:chromium": "node scripts/install-browsers.cjs",
+    "smoke": "tests/smoke.sh",
+    "verify:clean-install": "node scripts/verify-clean-install.cjs --skip-browser-install"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1"
+  }
+}
