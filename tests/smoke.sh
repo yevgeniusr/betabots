@@ -56,6 +56,7 @@ node --test "$ROOT/tests/thinking_body_browser.test.cjs" >/dev/null
 node --test "$ROOT/tests/install_deps.test.cjs" >/dev/null
 node --test "$ROOT/tests/install_symlink_safety.test.cjs" >/dev/null
 node --test "$ROOT/tests/verify_clean_install.test.cjs" >/dev/null
+node --test "$ROOT/tests/generate_cohort_cli.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body_runner.test.cjs" >/dev/null
 node --test "$ROOT/tests/session_scheduler.test.cjs" >/dev/null
 node --test "$ROOT/tests/session_state_browser.test.cjs" >/dev/null

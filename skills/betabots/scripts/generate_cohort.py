@@ -230,7 +230,7 @@ def main() -> None:
     parser.add_argument(
         "--screen-size-distribution",
         default=None,
-        help="JSON array overriding weighted screen-size buckets. Defaults to 50% mobile, 20% tablet, 30% desktop.",
+        help="JSON array overriding weighted screen-size buckets. Defaults to 50%% mobile, 20%% tablet, 30%% desktop.",
     )
     args = parser.parse_args()
 
