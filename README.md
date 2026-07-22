@@ -219,7 +219,7 @@ skills/betabots/scripts/       Cohort, analysis, and browser-run scripts
 skills/betabots/examples/      Reusable generic cohort files
 skills/betabots/references/    Session templates, safety, cohort, and browser guidance
 scripts/install-local.sh       Local installer for Codex, Agent Skills, Claude, and Cursor
-scripts/install-deps.cjs       Deterministic dependency installer from lockfiles
+scripts/install-deps.cjs       npm lockfile dependency installer with lifecycle scripts disabled
 scripts/install-browsers.cjs   Chromium-only Playwright browser installer
 tests/smoke.sh                 Lightweight validation
 ```
@@ -243,7 +243,7 @@ tests/smoke.sh
 scripts/install-local.sh all
 ```
 
-`node scripts/install-deps.cjs --all` installs the pinned repository test dependencies and copied-skill runtime dependencies from committed lockfiles. It does not copy or reuse any sibling `node_modules` directory.
+`node scripts/install-deps.cjs --all` installs the pinned repository test dependencies and copied-skill runtime dependencies with `npm ci` from committed lockfiles. It disables npm package lifecycle scripts during dependency installation and does not copy or reuse any sibling `node_modules` directory.
 
 `node scripts/install-browsers.cjs` installs Playwright Chromium for the pinned Playwright revision. Playwright downloads Chrome for Testing, Chrome Headless Shell, and FFmpeg for Chromium support; it does not download Firefox or WebKit. Disk and network use varies by platform and Playwright revision. To use an existing Chrome or Chromium executable instead, set `BETABOT_BROWSER_EXECUTABLE_PATH`.
 
@@ -363,6 +363,8 @@ Optional auth isolation:
 - `BETABOT_LLM_MODEL`: optional provider model override.
 - `BETABOT_CODEX_COMMAND=codex`: Codex CLI command path for the local ChatGPT/Codex provider.
 - `BETABOT_LLM_TIMEOUT_MS=90000`: timeout per model call.
+- `BETABOT_ACTION_TIMEOUT_MS=60000`: page-level navigation and recovery timeout.
+- `BETABOT_BODY_ACTION_TIMEOUT_MS=5000`: timeout for individual click, fill, and select body actions.
 - `BETABOT_LLM_MAX_CALLS=500`: cap per run; further mind decisions fail visibly instead of driving the browser with fallback text.
 - `OPENROUTER_API_KEY` or `BETABOT_OPENROUTER_API_KEY`: OpenRouter key when `BETABOT_LLM_PROVIDER=openrouter`.
 - `BETABOT_OPENROUTER_BASE_URL`: optional OpenRouter-compatible base URL.
@@ -392,11 +394,13 @@ Persona and role definition:
 node scripts/install-deps.cjs --all
 node scripts/install-browsers.cjs
 tests/smoke.sh
-node scripts/verify-clean-install.cjs --skip-browser-install
+npm run verify:clean-install
 python3 /Users/mac/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
 ```
 
-Use `--skip-browser-install` only when the machine has already installed Chromium for the pinned Playwright revision. With this flag, the verifier reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated. Omit it to let the clean-install verifier run the Chromium install command.
+`npm run verify:clean-install` copies a fresh tracked tree, uses an isolated `HOME` and npm cache, installs dependencies from lockfiles with lifecycle scripts disabled, installs Chromium for Playwright 1.61.1, launches Chromium, checks standalone and plugin-embedded skill runtimes, and runs smoke without inherited `NODE_PATH`.
+
+Use `node scripts/verify-clean-install.cjs --skip-browser-install` only for developer iteration when the machine has already installed Chromium for the pinned Playwright revision. With this flag, the verifier reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated.
 
 On minimal Linux images, run `node scripts/install-browsers.cjs --with-deps` before smoke if Playwright reports missing system libraries.
 

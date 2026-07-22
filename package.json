@@ -15,7 +15,7 @@
     "install:deps": "node scripts/install-deps.cjs --all",
     "install:chromium": "node scripts/install-browsers.cjs",
     "smoke": "tests/smoke.sh",
-    "verify:clean-install": "node scripts/verify-clean-install.cjs --skip-browser-install"
+    "verify:clean-install": "node scripts/verify-clean-install.cjs"
   },
   "devDependencies": {
     "playwright": "1.61.1"

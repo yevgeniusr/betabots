@@ -49,10 +49,14 @@ function copyTrackedTree(source, destination) {
   const trackedFiles = listTrackedFiles(source)
   if (trackedFiles && trackedFiles.length > 0) {
     for (const file of trackedFiles) {
+      const sourceStat = fs.lstatSync(file.source)
+      if (sourceStat.isSymbolicLink()) {
+        throw new Error(`Refusing to install symlink ${file.relative}. Betabots local installs copy regular tracked files only.`)
+      }
       const target = path.join(destination, file.relative)
       fs.mkdirSync(path.dirname(target), { recursive: true })
       fs.copyFileSync(file.source, target)
-      fs.chmodSync(target, fs.statSync(file.source).mode)
+      fs.chmodSync(target, sourceStat.mode)
     }
     return
   }
@@ -71,12 +75,15 @@ function copyTrackedTree(source, destination) {
         fs.mkdirSync(childDestination, { recursive: true })
         stack.push(childRelative)
       } else if (entry.isSymbolicLink()) {
-        fs.mkdirSync(path.dirname(childDestination), { recursive: true })
-        fs.symlinkSync(fs.readlinkSync(childSource), childDestination)
+        throw new Error(`Refusing to install symlink ${childRelative}. Betabots local installs copy regular files only.`)
       } else if (entry.isFile()) {
+        const sourceStat = fs.lstatSync(childSource)
+        if (sourceStat.isSymbolicLink()) {
+          throw new Error(`Refusing to install symlink ${childRelative}. Betabots local installs copy regular files only.`)
+        }
         fs.mkdirSync(path.dirname(childDestination), { recursive: true })
         fs.copyFileSync(childSource, childDestination)
-        fs.chmodSync(childDestination, fs.statSync(childSource).mode)
+        fs.chmodSync(childDestination, sourceStat.mode)
       }
     }
   }

@@ -151,7 +151,7 @@ test('executes the validated action through its captured locator', async () => {
   const calls = []
   const locator = {
     isVisible: async () => true,
-    fill: async (value) => calls.push(['fill', value]),
+    fill: async (value, options) => calls.push(['fill', value, options]),
   }
   const snapshot = {
     controls: [{ id: 'control-2', kind: 'textbox', name: 'Message', disabled: false }],
@@ -165,6 +165,72 @@ test('executes the validated action through its captured locator', async () => {
   })
 
   assert.equal(result.ok, true)
-  assert.deepEqual(calls, [['fill', 'A real response']])
+  assert.deepEqual(calls, [['fill', 'A real response', { timeout: 5000 }]])
   assert.match(result.description, /Message/)
+})
+
+test('uses a bounded default timeout for click body actions', async () => {
+  const calls = []
+  const locator = {
+    isVisible: async () => true,
+    click: async (options) => calls.push(options),
+  }
+  const snapshot = {
+    controls: [{ id: 'control-1', kind: 'button', name: 'View details', disabled: false }],
+    locators: new Map([['control-1', locator]]),
+  }
+
+  const result = await executeMindAction({}, snapshot, {
+    type: 'click',
+    targetId: 'control-1',
+  })
+
+  assert.equal(result.ok, true)
+  assert.deepEqual(calls, [{ timeout: 5000 }])
+})
+
+test('body action timeout override does not inherit the global page action timeout', async () => {
+  const calls = []
+  const locator = {
+    isVisible: async () => true,
+    fill: async (_value, options) => calls.push(options),
+  }
+  const snapshot = {
+    controls: [{ id: 'control-2', kind: 'textbox', name: 'Message', disabled: false }],
+    locators: new Map([['control-2', locator]]),
+  }
+
+  const result = await executeMindAction({}, snapshot, {
+    type: 'fill',
+    targetId: 'control-2',
+    value: 'Short timeout',
+  }, {
+    actionTimeoutMs: 60000,
+    bodyActionTimeoutMs: 7000,
+  })
+
+  assert.equal(result.ok, true)
+  assert.deepEqual(calls, [{ timeout: 7000 }])
+})
+
+test('uses the bounded body timeout for native select actions', async () => {
+  const calls = []
+  const locator = {
+    isVisible: async () => true,
+    evaluate: async () => 'select',
+    selectOption: async (value, options) => calls.push([value, options]),
+  }
+  const snapshot = {
+    controls: [{ id: 'control-4', kind: 'combobox', name: 'Plan', disabled: false }],
+    locators: new Map([['control-4', locator]]),
+  }
+
+  const result = await executeMindAction({}, snapshot, {
+    type: 'select',
+    targetId: 'control-4',
+    value: 'Pro',
+  })
+
+  assert.equal(result.ok, true)
+  assert.deepEqual(calls, [[{ label: 'Pro' }, { timeout: 5000 }]])
 })

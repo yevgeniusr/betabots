@@ -2,6 +2,7 @@ const BODY_ACTIONS = new Set(['click', 'fill', 'select', 'scroll', 'wait', 'back
 const TARGET_ACTIONS = new Set(['click', 'fill', 'select'])
 const UNSAFE_CONTROL = /\b(delete|remove|revoke|erase|destroy|sign out|log ?out|pay|purchase|buy|checkout|subscribe|publish|send money|transfer)\b/i
 const DESTINY_DISPOSITIONS = new Set(['follow', 'reinterpret', 'reject', 'none'])
+const DEFAULT_BODY_ACTION_TIMEOUT_MS = 5000
 
 function cleanText(value, limit = 1000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, limit)
@@ -240,13 +241,14 @@ async function visibleAriaOptions(page, value, exact) {
   return matches
 }
 
-function actionTimeoutMs(options = {}) {
-  return options.actionTimeoutMs || 15000
+function bodyActionTimeoutMs(options = {}) {
+  const configured = Number(options.bodyActionTimeoutMs)
+  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_BODY_ACTION_TIMEOUT_MS
 }
 
 async function selectAriaOption(page, locator, value, options = {}) {
   const expanded = await locator.getAttribute('aria-expanded').catch(() => null)
-  if (expanded !== 'true') await locator.click({ timeout: actionTimeoutMs(options) })
+  if (expanded !== 'true') await locator.click({ timeout: bodyActionTimeoutMs(options) })
 
   let matches = []
   for (let attempt = 0; attempt < 4 && matches.length === 0; attempt += 1) {
@@ -257,16 +259,17 @@ async function selectAriaOption(page, locator, value, options = {}) {
   if (matches.length !== 1) {
     throw new Error(`Expected one visible option named "${value}", found ${matches.length}.`)
   }
-  await matches[0].click({ timeout: actionTimeoutMs(options) })
+  await matches[0].click({ timeout: bodyActionTimeoutMs(options) })
 }
 
 async function performTargetAction(page, locator, action, options = {}) {
-  if (action.type === 'click') await locator.click({ timeout: actionTimeoutMs(options) })
-  if (action.type === 'fill') await locator.fill(action.value, { timeout: actionTimeoutMs(options) })
+  const timeout = bodyActionTimeoutMs(options)
+  if (action.type === 'click') await locator.click({ timeout })
+  if (action.type === 'fill') await locator.fill(action.value, { timeout })
   if (action.type === 'select') {
     const tagName = await locator.evaluate((element) => element.tagName.toLowerCase())
     if (tagName === 'select') {
-      await locator.selectOption({ label: action.value }).catch(() => locator.selectOption(action.value))
+      await locator.selectOption({ label: action.value }, { timeout }).catch(() => locator.selectOption(action.value, { timeout }))
     } else {
       await selectAriaOption(page, locator, action.value, options)
     }
@@ -385,7 +388,7 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
       let matches = await visibleAriaOptions(page, optionValue, true)
       if (matches.length === 0) matches = await visibleAriaOptions(page, optionValue, false)
       if (matches.length === 1) {
-        await matches[0].click({ timeout: actionTimeoutMs(options) })
+        await matches[0].click({ timeout: bodyActionTimeoutMs(options) })
         return {
           ok: true,
           description: `selected ${cleanText(requestedAction.targetId || requestedAction.target || optionValue, 180)}`,
@@ -462,6 +465,7 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
 
 module.exports = {
   BODY_ACTIONS,
+  DEFAULT_BODY_ACTION_TIMEOUT_MS,
   collectInteractiveControls,
   executeMindAction,
   normalizeMindDecision,

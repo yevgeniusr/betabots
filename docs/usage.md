@@ -143,10 +143,12 @@ control. Echoes, stale completion text, and unrelated iframe clicks do not count
 tests/smoke.sh
 ```
 
-For release checks, run the clean-install verifier from a prepared machine that already has Chromium for the pinned Playwright revision:
+For release checks, run the full clean-install verifier:
 
 ```bash
-node scripts/verify-clean-install.cjs --skip-browser-install
+npm run verify:clean-install
 ```
 
-With `--skip-browser-install`, the verifier reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated. Omit the flag to let the verifier run the Chromium install command.
+The default verifier copies a fresh tracked tree, uses an isolated `HOME` and npm cache, installs dependencies from lockfiles with lifecycle scripts disabled, installs Chromium for Playwright 1.61.1, launches Chromium, checks standalone and plugin-embedded skill runtimes, and runs smoke without inherited `NODE_PATH`.
+
+For local iteration only, `node scripts/verify-clean-install.cjs --skip-browser-install` reuses the caller's Playwright browser cache, or the cache named by `PLAYWRIGHT_BROWSERS_PATH`, while keeping the temporary repository and dependency tree isolated.

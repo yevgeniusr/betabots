@@ -130,6 +130,7 @@ const config = {
   llmMaxCalls: Number(process.env.BETABOT_LLM_MAX_CALLS || 500),
   llmTimeoutMs: Number(process.env.BETABOT_LLM_TIMEOUT_MS || 90000),
   actionTimeoutMs: Number(process.env.BETABOT_ACTION_TIMEOUT_MS || 60000),
+  bodyActionTimeoutMs: Number(process.env.BETABOT_BODY_ACTION_TIMEOUT_MS || 5000),
   codexCommand: process.env.BETABOT_CODEX_COMMAND || 'codex',
   openrouterApiKey: process.env.OPENROUTER_API_KEY || process.env.BETABOT_OPENROUTER_API_KEY || '',
   openrouterBaseUrl: (process.env.BETABOT_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, ''),
@@ -2239,6 +2240,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
   const bodyActionOptions = {
     fallbackUrl: config.appUrl,
     actionTimeoutMs: config.actionTimeoutMs,
+    bodyActionTimeoutMs: config.bodyActionTimeoutMs,
     beforeTargetAction: ({ action, control }) => {
       if (action.type !== 'click' || !control?.href) return
       trackNavigationIntent(browserIssueRecovery, {

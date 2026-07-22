@@ -53,6 +53,9 @@ node --test "$ROOT/tests/confidence_tiers.test.cjs" >/dev/null
 node --test "$ROOT/tests/route_planning.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body_browser.test.cjs" >/dev/null
+node --test "$ROOT/tests/install_deps.test.cjs" >/dev/null
+node --test "$ROOT/tests/install_symlink_safety.test.cjs" >/dev/null
+node --test "$ROOT/tests/verify_clean_install.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body_runner.test.cjs" >/dev/null
 node --test "$ROOT/tests/session_scheduler.test.cjs" >/dev/null
 node --test "$ROOT/tests/session_state_browser.test.cjs" >/dev/null

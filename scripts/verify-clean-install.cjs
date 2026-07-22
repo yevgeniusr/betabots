@@ -74,8 +74,7 @@ function copyIndexedFiles(sourceRoot, destinationRoot) {
     fs.mkdirSync(path.dirname(destination), { recursive: true })
     const mode = modes.get(file)
     if (mode === '120000') {
-      fs.symlinkSync(run('git', ['show', `:${file}`], { cwd: sourceRoot }).trim(), destination)
-      continue
+      throw new Error(`Refusing to verify clean install with tracked symlink: ${file}`)
     }
     fs.writeFileSync(destination, runBuffer('git', ['show', `:${file}`], { cwd: sourceRoot }))
     fs.chmodSync(destination, mode === '100755' ? 0o755 : 0o644)
@@ -114,14 +113,29 @@ function defaultBrowserCache(home) {
   return ''
 }
 
-function assertLocalPlaywright(skillDir) {
+function assertLocalPlaywright(skillDir, env) {
   const packagePath = path.join(skillDir, 'node_modules', 'playwright', 'package.json')
   if (!fs.existsSync(packagePath)) {
     throw new Error(`Installed skill is missing local Playwright runtime: ${packagePath}`)
   }
   run(process.execPath, ['-e', "require('playwright'); console.log('playwright resolved locally')"], {
     cwd: skillDir,
-    env: { ...isolatedEnv(path.dirname(path.dirname(skillDir))), NODE_PATH: '' },
+    env: { ...env, NODE_PATH: '' },
+  })
+}
+
+function assertChromiumLaunch(skillDir, env) {
+  run(process.execPath, ['-e', [
+    "const { chromium } = require('playwright')",
+    "(async () => {",
+    "  const browser = await chromium.launch({ headless: true })",
+    "  await browser.close()",
+    "  console.log('chromium launched locally')",
+    "})().catch((error) => { console.error(error.message); process.exit(1) })",
+  ].join(';')], {
+    cwd: skillDir,
+    env: { ...env, NODE_PATH: '' },
+    stdio: 'inherit',
   })
 }
 
@@ -144,17 +158,20 @@ function main() {
       }
     }
     run(process.execPath, ['scripts/install-deps.cjs', '--all'], { cwd: cleanRepo, env, stdio: 'pipe' })
-    run('bash', ['scripts/install-local.sh', 'all', '--skip-cli'], { cwd: cleanRepo, env, stdio: 'pipe' })
+    run(process.execPath, ['scripts/install.cjs', 'all', '--skip-cli'], { cwd: cleanRepo, env, stdio: 'pipe' })
 
     const installedSkills = [
+      path.join(home, 'plugins', 'betabots', 'skills', 'betabots'),
       path.join(home, '.codex', 'skills', 'betabots'),
       path.join(home, '.agents', 'skills', 'betabots'),
+      path.join(home, '.claude', 'plugins', 'local', 'betabots', 'skills', 'betabots'),
       path.join(home, '.claude', 'skills', 'betabots'),
+      path.join(home, '.cursor', 'plugins', 'betabots', 'skills', 'betabots'),
       path.join(home, '.cursor', 'skills', 'betabots'),
       path.join(home, '.cursor', 'skills-cursor', 'betabots'),
     ]
     for (const skillDir of installedSkills) {
-      assertLocalPlaywright(skillDir)
+      assertLocalPlaywright(skillDir, env)
     }
 
     if (!skipBrowserInstall) {
@@ -163,6 +180,7 @@ function main() {
         env,
         stdio: 'inherit',
       })
+      assertChromiumLaunch(path.join(home, '.codex', 'skills', 'betabots'), env)
     }
 
     runSmoke(cleanRepo, { ...env, NODE_PATH: '' })
