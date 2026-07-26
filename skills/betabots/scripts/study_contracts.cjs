@@ -2,6 +2,7 @@ const crypto = require('node:crypto')
 const fs = require('node:fs')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
+const { types } = require('node:util')
 
 const STUDY_MANIFEST_V1 = 'betabots.study-manifest.v1'
 const EVIDENCE_REF_V1 = 'betabots.evidence-ref.v1'
@@ -26,6 +27,7 @@ const CONFUSABLE_IDENTIFIER_SKELETON = new Map([
   ['\u0430', 'a'], ['\u0432', 'b'], ['\u0441', 'c'], ['\u0435', 'e'], ['\u0433', 'r'], ['\u0456', 'i'], ['\u0458', 'j'], ['\u043e', 'o'], ['\u0440', 'p'], ['\u0455', 's'], ['\u0442', 't'], ['\u0445', 'x'], ['\u0443', 'y'],
   ['\u03b1', 'a'], ['\u03b2', 'b'], ['\u03b5', 'e'], ['\u03b9', 'i'], ['\u03ba', 'k'], ['\u03bc', 'u'], ['\u03bd', 'v'], ['\u03bf', 'o'], ['\u03c1', 'p'], ['\u03c4', 't'], ['\u03c5', 'y'], ['\u03c7', 'x'],
 ])
+const DESCRIPTOR_PATH_UNAVAILABLE = Symbol('descriptor-path-unavailable')
 
 function issue(code, pointer, message) {
   return { code, path: pointer, message }
@@ -966,7 +968,7 @@ function resolveLinuxDescriptorPath(descriptor) {
   try {
     return fs.realpathSync(`/proc/self/fd/${descriptor}`)
   } catch {
-    return { unavailable: true }
+    return DESCRIPTOR_PATH_UNAVAILABLE
   }
 }
 
@@ -974,7 +976,7 @@ function resolveMacDescriptorPath(descriptor) {
   const lsof = spawnSync('/usr/sbin/lsof', [
     '-nP', '-a', '-p', String(process.pid), '-d', String(descriptor), '-Fn0',
   ], { encoding: 'buffer', timeout: 5000, maxBuffer: 1024 * 1024, windowsHide: true })
-  if (lsof.error?.code === 'ENOENT') return { unavailable: true }
+  if (lsof.error?.code === 'ENOENT') return DESCRIPTOR_PATH_UNAVAILABLE
   if (lsof.error || lsof.status !== 0 || !Buffer.isBuffer(lsof.stdout)) return undefined
   let currentDescriptor = false
   let resolvedPath
@@ -1003,7 +1005,11 @@ function platformDescriptorPathResolver() {
 function resolveOpenedDescriptorPath(resolver, descriptor) {
   try {
     const resolved = resolver(descriptor)
-    if (resolved?.unavailable === true) return { unavailable: true }
+    if (resolved === DESCRIPTOR_PATH_UNAVAILABLE) return { unavailable: true }
+    if (types.isPromise(resolved)) {
+      absorbNativePromise(resolved)
+      return { failed: true }
+    }
     if (typeof resolved !== 'string' || resolved === '' || !path.isAbsolute(resolved)) return { failed: true }
     return { path: resolved }
   } catch {
@@ -1029,10 +1035,16 @@ function checkpointIssue(code, pointer) {
   if (code === 'ASYNC_CHECKPOINT_UNSUPPORTED') {
     return issue(code, pointer, 'Checkpoint callbacks must return undefined synchronously.')
   }
-  if (code === 'CHECKPOINT_RETURN_VALUE_UNSUPPORTED') {
+  if (code === 'CHECKPOINT_RETURN_VALUE_FORBIDDEN') {
     return issue(code, pointer, 'Checkpoint callbacks must return undefined.')
   }
   return issue('UNSAFE_CHECKPOINT_CALLBACK', pointer, 'Checkpoint callback could not be safely invoked.')
+}
+
+function absorbNativePromise(promise) {
+  try {
+    Promise.prototype.then.call(promise, undefined, () => undefined)
+  } catch {}
 }
 
 function invokeCheckpointSafely(checkpoint, stage, pointer) {
@@ -1044,21 +1056,11 @@ function invokeCheckpointSafely(checkpoint, stage, pointer) {
     return checkpointIssue('UNSAFE_CHECKPOINT_CALLBACK', pointer)
   }
   if (callbackResult === undefined) return undefined
-  if (callbackResult !== null && (typeof callbackResult === 'object' || typeof callbackResult === 'function')) {
-    let then
-    try {
-      then = callbackResult.then
-    } catch {
-      return checkpointIssue('ASYNC_CHECKPOINT_UNSUPPORTED', pointer)
-    }
-    if (typeof then === 'function') {
-      try {
-        Promise.resolve(callbackResult).catch(() => {})
-      } catch {}
-      return checkpointIssue('ASYNC_CHECKPOINT_UNSUPPORTED', pointer)
-    }
+  if (types.isPromise(callbackResult)) {
+    absorbNativePromise(callbackResult)
+    return checkpointIssue('ASYNC_CHECKPOINT_UNSUPPORTED', pointer)
   }
-  return checkpointIssue('CHECKPOINT_RETURN_VALUE_UNSUPPORTED', pointer)
+  return checkpointIssue('CHECKPOINT_RETURN_VALUE_FORBIDDEN', pointer)
 }
 
 function verifySanitizedExportFilesTrusted(value, root, options = {}) {

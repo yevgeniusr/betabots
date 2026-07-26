@@ -814,8 +814,8 @@ test('filesystem verification rejects asynchronous, hostile, and value-returning
 
   for (const [checkpoint, code] of [
     [() => Promise.resolve(), 'ASYNC_CHECKPOINT_UNSUPPORTED'],
-    [() => hostileThenable, 'ASYNC_CHECKPOINT_UNSUPPORTED'],
-    [() => 'unexpected return', 'CHECKPOINT_RETURN_VALUE_UNSUPPORTED'],
+    [() => hostileThenable, 'CHECKPOINT_RETURN_VALUE_FORBIDDEN'],
+    [() => 'unexpected return', 'CHECKPOINT_RETURN_VALUE_FORBIDDEN'],
   ]) {
     let result
     assert.doesNotThrow(() => { result = verifySanitizedExportFiles(exported, root, { checkpoint }) })
@@ -823,6 +823,68 @@ test('filesystem verification rejects asynchronous, hostile, and value-returning
     assert.equal(result.errors[0].code, code)
     assert.equal(result.errors[0].path, '/allowlistedArtifacts/0')
     assert.doesNotMatch(JSON.stringify(result), new RegExp(marker))
+  }
+})
+
+test('filesystem verification does not invoke checkpoint or resolver return accessors or leak their rejected promises', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-checkpoint-then-getter-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const contents = 'public artifact\n'
+  fs.writeFileSync(path.join(root, 'artifact.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifact.json', sha256: crypto.createHash('sha256').update(contents).digest('hex'), sizeBytes: Buffer.byteLength(contents),
+  }
+  const marker = 'checkpoint_then_getter_secret_marker'
+  let getterCalls = 0
+  const returnValue = {}
+  Object.defineProperty(returnValue, 'then', {
+    get() {
+      getterCalls += 1
+      Promise.reject(new Error(marker))
+      Promise.reject(new Error(marker))
+      return () => {}
+    },
+  })
+  const resolverMarker = 'descriptor_resolver_then_getter_secret_marker'
+  let unavailableGetterCalls = 0
+  let resolverThenGetterCalls = 0
+  const resolverReturnValue = {}
+  Object.defineProperties(resolverReturnValue, {
+    unavailable: {
+      get() {
+        unavailableGetterCalls += 1
+        Promise.reject(new Error(resolverMarker))
+        return true
+      },
+    },
+    then: {
+      get() {
+        resolverThenGetterCalls += 1
+        Promise.reject(new Error(resolverMarker))
+        return () => {}
+      },
+    },
+  })
+  const unhandled = []
+  const observeUnhandled = (reason) => { unhandled.push(reason) }
+  process.on('unhandledRejection', observeUnhandled)
+  try {
+    const result = verifySanitizedExportFiles(exported, root, { checkpoint() { return returnValue } })
+    const resolverResult = verifySanitizedExportFiles(exported, root, { descriptorPathResolver: () => resolverReturnValue })
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.equal(getterCalls, 0)
+    assert.equal(unavailableGetterCalls, 0)
+    assert.equal(resolverThenGetterCalls, 0)
+    assert.deepEqual(unhandled, [])
+    assert.equal(result.valid, false)
+    assert.equal(result.errors[0].code, 'CHECKPOINT_RETURN_VALUE_FORBIDDEN')
+    assert.equal(resolverResult.valid, false)
+    assert.equal(resolverResult.errors[0].code, 'DESCRIPTOR_PATH_RESOLUTION_FAILED')
+    assert.doesNotMatch(JSON.stringify(result), new RegExp(marker))
+    assert.doesNotMatch(JSON.stringify(resolverResult), new RegExp(resolverMarker))
+  } finally {
+    process.removeListener('unhandledRejection', observeUnhandled)
   }
 })
 
