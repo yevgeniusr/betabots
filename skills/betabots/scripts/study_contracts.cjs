@@ -9,7 +9,14 @@ const FINDING_V1 = 'betabots.finding.v1'
 const SANITIZED_EXPORT_V1 = 'betabots.sanitized-export.v1'
 const ALLOCATION_PERCENT_TOLERANCE = 0.01
 const EVIDENCE_CLASSIFICATIONS = new Set(['observed', 'inferred', 'recommendation', 'external', 'unverified'])
-const SENSITIVE_NAME_PATTERN = /(secret|password|credential|api[-_]?key|auth(?:entication)?|cookie|token)/i
+const MAX_SAFE_DOLLAR_CENTS = Number.MAX_SAFE_INTEGER
+const SENSITIVE_IDENTIFIER_TERMS = new Set([
+  'secret', 'password', 'credential', 'credentials', 'auth', 'authentication',
+  'token', 'tokens', 'cookie', 'cookies', 'session', 'wallet',
+])
+const SENSITIVE_IDENTIFIER_PHRASES = [
+  ['access', 'key'], ['private', 'key'], ['secret', 'key'], ['api', 'key'], ['browser', 'state'],
+]
 
 function issue(code, pointer, message) {
   return { code, path: pointer, message }
@@ -81,6 +88,40 @@ function requiredAllocationNumber(value, pointer, errors, maximum = Infinity) {
   }
   if (value > maximum) {
     errors.push(issue('NUMBER_OUT_OF_RANGE', pointer, `Expected a number from 0 to ${maximum}.`))
+    return false
+  }
+  return true
+}
+
+function decimalPlaces(value) {
+  const [coefficient, exponentPart] = value.toString().toLowerCase().split('e')
+  const exponent = exponentPart === undefined ? 0 : Number(exponentPart)
+  const fraction = coefficient.split('.')[1]?.length || 0
+  return Math.max(0, fraction - exponent)
+}
+
+function dollarCents(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return undefined
+  if (decimalPlaces(value) > 2) return undefined
+  const cents = Math.round(value * 100)
+  return Number.isSafeInteger(cents) ? cents : undefined
+}
+
+function requiredDollarAmount(value, pointer, errors) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    errors.push(issue('INVALID_FINITE_NUMBER', pointer, 'Expected a finite number.'))
+    return false
+  }
+  if (value < 0) {
+    errors.push(issue('NEGATIVE_ALLOCATION', pointer, 'Allocation dollars and percentages cannot be negative.'))
+    return false
+  }
+  if (decimalPlaces(value) > 2) {
+    errors.push(issue('INVALID_DOLLAR_PRECISION', pointer, 'Dollar amounts must use at most two decimal places.'))
+    return false
+  }
+  if (dollarCents(value) === undefined || value * 100 > MAX_SAFE_DOLLAR_CENTS) {
+    errors.push(issue('DOLLAR_AMOUNT_OUT_OF_SAFE_RANGE', pointer, 'Dollar amounts must convert to safe integer cents.'))
     return false
   }
   return true
@@ -160,11 +201,28 @@ function validateStudyManifest(value) {
   if (!['none', 'no-auth', 'transient-user-approved'].includes(value.authenticationLifecyclePolicy)) {
     errors.push(issue('INVALID_AUTHENTICATION_LIFECYCLE_POLICY', '/authenticationLifecyclePolicy', 'Authentication lifecycle policy must be none, no-auth, or transient-user-approved.'))
   }
-  if (requiredStringArray(value.evidenceRequirements, '/evidenceRequirements', errors)) {
+  if (requiredArray(value.evidenceRequirements, '/evidenceRequirements', errors)) {
     for (const [index, requirement] of value.evidenceRequirements.entries()) {
-      if (!['screenshot', 'event-log', 'trace'].includes(requirement)) {
-        errors.push(issue('INVALID_EVIDENCE_REQUIREMENT', `/evidenceRequirements/${index}`, 'Evidence requirements must be screenshot, event-log, or trace.'))
+      const pointer = `/evidenceRequirements/${index}`
+      if (!addObjectError(requirement, pointer, errors)) continue
+      const classificationIsString = requiredString(requirement.classification, `${pointer}/classification`, errors)
+      if (classificationIsString && !EVIDENCE_CLASSIFICATIONS.has(requirement.classification)) {
+        errors.push(issue('INVALID_EVIDENCE_CLASSIFICATION', `${pointer}/classification`, 'Classification must be observed, inferred, recommendation, external, or unverified.'))
       }
+      requiredString(requirement.artifactType, `${pointer}/artifactType`, errors)
+      if (!['screenshot', 'event', 'path'].includes(requirement.artifactType)) {
+        errors.push(issue('INVALID_ARTIFACT_TYPE', `${pointer}/artifactType`, 'Artifact type must be screenshot, event, or path.'))
+      }
+      if (!Number.isInteger(requirement.minimumCount) || requirement.minimumCount < 1) {
+        errors.push(issue('INVALID_REQUIREMENT_MINIMUM_COUNT', `${pointer}/minimumCount`, 'Evidence requirement minimumCount must be a positive integer.'))
+      }
+      if (requirement.armId !== undefined) {
+        const armIsString = requiredString(requirement.armId, `${pointer}/armId`, errors)
+        if (armIsString && !armIds.has(requirement.armId)) {
+          errors.push(issue('UNKNOWN_REQUIREMENT_ARM', `${pointer}/armId`, 'Evidence requirement armId must name a declared study arm.'))
+        }
+      }
+      checkKnownFields(requirement, new Set(['classification', 'artifactType', 'minimumCount', 'armId']), pointer, errors)
     }
   }
   if (addObjectError(value.reproducibility, '/reproducibility', errors)) {
@@ -179,7 +237,7 @@ function validateStudyManifest(value) {
     value.limitations.forEach((limitation, index) => requiredString(limitation, `/limitations/${index}`, errors))
   }
   checkKnownFields(value, new Set(['schema', 'id', 'title', 'researchQuestion', 'hypotheses', 'target', 'environment', 'arms', 'interactionPolicyRef', 'authenticationLifecyclePolicy', 'evidenceRequirements', 'reproducibility', 'limitations']), '', errors)
-  return result(errors)
+  return result(errors, issue('BATCH_CONTEXT_REQUIRED', '/evidenceRequirements', 'Evidence requirements are satisfied only by batch validation.'))
 }
 
 function validateEvidenceRef(value) {
@@ -187,6 +245,8 @@ function validateEvidenceRef(value) {
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, EVIDENCE_REF_V1, errors)
   requiredString(value.id, '/id', errors)
+  requiredString(value.studyId, '/studyId', errors)
+  if (value.armId !== undefined) requiredString(value.armId, '/armId', errors)
   const classificationIsString = requiredString(value.classification, '/classification', errors)
   if (classificationIsString && !EVIDENCE_CLASSIFICATIONS.has(value.classification)) {
     errors.push(issue('INVALID_EVIDENCE_CLASSIFICATION', '/classification', 'Classification must be observed, inferred, recommendation, external, or unverified.'))
@@ -219,8 +279,8 @@ function validateEvidenceRef(value) {
       errors.push(issue('RECOMMENDATION_MASQUERADING_AS_OBSERVED', '/recommendation', 'Recommendations must use the recommendation classification.'))
     }
   }
-  checkKnownFields(value, new Set(['schema', 'id', 'classification', 'claim', 'artifact', 'context', 'recommendation']), '', errors)
-  return result(errors)
+  checkKnownFields(value, new Set(['schema', 'id', 'studyId', 'armId', 'classification', 'claim', 'artifact', 'context', 'recommendation']), '', errors)
+  return result(errors, issue('BATCH_CONTEXT_REQUIRED', '/studyId', 'Evidence study and arm links require batch validation for resolution.'))
 }
 
 function validateDecisionOutcome(value) {
@@ -228,6 +288,7 @@ function validateDecisionOutcome(value) {
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, DECISION_OUTCOME_V1, errors)
   requiredString(value.id, '/id', errors)
+  requiredString(value.studyId, '/studyId', errors)
   if (Object.hasOwn(value, 'realSpend')) errors.push(issue('REAL_SPEND_FORBIDDEN', '/realSpend', 'Decision artifacts must not represent real spend.'))
   requiredString(value.outcome, '/outcome', errors)
   if (!['allocate', 'reject', 'conditional', 'inconclusive'].includes(value.outcome)) {
@@ -242,9 +303,9 @@ function validateDecisionOutcome(value) {
     if (addObjectError(value.allocation, '/allocation', errors)) {
       const allocation = value.allocation
       if (allocation.hypothetical !== true) errors.push(issue('HYPOTHETICAL_ALLOCATION_REQUIRED', '/allocation/hypothetical', 'Allocations are hypothetical and must be marked true.'))
-      requiredAllocationNumber(allocation.budgetDollars, '/allocation/budgetDollars', errors)
+      requiredDollarAmount(allocation.budgetDollars, '/allocation/budgetDollars', errors)
       if (addObjectError(allocation.cash, '/allocation/cash', errors)) {
-        requiredAllocationNumber(allocation.cash.dollars, '/allocation/cash/dollars', errors)
+        requiredDollarAmount(allocation.cash.dollars, '/allocation/cash/dollars', errors)
         requiredAllocationNumber(allocation.cash.percent, '/allocation/cash/percent', errors, 100)
         checkKnownFields(allocation.cash, new Set(['dollars', 'percent']), '/allocation/cash', errors)
       }
@@ -258,7 +319,7 @@ function validateDecisionOutcome(value) {
             if (sleeveIds.has(sleeve.id)) errors.push(issue('DUPLICATE_SLEEVE_ID', `${pointer}/id`, 'Sleeve ids must be unique.'))
             sleeveIds.add(sleeve.id)
           }
-          requiredAllocationNumber(sleeve.dollars, `${pointer}/dollars`, errors)
+          requiredDollarAmount(sleeve.dollars, `${pointer}/dollars`, errors)
           requiredAllocationNumber(sleeve.percent, `${pointer}/percent`, errors, 100)
           requiredBoolean(sleeve.deployed, `${pointer}/deployed`, errors)
           const referencesValid = requiredStringArray(sleeve.evidenceRefs, `${pointer}/evidenceRefs`, errors, 0)
@@ -272,10 +333,14 @@ function validateDecisionOutcome(value) {
         }
       }
       checkKnownFields(allocation, new Set(['hypothetical', 'budgetDollars', 'cash', 'sleeves']), '/allocation', errors)
-      if (Number.isFinite(allocation.budgetDollars) && isObject(allocation.cash) && Array.isArray(allocation.sleeves)
-        && Number.isFinite(allocation.cash.dollars) && allocation.sleeves.every((sleeve) => isObject(sleeve) && Number.isFinite(sleeve.dollars))) {
-        const assignedDollars = allocation.cash.dollars + allocation.sleeves.reduce((total, sleeve) => total + sleeve.dollars, 0)
-        if (assignedDollars !== allocation.budgetDollars) errors.push(issue('ALLOCATION_DOLLAR_MISMATCH', '/allocation', 'Allocation dollars must equal the assigned budget.'))
+      const budgetCents = dollarCents(allocation.budgetDollars)
+      const cashCents = isObject(allocation.cash) ? dollarCents(allocation.cash.dollars) : undefined
+      const sleeveCents = Array.isArray(allocation.sleeves) ? allocation.sleeves.map((sleeve) => (
+        isObject(sleeve) ? dollarCents(sleeve.dollars) : undefined
+      )) : []
+      if (budgetCents !== undefined && cashCents !== undefined && sleeveCents.length > 0 && sleeveCents.every((cents) => cents !== undefined)) {
+        const assignedCents = cashCents + sleeveCents.reduce((total, cents) => total + cents, 0)
+        if (!Number.isSafeInteger(assignedCents) || assignedCents !== budgetCents) errors.push(issue('ALLOCATION_DOLLAR_MISMATCH', '/allocation', 'Allocation dollars must equal the assigned budget in exact cents.'))
       }
       if (isObject(allocation.cash) && Array.isArray(allocation.sleeves)
         && Number.isFinite(allocation.cash.percent) && allocation.sleeves.every((sleeve) => isObject(sleeve) && Number.isFinite(sleeve.percent))) {
@@ -290,10 +355,8 @@ function validateDecisionOutcome(value) {
   if (requiredStringArray(value.evidenceRefs, '/evidenceRefs', errors, 0)) {
     for (const [index, reference] of value.evidenceRefs.entries()) evidencePointers.push([`/evidenceRefs/${index}`, reference])
   }
-  checkKnownFields(value, new Set(['schema', 'id', 'outcome', 'allocation', 'conditions', 'rejectedOpportunities', 'missingEvidence', 'evidenceRefs', 'realSpend']), '', errors)
-  const batchRequirement = evidencePointers.length > 0
-    ? issue('BATCH_CONTEXT_REQUIRED', '/evidenceRefs', 'Evidence references require batch validation for resolution.')
-    : undefined
+  checkKnownFields(value, new Set(['schema', 'id', 'studyId', 'outcome', 'allocation', 'conditions', 'rejectedOpportunities', 'missingEvidence', 'evidenceRefs', 'realSpend']), '', errors)
+  const batchRequirement = issue('BATCH_CONTEXT_REQUIRED', '/studyId', 'Study and evidence references require batch validation for resolution.')
   return result(errors, batchRequirement)
 }
 
@@ -302,6 +365,7 @@ function validateFinding(value) {
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, FINDING_V1, errors)
   requiredString(value.id, '/id', errors)
+  requiredString(value.studyId, '/studyId', errors)
   requiredString(value.observation, '/observation', errors)
   if (addObjectError(value.affected, '/affected', errors)) {
     requiredStringArray(value.affected.arms, '/affected/arms', errors)
@@ -312,8 +376,19 @@ function validateFinding(value) {
   const evidencePointers = []
   for (const [field, minimum] of [['supportingEvidence', 1], ['contradictingEvidence', 0]]) {
     if (requiredStringArray(value[field], `/${field}`, errors, minimum)) {
-      for (const [index, reference] of value[field].entries()) evidencePointers.push([`/${field}/${index}`, reference])
+      const seen = new Set()
+      for (const [index, reference] of value[field].entries()) {
+        if (seen.has(reference)) errors.push(issue(`DUPLICATE_${field === 'supportingEvidence' ? 'SUPPORTING' : 'CONTRADICTING'}_EVIDENCE_REF`, `/${field}/${index}`, 'Evidence references must be unique within each polarity list.'))
+        seen.add(reference)
+        evidencePointers.push([`/${field}/${index}`, reference])
+      }
     }
+  }
+  if (Array.isArray(value.supportingEvidence) && Array.isArray(value.contradictingEvidence)) {
+    const supporting = new Set(value.supportingEvidence)
+    value.contradictingEvidence.forEach((reference, index) => {
+      if (supporting.has(reference)) errors.push(issue('OVERLAPPING_EVIDENCE_REF', `/contradictingEvidence/${index}`, 'Evidence cannot support and contradict the same finding.'))
+    })
   }
   if (addObjectError(value.commercialImplication, '/commercialImplication', errors)) {
     if (value.commercialImplication.classification !== 'inferred') {
@@ -324,10 +399,8 @@ function validateFinding(value) {
   }
   requiredFiniteNumber(value.confidence, '/confidence', errors, { minimum: 0, maximum: 1 })
   requiredStringArray(value.limitations, '/limitations', errors)
-  checkKnownFields(value, new Set(['schema', 'id', 'observation', 'affected', 'supportingEvidence', 'contradictingEvidence', 'commercialImplication', 'confidence', 'limitations']), '', errors)
-  const batchRequirement = evidencePointers.length > 0
-    ? issue('BATCH_CONTEXT_REQUIRED', '/supportingEvidence', 'Evidence references require batch validation for resolution.')
-    : undefined
+  checkKnownFields(value, new Set(['schema', 'id', 'studyId', 'observation', 'affected', 'supportingEvidence', 'contradictingEvidence', 'commercialImplication', 'confidence', 'limitations']), '', errors)
+  const batchRequirement = issue('BATCH_CONTEXT_REQUIRED', '/studyId', 'Study and evidence references require batch validation for resolution.')
   return result(errors, batchRequirement)
 }
 
@@ -336,6 +409,27 @@ function isSafeRelativePosixPath(value) {
   if (/[\u0000-\u001F\u007F]/.test(value) || value.includes('\\') || value.startsWith('/') || /^[A-Za-z]:/.test(value)) return false
   const segments = value.split('/')
   return segments.every((segment) => segment !== '' && segment !== '.' && segment !== '..')
+}
+
+function identifierTokens(value) {
+  if (typeof value !== 'string') return []
+  return value
+    .normalize('NFKC')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .match(/[a-z0-9]+/g) || []
+}
+
+function isSensitiveIdentifier(value) {
+  const tokens = identifierTokens(value)
+  if (tokens.some((token) => SENSITIVE_IDENTIFIER_TERMS.has(token))) return true
+  return SENSITIVE_IDENTIFIER_PHRASES.some((phrase) => tokens.some((_, start) => (
+    phrase.every((token, index) => tokens[start + index] === token)
+  )))
+}
+
+function isIdentifierValueField(key) {
+  return ['path', 'name', 'class', 'type', 'kind', 'extension', 'context'].some((term) => identifierTokens(key).includes(term))
 }
 
 function scanSensitiveFields(value, pointer, errors) {
@@ -347,8 +441,12 @@ function scanSensitiveFields(value, pointer, errors) {
   for (const [key, entry] of Object.entries(value)) {
     const entryPointer = `${pointer}/${key}`
     const declaredAbsence = pointer === '/verification' && ['authenticationStatesAbsent', 'cookiesAbsent', 'tokensAbsent'].includes(key)
-    if (!declaredAbsence && SENSITIVE_NAME_PATTERN.test(key)) {
+    if (!declaredAbsence && isSensitiveIdentifier(key)) {
       errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', entryPointer, 'Secret-like fields are forbidden in sanitized exports.'))
+    }
+    const canonicalArtifactIdentifier = /^\/allowlistedArtifacts\/\d+\/(path|artifactClass)$/.test(entryPointer)
+    if (!canonicalArtifactIdentifier && isIdentifierValueField(key) && typeof entry === 'string' && isSensitiveIdentifier(entry)) {
+      errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', entryPointer, 'Secret-like identifier values are forbidden in sanitized exports.'))
     }
     scanSensitiveFields(entry, entryPointer, errors)
   }
@@ -367,7 +465,7 @@ function validateSanitizedExportManifest(value) {
       if (!isSafeRelativePosixPath(artifact.path)) {
         errors.push(issue('EXPORT_PATH_TRAVERSAL', `${pointer}/path`, 'Allowlisted artifact paths must be normalized relative POSIX paths.'))
       }
-      if (typeof artifact.path === 'string' && SENSITIVE_NAME_PATTERN.test(artifact.path)) {
+      if (typeof artifact.path === 'string' && isSensitiveIdentifier(artifact.path)) {
         errors.push(issue('SENSITIVE_ARTIFACT_FORBIDDEN', `${pointer}/path`, 'Authentication, credential, cookie, token, and secret artifacts cannot be exported.'))
       }
       if (artifact.type === 'symlink' || Object.hasOwn(artifact, 'linkTarget')) {
@@ -376,7 +474,7 @@ function validateSanitizedExportManifest(value) {
       if (artifact.artifactClass !== undefined && !requiredString(artifact.artifactClass, `${pointer}/artifactClass`, errors)) {
         // The required-string error fully describes the invalid optional field.
       }
-      if (typeof artifact.artifactClass === 'string' && SENSITIVE_NAME_PATTERN.test(artifact.artifactClass)) {
+      if (typeof artifact.artifactClass === 'string' && isSensitiveIdentifier(artifact.artifactClass)) {
         errors.push(issue('SENSITIVE_ARTIFACT_FORBIDDEN', `${pointer}/artifactClass`, 'Authentication, credential, cookie, token, and secret artifacts cannot be exported.'))
       }
       if (typeof artifact.sha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(artifact.sha256)) {
@@ -467,17 +565,74 @@ function validateArtifacts(values) {
     }
   }
   const evidenceIds = new Map()
+  const manifestIds = new Map()
   values.forEach((value, index) => {
     if (isObject(value) && value.schema === EVIDENCE_REF_V1 && typeof value.id === 'string' && value.id.trim() !== '') {
       const entries = evidenceIds.get(value.id) || []
       entries.push(index)
       evidenceIds.set(value.id, entries)
     }
+    if (isObject(value) && value.schema === STUDY_MANIFEST_V1 && typeof value.id === 'string' && value.id.trim() !== '') {
+      const entries = manifestIds.get(value.id) || []
+      entries.push(index)
+      manifestIds.set(value.id, entries)
+    }
+  })
+  values.forEach((value, index) => {
+    if (!isObject(value) || value.schema !== EVIDENCE_REF_V1) return
+    const manifests = manifestIds.get(value.studyId) || []
+    if (manifests.length !== 1) {
+      results[index].errors.push(issue('UNKNOWN_EVIDENCE_STUDY', '/studyId', 'Evidence studyId must resolve to exactly one StudyManifest in this batch.'))
+      results[index].valid = false
+      return
+    }
+    if (value.armId === undefined) return
+    const manifest = values[manifests[0]]
+    const armIds = new Set(Array.isArray(manifest.arms) ? manifest.arms.map((arm) => arm?.id) : [])
+    if (!armIds.has(value.armId)) {
+      results[index].errors.push(issue('UNKNOWN_EVIDENCE_ARM', '/armId', 'Evidence armId must name a declared arm in its StudyManifest.'))
+      results[index].valid = false
+    }
+  })
+  values.forEach((value, index) => {
+    if (!isObject(value) || ![DECISION_OUTCOME_V1, FINDING_V1].includes(value.schema)) return
+    if ((manifestIds.get(value.studyId) || []).length !== 1) {
+      results[index].errors.push(issue('UNKNOWN_ARTIFACT_STUDY', '/studyId', 'Artifact studyId must resolve to exactly one StudyManifest in this batch.'))
+      results[index].valid = false
+    }
+  })
+  values.forEach((manifest, manifestIndex) => {
+    if (!isObject(manifest) || manifest.schema !== STUDY_MANIFEST_V1 || !Array.isArray(manifest.evidenceRequirements)) return
+    for (const [requirementIndex, requirement] of manifest.evidenceRequirements.entries()) {
+      if (!isObject(requirement)) continue
+      const matchingEvidence = values.filter((evidence, evidenceIndex) => results[evidenceIndex].valid
+        && isObject(evidence)
+        && evidence.schema === EVIDENCE_REF_V1
+        && evidence.studyId === manifest.id
+        && evidence.classification === requirement.classification
+        && evidence.artifact?.type === requirement.artifactType
+        && (requirement.armId === undefined || evidence.armId === requirement.armId))
+      if (matchingEvidence.length < requirement.minimumCount) {
+        results[manifestIndex].errors.push(issue('EVIDENCE_REQUIREMENT_UNSATISFIED', `/evidenceRequirements/${requirementIndex}`, 'Linked EvidenceRefs do not satisfy this structured evidence requirement.'))
+        results[manifestIndex].valid = false
+      }
+    }
   })
   values.forEach((value, index) => {
     for (const [pointer, reference] of referencedEvidence(value)) {
-      if ((evidenceIds.get(reference) || []).length !== 1) {
+      const matches = evidenceIds.get(reference) || []
+      if (matches.length !== 1) {
         results[index].errors.push(issue('UNRESOLVED_EVIDENCE_REF', pointer, `Evidence reference ${reference} must resolve to exactly one EvidenceRef artifact in this batch.`))
+        results[index].valid = false
+        continue
+      }
+      const evidence = values[matches[0]]
+      if (evidence.studyId !== value.studyId) {
+        results[index].errors.push(issue('EVIDENCE_STUDY_MISMATCH', pointer, 'Evidence reference must belong to the same study as the referring artifact.'))
+        results[index].valid = false
+      }
+      if (value.schema === FINDING_V1 && Array.isArray(value.affected?.arms) && evidence.armId !== undefined && !value.affected.arms.includes(evidence.armId)) {
+        results[index].errors.push(issue('EVIDENCE_ARM_MISMATCH', pointer, 'Finding evidence armId must be listed in affected.arms.'))
         results[index].valid = false
       }
     }
@@ -485,7 +640,68 @@ function validateArtifacts(values) {
   return { valid: results.every((artifactResult) => artifactResult.valid), results }
 }
 
-function verifySanitizedExportFiles(value, root) {
+function sameFileIdentity(left, right) {
+  return left.dev === right.dev && left.ino === right.ino
+}
+
+function samePathSnapshot(left, right) {
+  return sameFileIdentity(left, right)
+    && left.mode === right.mode
+    && left.uid === right.uid
+    && left.gid === right.gid
+    && left.realpath === right.realpath
+}
+
+function isContainedPath(root, target) {
+  const relative = path.relative(root, target)
+  return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))
+}
+
+function snapshotPath(target, rootRealpath, expectDirectory) {
+  let stat
+  try {
+    stat = fs.lstatSync(target)
+  } catch {
+    return { error: 'ARTIFACT_NOT_FOUND' }
+  }
+  if (stat.isSymbolicLink()) return { error: 'SYMLINK_ARTIFACT_FORBIDDEN' }
+  if (expectDirectory ? !stat.isDirectory() : !stat.isFile()) return { error: 'NON_REGULAR_ARTIFACT_FORBIDDEN' }
+  let realpath
+  try {
+    realpath = fs.realpathSync(target)
+  } catch {
+    return { error: 'ARTIFACT_NOT_FOUND' }
+  }
+  if (!isContainedPath(rootRealpath, realpath)) return { error: 'EXPORT_PATH_TRAVERSAL' }
+  return { dev: stat.dev, ino: stat.ino, mode: stat.mode, uid: stat.uid, gid: stat.gid, realpath }
+}
+
+function snapshotArtifactPath(resolvedRoot, rootRealpath, segments) {
+  const ancestors = []
+  const rootSnapshot = snapshotPath(resolvedRoot, rootRealpath, true)
+  if (rootSnapshot.error) return rootSnapshot
+  ancestors.push(rootSnapshot)
+  let current = resolvedRoot
+  for (const segment of segments.slice(0, -1)) {
+    current = path.join(current, segment)
+    const snapshot = snapshotPath(current, rootRealpath, true)
+    if (snapshot.error) return snapshot
+    ancestors.push(snapshot)
+  }
+  current = path.join(current, segments.at(-1))
+  const leaf = snapshotPath(current, rootRealpath, false)
+  if (leaf.error) return leaf
+  return { ancestors, leaf }
+}
+
+function artifactPathIssue(code, pointer) {
+  if (code === 'SYMLINK_ARTIFACT_FORBIDDEN') return issue(code, pointer, 'Allowlisted artifacts and their ancestors must not be symlinks.')
+  if (code === 'NON_REGULAR_ARTIFACT_FORBIDDEN') return issue(code, pointer, 'Allowlisted artifacts must be regular files.')
+  if (code === 'EXPORT_PATH_TRAVERSAL') return issue(code, pointer, 'Artifact path escapes the export root.')
+  return issue('ARTIFACT_NOT_FOUND', pointer, 'Allowlisted artifact does not exist beneath the export root.')
+}
+
+function verifySanitizedExportFiles(value, root, { checkpoint } = {}) {
   const structural = validateSanitizedExportManifest(value)
   if (!structural.valid) return structural
   const errors = []
@@ -498,40 +714,62 @@ function verifySanitizedExportFiles(value, root) {
     return result([issue('INVALID_EXPORT_ROOT', '', 'Export root does not exist.')])
   }
   if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) return result([issue('INVALID_EXPORT_ROOT', '', 'Export root must be a non-symlink directory.')])
+  if (typeof fs.constants.O_NOFOLLOW !== 'number' || fs.constants.O_NOFOLLOW === 0) {
+    return result([issue('NOFOLLOW_UNAVAILABLE', '', 'Filesystem verification requires no-follow open semantics.')])
+  }
+  let rootRealpath
+  try {
+    rootRealpath = fs.realpathSync(resolvedRoot)
+  } catch {
+    return result([issue('INVALID_EXPORT_ROOT', '', 'Export root does not exist.')])
+  }
   for (const [index, artifact] of value.allowlistedArtifacts.entries()) {
     const pointer = `/allowlistedArtifacts/${index}`
-    const target = path.resolve(resolvedRoot, ...artifact.path.split('/'))
+    const segments = artifact.path.split('/')
+    const target = path.resolve(resolvedRoot, ...segments)
     const relative = path.relative(resolvedRoot, target)
     if (relative === '' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
       errors.push(issue('EXPORT_PATH_TRAVERSAL', `${pointer}/path`, 'Artifact path escapes the export root.'))
       continue
     }
-    let current = resolvedRoot
-    let stat
-    let failed = false
-    for (const segment of artifact.path.split('/')) {
-      current = path.join(current, segment)
-      try {
-        stat = fs.lstatSync(current)
-      } catch {
-        errors.push(issue('ARTIFACT_NOT_FOUND', `${pointer}/path`, 'Allowlisted artifact does not exist beneath the export root.'))
-        failed = true
-        break
-      }
-      if (stat.isSymbolicLink()) {
-        errors.push(issue('SYMLINK_ARTIFACT_FORBIDDEN', `${pointer}/path`, 'Allowlisted artifacts and their ancestors must not be symlinks.'))
-        failed = true
-        break
-      }
-    }
-    if (failed) continue
-    if (!stat.isFile()) {
-      errors.push(issue('NON_REGULAR_ARTIFACT_FORBIDDEN', `${pointer}/path`, 'Allowlisted artifacts must be regular files.'))
+    const before = snapshotArtifactPath(resolvedRoot, rootRealpath, segments)
+    if (before.error) {
+      errors.push(artifactPathIssue(before.error, `${pointer}/path`))
       continue
     }
-    if (stat.size !== artifact.sizeBytes) errors.push(issue('ARTIFACT_SIZE_MISMATCH', `${pointer}/sizeBytes`, 'Artifact byte size does not match the manifest.'))
-    const digest = crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex')
-    if (digest !== artifact.sha256.toLowerCase()) errors.push(issue('ARTIFACT_HASH_MISMATCH', `${pointer}/sha256`, 'Artifact SHA-256 digest does not match the manifest.'))
+    let descriptor
+    try {
+      checkpoint?.('beforeOpen')
+      try {
+        descriptor = fs.openSync(target, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW)
+      } catch {
+        errors.push(issue('ARTIFACT_NOT_FOUND', `${pointer}/path`, 'Allowlisted artifact does not exist beneath the export root.'))
+        continue
+      }
+      checkpoint?.('afterOpen')
+      const opened = fs.fstatSync(descriptor)
+      if (!opened.isFile()) {
+        errors.push(issue('NON_REGULAR_ARTIFACT_FORBIDDEN', `${pointer}/path`, 'Allowlisted artifacts must be regular files.'))
+        continue
+      }
+      const contents = fs.readFileSync(descriptor)
+      const after = snapshotArtifactPath(resolvedRoot, rootRealpath, segments)
+      if (after.error
+        || !sameFileIdentity(before.leaf, opened)
+        || !sameFileIdentity(after.leaf, opened)
+        || before.ancestors.length !== after.ancestors.length
+        || before.ancestors.some((snapshot, ancestorIndex) => !samePathSnapshot(snapshot, after.ancestors[ancestorIndex]))) {
+        errors.push(issue('ARTIFACT_PATH_RACE_DETECTED', `${pointer}/path`, 'Allowlisted artifact path changed while it was being verified.'))
+        continue
+      }
+      if (opened.size !== artifact.sizeBytes) errors.push(issue('ARTIFACT_SIZE_MISMATCH', `${pointer}/sizeBytes`, 'Artifact byte size does not match the manifest.'))
+      const digest = crypto.createHash('sha256').update(contents).digest('hex')
+      if (digest !== artifact.sha256.toLowerCase()) errors.push(issue('ARTIFACT_HASH_MISMATCH', `${pointer}/sha256`, 'Artifact SHA-256 digest does not match the manifest.'))
+    } finally {
+      if (descriptor !== undefined) {
+        try { fs.closeSync(descriptor) } catch {}
+      }
+    }
   }
   return result(errors)
 }

@@ -28,7 +28,7 @@ function validManifest() {
     ],
     interactionPolicyRef: 'policies/read-only-v1.json',
     authenticationLifecyclePolicy: 'none',
-    evidenceRequirements: ['screenshot', 'event-log'],
+    evidenceRequirements: [{ classification: 'observed', artifactType: 'screenshot', minimumCount: 1, armId: 'neutral' }],
     reproducibility: { seed: '42', engine: 'playwright', model: 'gpt-5' },
     limitations: ['Synthetic behavior is directional, not population evidence.'],
   }
@@ -38,6 +38,8 @@ function validObservedEvidence() {
   return {
     schema: 'betabots.evidence-ref.v1',
     id: 'evidence.checkout-label',
+    studyId: 'generic-checkout-study',
+    armId: 'neutral',
     classification: 'observed',
     claim: 'The delivery label was visible before checkout.',
     artifact: { type: 'screenshot', ref: 'screenshots/neutral/001.png' },
@@ -53,6 +55,7 @@ function validDecision() {
   return {
     schema: 'betabots.decision-outcome.v1',
     id: 'decision.generic-checkout',
+    studyId: 'generic-checkout-study',
     outcome: 'conditional',
     allocation: {
       hypothetical: true,
@@ -74,7 +77,9 @@ function validDecision() {
 }
 
 test('valid three-arm StudyManifest passes semantic validation', () => {
-  assert.deepEqual(validateArtifact(validManifest()), { valid: true, errors: [] })
+  const result = validateArtifact(validManifest())
+  assert.equal(result.valid, true)
+  assert.equal(result.requiresBatchValidation.code, 'BATCH_CONTEXT_REQUIRED')
 })
 
 test('StudyManifest rejects duplicate arm ids', () => {
@@ -164,6 +169,7 @@ test('non-finite and object-valued numeric fields are rejected by direct module 
     const finding = {
       schema: 'betabots.finding.v1',
       id: 'finding.numeric',
+      studyId: 'generic-checkout-study',
       observation: 'Numeric input must be finite.',
       affected: { arms: ['neutral'], personas: ['persona.new-shopper'], surfaces: ['checkout'] },
       supportingEvidence: ['evidence.checkout-label'],
@@ -185,7 +191,9 @@ test('non-finite and object-valued numeric fields are rejected by direct module 
 })
 
 test('valid observed EvidenceRef passes validation', () => {
-  assert.deepEqual(validateArtifact(validObservedEvidence()), { valid: true, errors: [] })
+  const result = validateArtifact(validObservedEvidence())
+  assert.equal(result.valid, true)
+  assert.equal(result.requiresBatchValidation.code, 'BATCH_CONTEXT_REQUIRED')
 })
 
 test('EvidenceRef rejects an invalid evidence classification', () => {
@@ -241,6 +249,32 @@ test('DecisionOutcome rejects dollar allocations that miss the budget', () => {
   assert.equal(result.errors[0].path, '/allocation')
 })
 
+test('DecisionOutcome compares safe dollar allocations as exact cents', () => {
+  const decimal = validDecision()
+  decimal.allocation.budgetDollars = 0.30
+  decimal.allocation.cash.dollars = 0.10
+  decimal.allocation.sleeves[0].dollars = 0.20
+  assert.equal(validateArtifact(decimal).valid, true)
+
+  const large = validDecision()
+  large.allocation.budgetDollars = 90071992547409.9
+  large.allocation.cash.dollars = 0
+  large.allocation.sleeves[0].dollars = 90071992547409.9
+  assert.equal(validateArtifact(large).valid, true)
+
+  const excessivePrecision = validDecision()
+  excessivePrecision.allocation.cash.dollars = 200.001
+  let result = validateArtifact(excessivePrecision)
+  assert.equal(result.valid, false)
+  assert.ok(result.errors.some((error) => error.code === 'INVALID_DOLLAR_PRECISION'))
+
+  const unsafe = validDecision()
+  unsafe.allocation.budgetDollars = 90071992547410
+  result = validateArtifact(unsafe)
+  assert.equal(result.valid, false)
+  assert.ok(result.errors.some((error) => error.code === 'DOLLAR_AMOUNT_OUT_OF_SAFE_RANGE'))
+})
+
 test('DecisionOutcome rejects percentages that do not total 100 within tolerance', () => {
   const decision = validDecision()
   decision.allocation.sleeves[0].percent = 79.9
@@ -283,6 +317,7 @@ test('Finding requires an inferred commercial implication', () => {
   const finding = {
     schema: 'betabots.finding.v1',
     id: 'finding.checkout-label',
+    studyId: 'generic-checkout-study',
     observation: 'One neutral-arm persona overlooked delivery timing.',
     affected: { arms: ['neutral'], personas: ['persona.new-shopper'], surfaces: ['checkout'] },
     supportingEvidence: ['evidence.checkout-label'],
@@ -389,6 +424,31 @@ test('SanitizedExportManifest deeply rejects secret-like fields, metadata, and a
   assert.ok(nameResult.errors.some((error) => error.code === 'SENSITIVE_ARTIFACT_FORBIDDEN'))
 })
 
+test('SanitizedExportManifest rejects normalized high-confidence secret names without rejecting prose', () => {
+  for (const [field, value] of [
+    ['path', 'artifacts/access_key.json'],
+    ['path', 'artifacts/Private-Key.json'],
+    ['path', 'artifacts/browserState.json'],
+    ['artifactClass', 'private_key'],
+  ]) {
+    const exported = validExport()
+    exported.allowlistedArtifacts[0][field] = value
+    const result = validateArtifact(exported)
+    assert.equal(result.valid, false, `${field}: ${value}`)
+    assert.ok(result.errors.some((error) => error.code === 'SENSITIVE_ARTIFACT_FORBIDDEN'), `${field}: ${value}`)
+  }
+
+  const nested = validExport()
+  nested.auditTrail = { metadata: { artifactClass: 'API_KEY' } }
+  const nestedResult = validateArtifact(nested)
+  assert.equal(nestedResult.valid, false)
+  assert.ok(nestedResult.errors.some((error) => error.code === 'SENSITIVE_FIELD_FORBIDDEN'))
+
+  const prose = validExport()
+  prose.id = 'export.private-keyword-research'
+  assert.deepEqual(validateArtifact(prose), { valid: true, errors: [] })
+})
+
 test('filesystem-backed export verification rejects symlinks, non-regular files, and tampering', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-root-'))
   const artifactDirectory = path.join(root, 'artifacts')
@@ -432,12 +492,50 @@ test('filesystem-backed export verification rejects symlinks, non-regular files,
   assert.ok(result.errors.some((error) => error.code === 'ARTIFACT_HASH_MISMATCH'))
 })
 
+test('filesystem verification detects descriptor/path races after a transient ancestor swap', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-race-'))
+  const artifacts = path.join(root, 'artifacts')
+  const stashedArtifacts = path.join(root, 'artifacts-original')
+  const contents = 'same public bytes\n'
+  fs.mkdirSync(artifacts)
+  fs.writeFileSync(path.join(artifacts, 'manifest.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifacts/manifest.json',
+    sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+    sizeBytes: Buffer.byteLength(contents),
+  }
+
+  const result = verifySanitizedExportFiles(exported, root, {
+    checkpoint(stage) {
+      if (stage === 'beforeOpen') {
+        fs.renameSync(artifacts, stashedArtifacts)
+        fs.mkdirSync(artifacts)
+        fs.writeFileSync(path.join(artifacts, 'manifest.json'), contents)
+      }
+      if (stage === 'afterOpen') {
+        fs.rmSync(artifacts, { recursive: true, force: true })
+        fs.renameSync(stashedArtifacts, artifacts)
+      }
+    },
+  })
+
+  assert.equal(result.valid, false)
+  assert.deepEqual(result.errors, [{
+    code: 'ARTIFACT_PATH_RACE_DETECTED',
+    path: '/allowlistedArtifacts/0/path',
+    message: 'Allowlisted artifact path changed while it was being verified.',
+  }])
+})
+
 test('batch validation resolves evidence references and rejects duplicate artifact ids', () => {
+  const manifest = validManifest()
   const evidence = validObservedEvidence()
   const decision = validDecision()
   const finding = {
     schema: 'betabots.finding.v1',
     id: 'finding.batch',
+    studyId: manifest.id,
     observation: 'The label was missed by one persona.',
     affected: { arms: ['neutral'], personas: ['persona.new-shopper'], surfaces: ['checkout'] },
     supportingEvidence: ['evidence.checkout-label'],
@@ -446,17 +544,17 @@ test('batch validation resolves evidence references and rejects duplicate artifa
     confidence: 0.5,
     limitations: ['This is synthetic evidence.'],
   }
-  assert.equal(validateArtifacts([evidence, decision, finding]).valid, true)
+  assert.equal(validateArtifacts([manifest, evidence, decision, finding]).valid, true)
 
   const duplicate = { ...validObservedEvidence(), claim: 'Duplicate evidence id.' }
-  let result = validateArtifacts([evidence, duplicate])
+  let result = validateArtifacts([manifest, evidence, duplicate])
   assert.equal(result.valid, false)
-  assert.ok(result.results[1].errors.some((error) => error.code === 'DUPLICATE_EVIDENCE_ID'))
+  assert.ok(result.results[2].errors.some((error) => error.code === 'DUPLICATE_EVIDENCE_ID'))
 
   const duplicateArtifact = { ...validDecision(), id: evidence.id }
-  result = validateArtifacts([evidence, duplicateArtifact])
+  result = validateArtifacts([manifest, evidence, duplicateArtifact])
   assert.equal(result.valid, false)
-  assert.ok(result.results[1].errors.some((error) => error.code === 'DUPLICATE_ARTIFACT_ID'))
+  assert.ok(result.results[2].errors.some((error) => error.code === 'DUPLICATE_ARTIFACT_ID'))
 
   const missingDecision = validDecision()
   missingDecision.evidenceRefs = ['evidence.missing']
@@ -468,13 +566,111 @@ test('batch validation resolves evidence references and rejects duplicate artifa
   assert.ok(result.results[1].errors.some((error) => error.code === 'UNRESOLVED_EVIDENCE_REF'))
 })
 
+test('batch validation enforces structured study evidence requirements and study/arm links', () => {
+  const manifest = validManifest()
+  manifest.evidenceRequirements = [{ classification: 'observed', artifactType: 'screenshot', minimumCount: 1, armId: 'neutral' }]
+  const evidence = validObservedEvidence()
+  evidence.studyId = manifest.id
+  evidence.armId = 'neutral'
+  const decision = validDecision()
+  decision.studyId = manifest.id
+  const finding = {
+    schema: 'betabots.finding.v1',
+    id: 'finding.linked-batch',
+    studyId: manifest.id,
+    observation: 'The label was missed by one persona.',
+    affected: { arms: ['neutral'], personas: ['persona.new-shopper'], surfaces: ['checkout'] },
+    supportingEvidence: [evidence.id],
+    contradictingEvidence: [],
+    commercialImplication: { classification: 'inferred', statement: 'The label may need clearer placement.' },
+    confidence: 0.5,
+    limitations: ['This is synthetic evidence.'],
+  }
+
+  assert.equal(validateArtifacts([manifest, evidence, decision, finding]).valid, true)
+
+  const unknownStudy = { ...evidence, id: 'evidence.unknown-study', studyId: 'study.missing' }
+  let result = validateArtifacts([manifest, unknownStudy])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[1].errors.some((error) => error.code === 'UNKNOWN_EVIDENCE_STUDY'))
+
+  const wrongArm = { ...evidence, id: 'evidence.wrong-arm', armId: 'missing-arm' }
+  result = validateArtifacts([manifest, wrongArm])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[1].errors.some((error) => error.code === 'UNKNOWN_EVIDENCE_ARM'))
+
+  const recommendation = {
+    schema: 'betabots.evidence-ref.v1', id: 'evidence.recommendation', studyId: manifest.id, armId: 'neutral',
+    classification: 'recommendation', claim: 'Move the label higher.', recommendation: 'Move the label higher.',
+  }
+  result = validateArtifacts([manifest, recommendation])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[0].errors.some((error) => error.code === 'EVIDENCE_REQUIREMENT_UNSATISFIED'))
+
+  const duplicateManifest = { ...manifest }
+  result = validateArtifacts([manifest, duplicateManifest])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[1].errors.some((error) => error.code === 'DUPLICATE_ARTIFACT_ID'))
+
+  const wrongKind = { ...decision, evidenceRefs: [manifest.id], allocation: { ...decision.allocation, sleeves: [{ ...decision.allocation.sleeves[0], evidenceRefs: [manifest.id] }] } }
+  result = validateArtifacts([manifest, evidence, wrongKind])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[2].errors.some((error) => error.code === 'UNRESOLVED_EVIDENCE_REF'))
+})
+
+test('Finding evidence lists are unique, disjoint, and study-context matched', () => {
+  const finding = {
+    schema: 'betabots.finding.v1', id: 'finding.polarity', studyId: 'generic-checkout-study',
+    observation: 'A polarity check.',
+    affected: { arms: ['neutral'], personas: ['persona.new-shopper'], surfaces: ['checkout'] },
+    supportingEvidence: ['evidence.one', 'evidence.one'], contradictingEvidence: ['evidence.one'],
+    commercialImplication: { classification: 'inferred', statement: 'This remains an inference.' },
+    confidence: 0.5, limitations: ['Synthetic evidence.'],
+  }
+  const direct = validateArtifact(finding)
+  assert.equal(direct.valid, false)
+  assert.ok(direct.errors.some((error) => error.code === 'DUPLICATE_SUPPORTING_EVIDENCE_REF'))
+  assert.ok(direct.errors.some((error) => error.code === 'OVERLAPPING_EVIDENCE_REF'))
+
+  const manifest = validManifest()
+  manifest.evidenceRequirements = [{ classification: 'observed', artifactType: 'screenshot', minimumCount: 1 }]
+  const evidence = validObservedEvidence()
+  evidence.id = 'evidence.one'
+  evidence.studyId = manifest.id
+  evidence.armId = 'neutral'
+  const wrongStudyEvidence = { ...evidence, id: 'evidence.other', studyId: 'other-study' }
+  const linkedFinding = { ...finding, supportingEvidence: ['evidence.other'], contradictingEvidence: [] }
+  const result = validateArtifacts([manifest, evidence, wrongStudyEvidence, linkedFinding])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[3].errors.some((error) => error.code === 'EVIDENCE_STUDY_MISMATCH'))
+})
+
+test('batch validation ignores invalid evidence for requirements and resolves referring study ids', () => {
+  const manifest = validManifest()
+  const invalidEvidence = validObservedEvidence()
+  delete invalidEvidence.context
+  let result = validateArtifacts([manifest, invalidEvidence])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[0].errors.some((error) => error.code === 'EVIDENCE_REQUIREMENT_UNSATISFIED'))
+
+  const validEvidence = validObservedEvidence()
+  const decision = validDecision()
+  decision.studyId = 'study.missing'
+  decision.evidenceRefs = []
+  decision.allocation.sleeves[0].deployed = false
+  decision.allocation.sleeves[0].evidenceRefs = []
+  result = validateArtifacts([manifest, validEvidence, decision])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[2].errors.some((error) => error.code === 'UNKNOWN_ARTIFACT_STUDY'))
+})
+
 test('single-artifact reference validation identifies the need for batch context', () => {
   const result = validateArtifact(validDecision())
   assert.equal(result.valid, true)
   assert.deepEqual(result.requiresBatchValidation, {
     code: 'BATCH_CONTEXT_REQUIRED',
-    path: '/evidenceRefs',
-    message: 'Evidence references require batch validation for resolution.',
+    path: '/studyId',
+    message: 'Study and evidence references require batch validation for resolution.',
   })
 })
 
@@ -513,12 +709,14 @@ test('all published schemas specify closed object structures', () => {
 test('contract CLI emits JSON for valid and invalid artifacts', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-contract-cli-'))
   const validFile = path.join(directory, 'manifest.json')
+  const evidenceFile = path.join(directory, 'evidence.json')
   const invalidFile = path.join(directory, 'invalid.json')
   fs.writeFileSync(validFile, JSON.stringify(validManifest()))
+  fs.writeFileSync(evidenceFile, JSON.stringify(validObservedEvidence()))
   fs.writeFileSync(invalidFile, JSON.stringify({ schema: 'betabots.study-manifest.v1' }))
   const cli = path.join(__dirname, '..', 'scripts', 'validate-study-artifacts.cjs')
 
-  const valid = spawnSync(process.execPath, [cli, '--json', validFile], { encoding: 'utf8' })
+  const valid = spawnSync(process.execPath, [cli, '--json', validFile, evidenceFile], { encoding: 'utf8' })
   const invalid = spawnSync(process.execPath, [cli, '--json', invalidFile], { encoding: 'utf8' })
 
   assert.equal(valid.status, 0, valid.stderr)
@@ -530,24 +728,26 @@ test('contract CLI emits JSON for valid and invalid artifacts', () => {
 
 test('contract CLI reports mixed batches, invalid JSON, and filesystem verification errors as stable JSON', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-contract-cli-batch-'))
+  const manifestFile = path.join(directory, 'manifest.json')
   const evidenceFile = path.join(directory, 'evidence.json')
   const decisionFile = path.join(directory, 'decision.json')
   const invalidJsonFile = path.join(directory, 'invalid.json')
+  fs.writeFileSync(manifestFile, JSON.stringify(validManifest()))
   fs.writeFileSync(evidenceFile, JSON.stringify(validObservedEvidence()))
   fs.writeFileSync(decisionFile, JSON.stringify(validDecision()))
   fs.writeFileSync(invalidJsonFile, '{')
   const cli = path.join(__dirname, '..', 'scripts', 'validate-study-artifacts.cjs')
 
-  const valid = spawnSync(process.execPath, [cli, '--json', evidenceFile, decisionFile], { encoding: 'utf8' })
+  const valid = spawnSync(process.execPath, [cli, '--json', manifestFile, evidenceFile, decisionFile], { encoding: 'utf8' })
   assert.equal(valid.status, 0, valid.stderr)
   assert.equal(JSON.parse(valid.stdout).valid, true)
 
-  const mixed = spawnSync(process.execPath, [cli, '--json', decisionFile, invalidJsonFile], { encoding: 'utf8' })
+  const mixed = spawnSync(process.execPath, [cli, '--json', manifestFile, decisionFile, invalidJsonFile], { encoding: 'utf8' })
   assert.equal(mixed.status, 1)
   const mixedOutput = JSON.parse(mixed.stdout)
   assert.equal(mixedOutput.valid, false)
-  assert.equal(mixedOutput.results[1].errors[0].code, 'INVALID_JSON')
-  assert.ok(mixedOutput.results[0].errors.some((error) => error.code === 'UNRESOLVED_EVIDENCE_REF'))
+  assert.equal(mixedOutput.results[2].errors[0].code, 'INVALID_JSON')
+  assert.ok(mixedOutput.results[1].errors.some((error) => error.code === 'UNRESOLVED_EVIDENCE_REF'))
 
   const exportRoot = path.join(directory, 'export-root')
   fs.mkdirSync(exportRoot)

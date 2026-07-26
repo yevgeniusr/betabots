@@ -3,10 +3,11 @@
   "$id": "betabots.decision-outcome.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "id", "outcome", "conditions", "rejectedOpportunities", "missingEvidence", "evidenceRefs"],
+  "required": ["schema", "id", "studyId", "outcome", "conditions", "rejectedOpportunities", "missingEvidence", "evidenceRefs"],
   "properties": {
     "schema": {"const": "betabots.decision-outcome.v1"},
     "id": {"type": "string", "minLength": 1},
+    "studyId": {"type": "string", "minLength": 1},
     "outcome": {"enum": ["allocate", "reject", "conditional", "inconclusive"]},
     "allocation": {"$ref": "#/$defs/allocation"},
     "conditions": {"$ref": "#/$defs/stringList"},
@@ -17,8 +18,9 @@
   "allOf": [{"if": {"properties": {"outcome": {"const": "allocate"}}}, "then": {"required": ["allocation"]}}],
   "$defs": {
     "stringList": {"type": "array", "items": {"type": "string", "minLength": 1}},
-    "allocation": {"type": "object", "additionalProperties": false, "required": ["hypothetical", "budgetDollars", "cash", "sleeves"], "properties": {"hypothetical": {"const": true}, "budgetDollars": {"type": "number", "minimum": 0}, "cash": {"$ref": "#/$defs/cash"}, "sleeves": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/sleeve"}}}},
-    "cash": {"type": "object", "additionalProperties": false, "required": ["dollars", "percent"], "properties": {"dollars": {"type": "number", "minimum": 0}, "percent": {"type": "number", "minimum": 0, "maximum": 100}}},
-    "sleeve": {"type": "object", "additionalProperties": false, "required": ["id", "dollars", "percent", "deployed", "evidenceRefs"], "properties": {"id": {"type": "string", "minLength": 1}, "dollars": {"type": "number", "minimum": 0}, "percent": {"type": "number", "minimum": 0, "maximum": 100}, "deployed": {"type": "boolean"}, "evidenceRefs": {"$ref": "#/$defs/stringList"}}}
+    "allocation": {"type": "object", "additionalProperties": false, "required": ["hypothetical", "budgetDollars", "cash", "sleeves"], "properties": {"hypothetical": {"const": true}, "budgetDollars": {"$ref": "#/$defs/dollars"}, "cash": {"$ref": "#/$defs/cash"}, "sleeves": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/sleeve"}}}},
+    "dollars": {"type": "number", "minimum": 0, "maximum": 90071992547409.9, "multipleOf": 0.01},
+    "cash": {"type": "object", "additionalProperties": false, "required": ["dollars", "percent"], "properties": {"dollars": {"$ref": "#/$defs/dollars"}, "percent": {"type": "number", "minimum": 0, "maximum": 100}}},
+    "sleeve": {"type": "object", "additionalProperties": false, "required": ["id", "dollars", "percent", "deployed", "evidenceRefs"], "properties": {"id": {"type": "string", "minLength": 1}, "dollars": {"$ref": "#/$defs/dollars"}, "percent": {"type": "number", "minimum": 0, "maximum": 100}, "deployed": {"type": "boolean"}, "evidenceRefs": {"$ref": "#/$defs/stringList"}}}
   }
 }

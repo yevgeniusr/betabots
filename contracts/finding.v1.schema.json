@@ -3,21 +3,22 @@
   "$id": "betabots.finding.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "id", "observation", "affected", "supportingEvidence", "contradictingEvidence", "commercialImplication", "confidence", "limitations"],
+  "required": ["schema", "id", "studyId", "observation", "affected", "supportingEvidence", "contradictingEvidence", "commercialImplication", "confidence", "limitations"],
   "properties": {
     "schema": {"const": "betabots.finding.v1"},
     "id": {"type": "string", "minLength": 1},
+    "studyId": {"type": "string", "minLength": 1},
     "observation": {"type": "string", "minLength": 1},
     "affected": {"$ref": "#/$defs/affected"},
     "supportingEvidence": {"$ref": "#/$defs/evidenceIds"},
-    "contradictingEvidence": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "contradictingEvidence": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "commercialImplication": {"$ref": "#/$defs/commercialImplication"},
     "confidence": {"type": "number", "minimum": 0, "maximum": 1},
     "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
   },
   "$defs": {
     "affected": {"type": "object", "additionalProperties": false, "required": ["arms", "personas", "surfaces"], "properties": {"arms": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "personas": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "surfaces": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}}},
-    "evidenceIds": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "evidenceIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "commercialImplication": {"type": "object", "additionalProperties": false, "required": ["classification", "statement"], "properties": {"classification": {"const": "inferred"}, "statement": {"type": "string", "minLength": 1}}}
   }
 }
