@@ -13,6 +13,7 @@ const {
 } = require('./environment_integrity.cjs')
 const { screenFingerprint } = require('./screen_identity.cjs')
 const { newKeywordMatches } = require('./keyword_scoring.cjs')
+const { extractCommittedDollars } = require('./truth_pressure.cjs')
 const { scoreMultiSessionJourney, scoreSession } = require('./session_scoring.cjs')
 const {
   appendGoalEvidence,
@@ -1192,11 +1193,6 @@ function createMortalityLedger(bot) {
     deathReason: '',
     entries: [],
   }
-}
-
-function extractCommittedDollars(text) {
-  const matches = String(text || '').match(/\$[\d,]+(?:\.\d+)?/g) || []
-  return matches.reduce((sum, token) => sum + Number(token.replace(/[$,]/g, '')), 0)
 }
 
 function chargeLife(ledger, kind, amount, reason) {
