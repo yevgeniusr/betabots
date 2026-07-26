@@ -189,6 +189,38 @@ test('uses a bounded default timeout for click body actions', async () => {
   assert.deepEqual(calls, [{ timeout: 5000 }])
 })
 
+test('enforces configured policy before the initial target action', async () => {
+  const calls = []
+  const locator = {
+    isVisible: async () => true,
+    click: async () => calls.push('clicked'),
+  }
+  const snapshot = {
+    controls: [{ id: 'control-community', kind: 'button', name: 'Post comment', disabled: false }],
+    locators: new Map([['control-community', locator]]),
+  }
+  const result = await executeMindAction({ url: () => 'https://app.test/community' }, snapshot, {
+    type: 'click', targetId: 'control-community',
+  }, {
+    interactionPolicy: { actionDenyRules: [{ id: 'no-community-actions', urlPatterns: ['/community'], actionTypes: ['click'] }] },
+  })
+
+  assert.equal(result.ok, false)
+  assert.match(result.reason, /interaction policy/i)
+  assert.deepEqual(calls, [])
+})
+
+test('enforces configured policy for non-target action types', async () => {
+  const result = await executeMindAction({
+    goBack: async () => assert.fail('back should not run'),
+    url: () => 'https://app.test/community',
+  }, { controls: [], locators: new Map() }, { type: 'back' }, {
+    interactionPolicy: { actionDenyRules: [{ id: 'no-community-back', actionTypes: ['back'], urlPatterns: ['/community'] }] },
+  })
+  assert.equal(result.ok, false)
+  assert.match(result.reason, /interaction policy/i)
+})
+
 test('body action timeout override does not inherit the global page action timeout', async () => {
   const calls = []
   const locator = {

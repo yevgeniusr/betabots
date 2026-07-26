@@ -135,6 +135,36 @@ test('a replaced textarea is retried once through the same visible semantic cont
   assert.equal(await page.getByRole('textbox', { name: 'Message' }).inputValue(), 'A response after rerender')
 })
 
+test('policy blocks semantic retry and recovered option paths', async (t) => {
+  const browser = await chromium.launch({ headless: true })
+  t.after(() => browser.close())
+  const page = await browser.newPage()
+  await page.setContent('<textarea aria-label="Comment"></textarea>')
+  const snapshot = await collectInteractiveControls(page)
+  const textbox = snapshot.controls.find((control) => control.name === 'Comment')
+  await page.evaluate(() => {
+    const replacement = document.createElement('textarea')
+    replacement.setAttribute('aria-label', 'Comment')
+    document.querySelector('textarea').replaceWith(replacement)
+  })
+  const retried = await executeMindAction(page, snapshot, {
+    type: 'fill', targetId: textbox.id, value: 'blocked value',
+  }, {
+    interactionPolicy: { actionDenyRules: [{ id: 'no-comments', controlNamePatterns: ['comment'] }] },
+  })
+  assert.equal(retried.ok, false)
+  assert.match(retried.reason, /interaction policy/i)
+
+  await page.setContent('<div role="listbox"><button role="option">Discuss thread</button></div>')
+  const recovered = await executeMindAction(page, { controls: [], locators: new Map() }, {
+    type: 'select', targetId: 'not-visible', value: 'Discuss thread',
+  }, {
+    interactionPolicy: { actionDenyRules: [{ id: 'no-community-options', controlNamePatterns: ['discuss'] }] },
+  })
+  assert.equal(recovered.ok, false)
+  assert.match(recovered.reason, /interaction policy/i)
+})
+
 test('reports visible-link navigation intent immediately before the validated click', async (t) => {
   const browser = await chromium.launch({ headless: true })
   t.after(() => browser.close())

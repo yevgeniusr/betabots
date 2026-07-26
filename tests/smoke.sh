@@ -37,6 +37,8 @@ node --check "$ROOT/skills/betabots/scripts/confidence_tiers.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/route_planning.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/thinking_body.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/session_scheduler.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/interaction_policy.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/export_storage_state_from_cdp.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/browser_issue_recovery.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/destiny_actions.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/persona_generation.cjs" >/dev/null
@@ -59,6 +61,10 @@ node --test "$ROOT/tests/verify_clean_install.test.cjs" >/dev/null
 node --test "$ROOT/tests/generate_cohort_cli.test.cjs" >/dev/null
 node --test "$ROOT/tests/thinking_body_runner.test.cjs" >/dev/null
 node --test "$ROOT/tests/session_scheduler.test.cjs" >/dev/null
+node --test "$ROOT/tests/interaction_policy.test.cjs" >/dev/null
+node --test "$ROOT/tests/cryptonary_cohort.test.cjs" >/dev/null
+node --test "$ROOT/tests/export_storage_state_from_cdp.test.cjs" >/dev/null
+node --test "$ROOT/tests/safe_cohort_runner.test.cjs" >/dev/null
 node --test "$ROOT/tests/session_state_browser.test.cjs" >/dev/null
 node --test "$ROOT/tests/browser_issue_recovery.test.cjs" >/dev/null
 node --test "$ROOT/tests/request_failure_browser.test.cjs" >/dev/null
@@ -88,6 +94,9 @@ grep -q "BETABOT_REQUIRE_REAL_BACKEND" "$ROOT/skills/betabots/scripts/thoughtful
 grep -q "BETABOT_APP_ORIGINS" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_ENVIRONMENT_ATTESTATION_URL" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_STORAGE_STATE_TEMPLATE" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "BETABOT_STORAGE_STATE_SEED" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+grep -q "installNetworkMutationBackstop" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
+test -f "$ROOT/demo-cohorts/cryptonary-authenticated-platform.json"
 grep -q "BETABOT_SESSION_COUNT" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_SESSION_GAP_MINUTES" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "BETABOT_MIN_AI_USER_TURNS" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"

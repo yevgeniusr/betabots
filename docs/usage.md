@@ -88,6 +88,28 @@ The initial state must come from visible UI login. Every visit writes the state
 back for the next cohort round. Use `BETABOT_MIN_AI_USER_TURNS` and
 `BETABOT_MIN_COMPLETED_ACTIVITIES` when a happy result must prove those actions.
 
+For one authenticated session reused by a cohort, seed isolated state files:
+
+```bash
+BETABOT_STORAGE_STATE_SEED=/absolute/path/user-approved-auth-state.json \
+BETABOT_STORAGE_STATE_TEMPLATE='/tmp/betabots-auth/{id}.json' \
+BETABOT_COHORT_FILE=demo-cohorts/cryptonary-authenticated-platform.json \
+BETABOT_THOUGHTFUL_COUNT=10 \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+The source state is read once, validated, and copied atomically with mode
+`0600`; bot destinations must be unique and may not be the source file. Do not
+put cookie values, tokens, or credentials in environment variables, cohort
+files, logs, or bug reports.
+
+Use an `interactionPolicy` to deny UI actions by action type, current URL,
+control name/kind/href, or fill/select value. Its request backstop aborts
+matching state-changing requests before navigation. The Cryptonary cohort is
+configured for read-only community discovery: it prohibits comments, replies,
+posts, reactions, likes, follows, messages, shares, and publishing, and sets
+`socialActionsAllowed: false` to disable the optional Betabook/Destiny layers.
+
 Betabots assign each persona a DiceBear avatar. The default style is `bottts-neutral`; set `BETABOT_AVATAR_STYLE` to another DiceBear style slug or style URL to change the visual system.
 
 ## 4. Tune Truth Pressure

@@ -8,6 +8,9 @@ deep personas automatically. Use a cohort file when you need curated research,
 route hints, scoring keywords, evidence requirements, or device weights.
 For authenticated products, provide `BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE`
 so visible-product analysis is not based on a public or sign-in shell.
+For a shared approved session, set `BETABOT_STORAGE_STATE_SEED` plus a unique
+`BETABOT_STORAGE_STATE_TEMPLATE`; the runner creates the per-bot states before
+persona preflight. Never place state contents in the cohort.
 
 For product-quality runs, create audience research first. Read `audience-research.md`, then encode its segment weights, vocabulary, traffic mix, and assumptions in the cohort file.
 
@@ -108,6 +111,14 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ## Fields
 
 - `appName`: Human-readable product name used in thoughts and analysis.
+- `socialActionsAllowed`: Set to `false` to disable Betabook and Destiny for a
+  cohort, even when their environment flags are supplied. Use this for strictly
+  read-only production research.
+- `interactionPolicy`: Optional generic runtime guard with `actionDenyRules`
+  and `requestDenyRules`. Action rules can match `actionTypes`, `urlPatterns`,
+  `controlNamePatterns`, `controlKindPatterns`, `hrefPatterns`, and
+  `valuePatterns`. Request rules can match `methods` and `urlPatterns`; matching
+  state-changing requests are aborted and recorded only as redacted events.
 - `audienceResearch`: Optional object or text summary of source evidence, segment assumptions, traffic mix, vocabulary, and objections.
 - `researchSources`: Optional array of evidence sources used to design the cohort. Use source labels, not secrets.
 - `audienceSegments`: Optional array of weighted audience segments. Each segment can include `name`, `weight`, `evidence`, `jobs`, `objections`, `deviceBias`, `vocabulary`, and `assumptions`.

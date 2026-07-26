@@ -3,6 +3,7 @@ const TARGET_ACTIONS = new Set(['click', 'fill', 'select'])
 const UNSAFE_CONTROL = /\b(delete|remove|revoke|erase|destroy|sign out|log ?out|pay|purchase|buy|checkout|subscribe|publish|send money|transfer)\b/i
 const DESTINY_DISPOSITIONS = new Set(['follow', 'reinterpret', 'reject', 'none'])
 const DEFAULT_BODY_ACTION_TIMEOUT_MS = 5000
+const { enforceActionPolicy } = require('./interaction_policy.cjs')
 
 function cleanText(value, limit = 1000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, limit)
@@ -246,6 +247,16 @@ function bodyActionTimeoutMs(options = {}) {
   return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_BODY_ACTION_TIMEOUT_MS
 }
 
+function authorizeTargetAction(page, action, control, options = {}) {
+  if (!options.interactionPolicy) return { ok: true }
+  return enforceActionPolicy(options.interactionPolicy, {
+    action,
+    control,
+    currentUrl: page.url?.() || '',
+    collector: options.policyEventCollector,
+  })
+}
+
 async function selectAriaOption(page, locator, value, options = {}) {
   const expanded = await locator.getAttribute('aria-expanded').catch(() => null)
   if (expanded !== 'true') await locator.click({ timeout: bodyActionTimeoutMs(options) })
@@ -307,6 +318,8 @@ async function retrySemanticTarget(page, originalControl, action, originalReason
     return { ok: false, reason: `Semantic replacement ${replacement.id} disappeared before the retry.` }
   }
   try {
+    const policy = authorizeTargetAction(page, revalidated.action, revalidated.control, options)
+    if (!policy.ok) return policy
     await options.beforeTargetAction?.({ action: revalidated.action, control: revalidated.control })
     await performTargetAction(page, locator, revalidated.action, options)
     return successfulTargetAction(revalidated.action, revalidated.control, true)
@@ -388,6 +401,8 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
       let matches = await visibleAriaOptions(page, optionValue, true)
       if (matches.length === 0) matches = await visibleAriaOptions(page, optionValue, false)
       if (matches.length === 1) {
+        const policy = authorizeTargetAction(page, requestedAction, { kind: 'option', name: optionValue }, options)
+        if (!policy.ok) return policy
         await matches[0].click({ timeout: bodyActionTimeoutMs(options) })
         return {
           ok: true,
@@ -401,6 +416,10 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
   }
 
   const action = validated.action
+  if (!TARGET_ACTIONS.has(action.type)) {
+    const policy = authorizeTargetAction(page, action, null, options)
+    if (!policy.ok) return policy
+  }
   if (action.type === 'leave') return { ok: true, ended: true, description: 'left the session' }
   if (action.type === 'wait') {
     await page.waitForTimeout?.(1500)
@@ -443,6 +462,8 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
     )
   }
   try {
+    const policy = authorizeTargetAction(page, action, validated.control, options)
+    if (!policy.ok) return policy
     await options.beforeTargetAction?.({ action, control: validated.control })
     await performTargetAction(page, locator, action, options)
     return successfulTargetAction(action, validated.control)
