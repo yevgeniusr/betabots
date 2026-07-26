@@ -118,8 +118,9 @@ test('real browser failures separate external traffic and prove visible RSC navi
   })
   assert.deepEqual(finalizeBrowserIssueRecovery(tracker), [])
 
+  const apiFailure = page.waitForEvent('requestfailed', (request) => request.url() === `${appOrigin}/api/messages`)
   await page.locator('#api').click()
-  await page.waitForTimeout(100)
+  assert.equal((await apiFailure).failure()?.errorText, 'net::ERR_ABORTED')
   assert.match(immediateProductIssues.join('\n'), /GET .*\/api\/messages net::ERR_ABORTED/)
 
   await page.locator('#analytics').click()
