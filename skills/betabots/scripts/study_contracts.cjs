@@ -18,6 +18,9 @@ const SENSITIVE_IDENTIFIER_TERMS = new Set([
 const SENSITIVE_IDENTIFIER_PHRASES = [
   ['access', 'key'], ['private', 'key'], ['secret', 'key'], ['api', 'key'], ['browser', 'state'],
 ]
+const SENSITIVE_IDENTIFIER_COMPACT_DENYLIST = new Set([
+  'apikey', 'secretkey', 'privatekey', 'accesskey', 'authorization', 'authtoken', 'bearertoken', 'sessiontoken', 'browserstate',
+])
 const DEFAULT_IGNORABLE_OR_FORMAT = /[\p{Cf}\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}\u{E0001}\u{E0020}-\u{E007F}]/gu
 
 function issue(code, pointer, message) {
@@ -156,7 +159,7 @@ function validateSchema(value, expected, errors) {
   }
 }
 
-function validateStudyManifest(value) {
+function validateStudyManifestTrusted(value) {
   const errors = []
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, STUDY_MANIFEST_V1, errors)
@@ -250,7 +253,7 @@ function validateStudyManifest(value) {
   return result(errors, issue('BATCH_CONTEXT_REQUIRED', '/evidenceRequirements', 'Evidence requirements are satisfied only by batch validation.'))
 }
 
-function validateEvidenceRef(value) {
+function validateEvidenceRefTrusted(value) {
   const errors = []
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, EVIDENCE_REF_V1, errors)
@@ -293,7 +296,7 @@ function validateEvidenceRef(value) {
   return result(errors, issue('BATCH_CONTEXT_REQUIRED', '/studyId', 'Evidence study and arm links require batch validation for resolution.'))
 }
 
-function validateDecisionOutcome(value) {
+function validateDecisionOutcomeTrusted(value) {
   const errors = []
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, DECISION_OUTCOME_V1, errors)
@@ -370,7 +373,7 @@ function validateDecisionOutcome(value) {
   return result(errors, batchRequirement)
 }
 
-function validateFinding(value) {
+function validateFindingTrusted(value) {
   const errors = []
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, FINDING_V1, errors)
@@ -421,36 +424,40 @@ function isSafeRelativePosixPath(value) {
   return segments.every((segment) => segment !== '' && segment !== '.' && segment !== '..')
 }
 
-function identifierTokens(value) {
-  if (typeof value !== 'string') return []
+function normalizedIdentifierForms(value) {
+  if (typeof value !== 'string') return { tokens: [], compact: [] }
   const normalized = value.normalize('NFKC')
   const forms = [
     normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ''),
     normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ' '),
   ]
-  return forms.flatMap((form) => form
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .toLowerCase()
-    .match(/[a-z0-9]+/g) || [])
+  const tokens = []
+  const compact = []
+  for (const form of forms) {
+    const boundaryNormalized = form
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    tokens.push(...(boundaryNormalized.toLowerCase().match(/[a-z0-9]+/g) || []))
+    for (const component of form.split(/[\\/.:\s]+/u)) {
+      const separatorFree = component.replace(/[^a-z0-9]/giu, '').toLowerCase()
+      if (separatorFree !== '') compact.push(separatorFree)
+    }
+  }
+  return { tokens, compact }
+}
+
+function identifierTokens(value) {
+  return normalizedIdentifierForms(value).tokens
 }
 
 function isSensitiveIdentifier(value) {
   if (typeof value !== 'string') return false
-  const normalized = value.normalize('NFKC')
-  const forms = [
-    normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ''),
-    normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ' '),
-  ]
-  return forms.some((form) => {
-    const tokens = form
-      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-      .toLowerCase()
-      .match(/[a-z0-9]+/g) || []
-    if (tokens.some((token) => SENSITIVE_IDENTIFIER_TERMS.has(token))) return true
-    return SENSITIVE_IDENTIFIER_PHRASES.some((phrase) => tokens.some((_, start) => (
-      phrase.every((token, phraseIndex) => tokens[start + phraseIndex] === token)
-    )))
-  })
+  const { tokens, compact } = normalizedIdentifierForms(value)
+  if (compact.some((candidate) => SENSITIVE_IDENTIFIER_COMPACT_DENYLIST.has(candidate))) return true
+  if (tokens.some((token) => SENSITIVE_IDENTIFIER_TERMS.has(token))) return true
+  return SENSITIVE_IDENTIFIER_PHRASES.some((phrase) => tokens.some((_, start) => (
+    phrase.every((token, phraseIndex) => tokens[start + phraseIndex] === token)
+  )))
 }
 
 function isIdentifierValueField(key) {
@@ -477,7 +484,7 @@ function scanSensitiveFields(value, pointer, errors) {
   }
 }
 
-function validateSanitizedExportManifest(value) {
+function validateSanitizedExportManifestTrusted(value) {
   const errors = []
   if (!addObjectError(value, '', errors)) return result(errors)
   validateSchema(value, SANITIZED_EXPORT_V1, errors)
@@ -538,13 +545,13 @@ function validateSanitizedExportManifest(value) {
   return result(errors)
 }
 
-function validateArtifact(value) {
+function validateArtifactTrusted(value) {
   if (!isObject(value)) return result([issue('INVALID_OBJECT', '', 'Expected an artifact object.')])
-  if (value.schema === STUDY_MANIFEST_V1) return validateStudyManifest(value)
-  if (value.schema === EVIDENCE_REF_V1) return validateEvidenceRef(value)
-  if (value.schema === DECISION_OUTCOME_V1) return validateDecisionOutcome(value)
-  if (value.schema === FINDING_V1) return validateFinding(value)
-  if (value.schema === SANITIZED_EXPORT_V1) return validateSanitizedExportManifest(value)
+  if (value.schema === STUDY_MANIFEST_V1) return validateStudyManifestTrusted(value)
+  if (value.schema === EVIDENCE_REF_V1) return validateEvidenceRefTrusted(value)
+  if (value.schema === DECISION_OUTCOME_V1) return validateDecisionOutcomeTrusted(value)
+  if (value.schema === FINDING_V1) return validateFindingTrusted(value)
+  if (value.schema === SANITIZED_EXPORT_V1) return validateSanitizedExportManifestTrusted(value)
   return result([issue('UNKNOWN_SCHEMA', '/schema', 'Unsupported or missing artifact schema identifier.')])
 }
 
@@ -567,10 +574,10 @@ function referencedEvidence(value) {
   return pointers.filter(([, reference]) => typeof reference === 'string' && reference.trim() !== '')
 }
 
-function validateArtifacts(values) {
+function validateArtifactsTrusted(values) {
   if (!Array.isArray(values)) return { valid: false, results: [{ valid: false, errors: [issue('INVALID_BATCH', '', 'Expected an array of artifacts.')] }] }
   const results = values.map((value) => {
-    const artifactResult = validateArtifact(value)
+    const artifactResult = validateArtifactTrusted(value)
     delete artifactResult.requiresBatchValidation
     return artifactResult
   })
@@ -638,9 +645,32 @@ function validateArtifacts(values) {
   })
   values.forEach((value, index) => {
     if (!isObject(value) || ![DECISION_OUTCOME_V1, FINDING_V1].includes(value.schema)) return
-    if ((manifestIds.get(value.studyId) || []).length !== 1) {
+    const manifests = manifestIds.get(value.studyId) || []
+    if (manifests.length !== 1) {
       results[index].errors.push(issue('UNKNOWN_ARTIFACT_STUDY', '/studyId', 'Artifact studyId must resolve to exactly one StudyManifest in this batch.'))
       results[index].valid = false
+      return
+    }
+    if (value.schema !== FINDING_V1 || !isObject(value.affected)) return
+    const manifest = values[manifests[0]]
+    const arms = Array.isArray(manifest.arms) ? manifest.arms.filter(isObject) : []
+    const affectedArms = Array.isArray(value.affected.arms) ? value.affected.arms : []
+    const affectedPersonas = Array.isArray(value.affected.personas) ? value.affected.personas : []
+    for (const [armIndex, armId] of affectedArms.entries()) {
+      if (!arms.some((arm) => arm.id === armId)) {
+        results[index].errors.push(issue('UNKNOWN_FINDING_ARM', `/affected/arms/${armIndex}`, 'Finding affected arm must be declared in its StudyManifest.'))
+        results[index].valid = false
+      }
+    }
+    for (const [personaIndex, personaRef] of affectedPersonas.entries()) {
+      const personaArms = arms.filter((arm) => Array.isArray(arm.personaRefs) && arm.personaRefs.includes(personaRef))
+      if (personaArms.length === 0) {
+        results[index].errors.push(issue('UNKNOWN_FINDING_PERSONA', `/affected/personas/${personaIndex}`, 'Finding affected persona must be declared in its StudyManifest.'))
+        results[index].valid = false
+      } else if (affectedArms.length > 0 && !personaArms.some((arm) => affectedArms.includes(arm.id))) {
+        results[index].errors.push(issue('FINDING_PERSONA_ARM_MISMATCH', `/affected/personas/${personaIndex}`, 'Finding affected persona must belong to at least one listed affected arm.'))
+        results[index].valid = false
+      }
     }
   })
   values.forEach((manifest, manifestIndex) => {
@@ -682,6 +712,95 @@ function validateArtifacts(values) {
   return { valid: results.every((artifactResult) => artifactResult.valid), results }
 }
 
+function cloneUntrustedValue(value, visiting = new WeakSet()) {
+  if (value === null || typeof value !== 'object') return { value }
+  try {
+    if (visiting.has(value)) return { code: 'CYCLIC_INPUT' }
+    visiting.add(value)
+    const copy = Array.isArray(value) ? [] : {}
+    const schema = value.schema
+    if (schema !== undefined) copy.schema = schema
+    for (const key of Object.keys(value)) {
+      const child = cloneUntrustedValue(value[key], visiting)
+      if (child.code) return child
+      copy[key] = child.value
+    }
+    visiting.delete(value)
+    return { value: copy }
+  } catch {
+    return { code: 'UNSAFE_INPUT_ACCESS' }
+  }
+}
+
+function inputSafetyResult(code) {
+  return result([issue(code, '', code === 'CYCLIC_INPUT'
+    ? 'Cyclic input is not supported.'
+    : 'Input could not be safely accessed.')])
+}
+
+function withSafeInput(value, validator) {
+  const cloned = cloneUntrustedValue(value)
+  if (cloned.code) return inputSafetyResult(cloned.code)
+  return validator(cloned.value)
+}
+
+function validateStudyManifest(value) {
+  return withSafeInput(value, validateStudyManifestTrusted)
+}
+
+function validateEvidenceRef(value) {
+  return withSafeInput(value, validateEvidenceRefTrusted)
+}
+
+function validateDecisionOutcome(value) {
+  return withSafeInput(value, validateDecisionOutcomeTrusted)
+}
+
+function validateFinding(value) {
+  return withSafeInput(value, validateFindingTrusted)
+}
+
+function validateSanitizedExportManifest(value) {
+  return withSafeInput(value, validateSanitizedExportManifestTrusted)
+}
+
+function validateArtifact(value) {
+  return withSafeInput(value, validateArtifactTrusted)
+}
+
+function validateArtifacts(values) {
+  let length
+  try {
+    if (!Array.isArray(values)) return validateArtifactsTrusted(values)
+    length = values.length
+  } catch {
+    return { valid: false, results: [inputSafetyResult('UNSAFE_INPUT_ACCESS')] }
+  }
+  const clonedValues = []
+  const unsafe = new Map()
+  for (let index = 0; index < length; index += 1) {
+    let entry
+    try {
+      entry = values[index]
+    } catch {
+      unsafe.set(index, 'UNSAFE_INPUT_ACCESS')
+      clonedValues.push({})
+      continue
+    }
+    const cloned = cloneUntrustedValue(entry)
+    if (cloned.code) {
+      unsafe.set(index, cloned.code)
+      clonedValues.push({})
+    } else {
+      clonedValues.push(cloned.value)
+    }
+  }
+  const output = validateArtifactsTrusted(clonedValues)
+  for (const [index, code] of unsafe) output.results[index] = inputSafetyResult(code)
+  output.valid = output.results.every((artifactResult) => artifactResult.valid)
+  return output
+}
+
 function sameFileIdentity(left, right) {
   return left.dev === right.dev && left.ino === right.ino
 }
@@ -692,6 +811,25 @@ function samePathSnapshot(left, right) {
     && left.uid === right.uid
     && left.gid === right.gid
     && left.realpath === right.realpath
+}
+
+function descriptorMetadataSnapshot(stat) {
+  return {
+    dev: stat.dev,
+    ino: stat.ino,
+    size: stat.size,
+    mode: stat.mode,
+    uid: stat.uid,
+    gid: stat.gid,
+    nlink: stat.nlink,
+    mtime: stat.mtimeNs === undefined ? stat.mtimeMs : stat.mtimeNs,
+    ctime: stat.ctimeNs === undefined ? stat.ctimeMs : stat.ctimeNs,
+    birthtime: stat.birthtimeNs === undefined ? stat.birthtimeMs : stat.birthtimeNs,
+  }
+}
+
+function sameDescriptorMetadata(left, right) {
+  return Object.keys(left).every((key) => left[key] === right[key])
 }
 
 function isContainedPath(root, target) {
@@ -792,9 +930,9 @@ function resolveOpenedDescriptorPath(resolver, descriptor) {
   }
 }
 
-function verifySanitizedExportFiles(value, root, options = {}) {
+function verifySanitizedExportFilesTrusted(value, root, options = {}) {
   const { checkpoint, descriptorPathResolver } = options
-  const structural = validateSanitizedExportManifest(value)
+  const structural = validateSanitizedExportManifestTrusted(value)
   if (!structural.valid) return structural
   const errors = []
   if (typeof root !== 'string' || root.trim() === '') return result([issue('INVALID_EXPORT_ROOT', '', 'An explicit export root is required for filesystem verification.')])
@@ -844,6 +982,7 @@ function verifySanitizedExportFiles(value, root, options = {}) {
       }
       checkpoint?.('afterOpen')
       const opened = fs.fstatSync(descriptor)
+      const openedMetadata = fs.fstatSync(descriptor, { bigint: true })
       if (!opened.isFile()) {
         errors.push(issue('NON_REGULAR_ARTIFACT_FORBIDDEN', `${pointer}/path`, 'Allowlisted artifacts must be regular files.'))
         continue
@@ -874,6 +1013,19 @@ function verifySanitizedExportFiles(value, root, options = {}) {
       if (opened.size !== artifact.sizeBytes) errors.push(issue('ARTIFACT_SIZE_MISMATCH', `${pointer}/sizeBytes`, 'Artifact byte size does not match the manifest.'))
       const digest = crypto.createHash('sha256').update(contents).digest('hex')
       if (digest !== artifact.sha256.toLowerCase()) errors.push(issue('ARTIFACT_HASH_MISMATCH', `${pointer}/sha256`, 'Artifact SHA-256 digest does not match the manifest.'))
+      checkpoint?.('afterReadBeforeFinalFstat')
+      let finalDescriptor
+      try {
+        // This final descriptor fstat is the verification linearization point; later mutations are post-verification.
+        finalDescriptor = fs.fstatSync(descriptor, { bigint: true })
+      } catch {
+        errors.push(issue('ARTIFACT_MUTATED_DURING_VERIFICATION', `${pointer}/path`, 'Allowlisted artifact changed while it was being verified.'))
+        continue
+      }
+      if (!sameDescriptorMetadata(descriptorMetadataSnapshot(openedMetadata), descriptorMetadataSnapshot(finalDescriptor))
+        || finalDescriptor.size !== BigInt(contents.length)) {
+        errors.push(issue('ARTIFACT_MUTATED_DURING_VERIFICATION', `${pointer}/path`, 'Allowlisted artifact changed while it was being verified.'))
+      }
     } finally {
       if (descriptor !== undefined) {
         try { fs.closeSync(descriptor) } catch {}
@@ -881,6 +1033,12 @@ function verifySanitizedExportFiles(value, root, options = {}) {
     }
   }
   return result(errors)
+}
+
+function verifySanitizedExportFiles(value, root, options = {}) {
+  const cloned = cloneUntrustedValue(value)
+  if (cloned.code) return inputSafetyResult(cloned.code)
+  return verifySanitizedExportFilesTrusted(cloned.value, root, options)
 }
 
 module.exports = {

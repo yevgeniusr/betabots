@@ -7,6 +7,11 @@ const crypto = require('node:crypto')
 const { spawnSync } = require('node:child_process')
 
 const {
+  validateStudyManifest,
+  validateEvidenceRef,
+  validateDecisionOutcome,
+  validateFinding,
+  validateSanitizedExportManifest,
   validateArtifact,
   validateArtifacts,
   verifySanitizedExportFiles,
@@ -1026,4 +1031,159 @@ test('smoke runner contains no forced test termination and a smoke component exi
   assert.doesNotMatch(smoke, new RegExp(['--test', 'force-exit'].join('-')))
   const result = spawnSync(process.execPath, ['--test', path.join(__dirname, 'keyword_scoring.test.cjs')], { encoding: 'utf8' })
   assert.equal(result.status, 0, result.stderr)
+})
+
+test('SanitizedExportManifest rejects acronym, camel-case, Unicode, format, and separator sensitive identifiers', () => {
+  for (const [field, identifier] of [
+    ['path', 'artifacts/APIKey.json'],
+    ['path', 'artifacts/APIKEY.json'],
+    ['path', 'artifacts/ＡＰＩＫｅｙ.json'],
+    ['path', 'artifacts/api\u200b_key.json'],
+    ['artifactClass', 'authorization'],
+    ['artifactClass', 'bearer-token'],
+  ]) {
+    const exported = validExport()
+    exported.allowlistedArtifacts[0][field] = identifier
+    const result = validateArtifact(exported)
+    assert.equal(result.valid, false, identifier)
+    assert.ok(result.errors.some((error) => error.code === 'SENSITIVE_ARTIFACT_FORBIDDEN'), identifier)
+    assert.doesNotMatch(JSON.stringify(result), new RegExp(identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  }
+
+  const nested = validExport()
+  nested.audit = { ApiKey: { authorization: 'forbidden' } }
+  const result = validateArtifact(nested)
+  assert.equal(result.valid, false)
+  assert.ok(result.errors.some((error) => error.code === 'SENSITIVE_FIELD_FORBIDDEN'))
+})
+
+test('contract CLI redacts unsafe input paths from JSON and human errors', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-cli-redaction-'))
+  const secretBasename = 'ＡＰＩＫｅｙ-authorization-input.json'
+  const invalidJson = path.join(directory, secretBasename)
+  const missing = path.join(directory, 'missing-secretKey-input.json')
+  fs.writeFileSync(invalidJson, '{')
+  const cli = path.join(__dirname, '..', 'scripts', 'validate-study-artifacts.cjs')
+
+  for (const args of [
+    ['--json', invalidJson, missing],
+    [invalidJson, missing],
+  ]) {
+    const run = spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' })
+    assert.equal(run.status, 1)
+    for (const output of [run.stdout, run.stderr]) {
+      assert.doesNotMatch(output, new RegExp(directory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+      assert.doesNotMatch(output, /ＡＰＩＫｅｙ|authorization|secretKey/iu)
+    }
+  }
+})
+
+test('filesystem verification rejects an in-place same-size mutation after read before final descriptor fstat', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-in-place-mutation-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const artifactFile = path.join(root, 'artifact.json')
+  const publicBytes = 'public-data-0001\n'
+  const mutatedBytes = 'public-data-9999\n'
+  fs.writeFileSync(artifactFile, publicBytes)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifact.json',
+    sha256: crypto.createHash('sha256').update(publicBytes).digest('hex'),
+    sizeBytes: Buffer.byteLength(publicBytes),
+  }
+
+  const result = verifySanitizedExportFiles(exported, root, {
+    checkpoint(stage) {
+      if (stage === 'afterReadBeforeFinalFstat') {
+        const original = fs.statSync(artifactFile)
+        fs.writeFileSync(artifactFile, mutatedBytes)
+        fs.utimesSync(artifactFile, original.atime, original.mtime)
+      }
+    },
+  })
+
+  assert.equal(result.valid, false)
+  assert.ok(result.errors.some((error) => error.code === 'ARTIFACT_MUTATED_DURING_VERIFICATION'))
+})
+
+test('public validators safely reject hostile getters, proxy traps, and cycles', () => {
+  const throwingGetter = {}
+  Object.defineProperty(throwingGetter, 'schema', { enumerable: true, get() { throw new Error('secret getter text') } })
+  const ownKeysProxy = new Proxy({}, { ownKeys() { throw new Error('secret ownKeys text') } })
+  const getProxy = new Proxy({}, { get() { throw new Error('secret get text') } })
+  const revokedTarget = Proxy.revocable({}, {})
+  revokedTarget.revoke()
+  const cyclicObject = validExport()
+  cyclicObject.audit = cyclicObject
+  const cyclicArray = validExport()
+  cyclicArray.audit = []
+  cyclicArray.audit.push(cyclicArray.audit)
+  const validators = [
+    validateStudyManifest,
+    validateEvidenceRef,
+    validateDecisionOutcome,
+    validateFinding,
+    validateSanitizedExportManifest,
+    validateArtifact,
+  ]
+
+  for (const hostile of [throwingGetter, ownKeysProxy, getProxy, revokedTarget.proxy]) {
+    for (const validator of validators) {
+      let result
+      assert.doesNotThrow(() => { result = validator(hostile) })
+      assert.equal(result.valid, false)
+      assert.equal(result.errors[0].code, 'UNSAFE_INPUT_ACCESS')
+      assert.doesNotMatch(JSON.stringify(result), /secret (getter|ownKeys|get) text/)
+    }
+  }
+  for (const hostile of [cyclicObject, cyclicArray]) {
+    const result = validateArtifact(hostile)
+    assert.equal(result.valid, false)
+    assert.equal(result.errors[0].code, 'CYCLIC_INPUT')
+  }
+  const batch = validateArtifacts([validManifest(), throwingGetter, validObservedEvidence()])
+  assert.equal(batch.valid, false)
+  assert.equal(batch.results[1].errors[0].code, 'UNSAFE_INPUT_ACCESS')
+  const filesystem = verifySanitizedExportFiles(cyclicObject, '.')
+  assert.equal(filesystem.valid, false)
+  assert.equal(filesystem.errors[0].code, 'CYCLIC_INPUT')
+})
+
+test('batch validation binds Finding affected arms and personas to its exact StudyManifest', () => {
+  const manifest = validManifest()
+  const evidence = validObservedEvidence()
+  const otherStudy = validManifest()
+  otherStudy.id = 'other-study'
+  otherStudy.arms = [{ id: 'other-arm', type: 'neutral', personaRefs: ['persona.other'], tasks: ['Observe.'] }]
+  otherStudy.evidenceRequirements[0].armId = 'other-arm'
+  const otherEvidence = validObservedEvidence()
+  otherEvidence.id = 'evidence.other'
+  otherEvidence.studyId = otherStudy.id
+  otherEvidence.armId = 'other-arm'
+  otherEvidence.context.personaRef = 'persona.other'
+  const finding = {
+    schema: 'betabots.finding.v1', id: 'finding.context', studyId: manifest.id,
+    observation: 'Context validation.',
+    affected: { arms: ['neutral', 'conversion'], personas: ['persona.new-shopper', 'persona.returning-shopper'], surfaces: ['checkout'] },
+    supportingEvidence: [evidence.id], contradictingEvidence: [],
+    commercialImplication: { classification: 'inferred', statement: 'This remains an inference.' },
+    confidence: 0.5, limitations: ['Synthetic evidence.'],
+  }
+  const validBatch = validateArtifacts([manifest, evidence, otherStudy, otherEvidence, finding])
+  assert.equal(validBatch.valid, true, JSON.stringify(validBatch))
+
+  const unknownPersona = { ...finding, id: 'finding.unknown-persona', affected: { ...finding.affected, personas: ['persona.unknown'] } }
+  let result = validateArtifacts([manifest, evidence, unknownPersona])
+  assert.ok(result.results[2].errors.some((error) => error.code === 'UNKNOWN_FINDING_PERSONA'))
+
+  const wrongArm = { ...finding, id: 'finding.wrong-arm', affected: { ...finding.affected, arms: ['conversion'], personas: ['persona.new-shopper'] } }
+  result = validateArtifacts([manifest, evidence, wrongArm])
+  assert.ok(result.results[2].errors.some((error) => error.code === 'FINDING_PERSONA_ARM_MISMATCH'))
+
+  const unknownArm = { ...finding, id: 'finding.unknown-arm', affected: { ...finding.affected, arms: ['missing-arm'] } }
+  result = validateArtifacts([manifest, evidence, unknownArm])
+  assert.ok(result.results[2].errors.some((error) => error.code === 'UNKNOWN_FINDING_ARM'))
+
+  const otherStudyFinding = { ...finding, id: 'finding.other-study', studyId: otherStudy.id, supportingEvidence: [otherEvidence.id], affected: { arms: ['other-arm'], personas: ['persona.other'], surfaces: ['checkout'] } }
+  assert.equal(validateArtifacts([manifest, evidence, otherStudy, otherEvidence, otherStudyFinding]).valid, true)
 })

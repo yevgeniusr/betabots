@@ -34,7 +34,7 @@ function print(output) {
     return
   }
   for (const entry of output.results) {
-    console.log(`${entry.valid ? 'valid' : 'invalid'} ${path.relative(process.cwd(), entry.file) || entry.file}`)
+    console.log(`${entry.valid ? 'valid' : 'invalid'} ${entry.file}`)
     for (const error of entry.errors) console.log(`  ${error.code} ${error.path}: ${error.message}`)
   }
 }
@@ -46,19 +46,20 @@ if (usageError) {
   process.exitCode = 2
 } else {
   const parsed = files.map((file, index) => {
+    const label = `input[${index}]`
     try {
-      return { index, file, value: JSON.parse(fs.readFileSync(file, 'utf8')) }
-    } catch (error) {
-      return { index, file, error: { code: 'INVALID_JSON', path: '', message: error.message } }
+      return { index, file, label, value: JSON.parse(fs.readFileSync(file, 'utf8')) }
+    } catch {
+      return { index, file, label, error: { code: 'INVALID_JSON', path: '', message: 'Input could not be read as JSON.' } }
     }
   })
   const validInputs = parsed.filter((entry) => !entry.error)
   const batch = validateArtifacts(validInputs.map((entry) => entry.value))
   const results = parsed.map((entry) => {
-    if (entry.error) return { file: entry.file, valid: false, errors: [entry.error] }
+    if (entry.error) return { file: entry.label, valid: false, errors: [entry.error] }
     const batchIndex = validInputs.indexOf(entry)
     const artifactResult = batch.results[batchIndex]
-    return { file: entry.file, ...artifactResult }
+    return { file: entry.label, ...artifactResult }
   })
   if (verifyExportFiles) {
     for (const [index, entry] of parsed.entries()) {
