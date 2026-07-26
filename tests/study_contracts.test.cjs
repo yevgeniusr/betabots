@@ -304,6 +304,30 @@ test('DecisionOutcome rejects negative dollars and percentages', () => {
   assert.equal(result.errors[0].path, '/allocation/cash/dollars')
 })
 
+test('DecisionOutcome rejects negative zero for all money and percentage inputs, including JSON CLI input', () => {
+  for (const [pointer, setValue] of [
+    ['/allocation/budgetDollars', (decision) => { decision.allocation.budgetDollars = -0 }],
+    ['/allocation/cash/dollars', (decision) => { decision.allocation.cash.dollars = -0 }],
+    ['/allocation/cash/percent', (decision) => { decision.allocation.cash.percent = -0 }],
+    ['/allocation/sleeves/0/dollars', (decision) => { decision.allocation.sleeves[0].dollars = -0 }],
+    ['/allocation/sleeves/0/percent', (decision) => { decision.allocation.sleeves[0].percent = -0 }],
+  ]) {
+    const decision = validDecision()
+    setValue(decision)
+    const result = validateArtifact(decision)
+    assert.equal(result.valid, false, pointer)
+    assert.ok(result.errors.some((error) => error.code === 'NEGATIVE_ZERO_ALLOCATION' && error.path === pointer), pointer)
+  }
+
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-negative-zero-cli-'))
+  const file = path.join(directory, 'decision.json')
+  fs.writeFileSync(file, JSON.stringify(validDecision()).replace('"budgetDollars":1000', '"budgetDollars":-0'))
+  const cli = path.join(__dirname, '..', 'scripts', 'validate-study-artifacts.cjs')
+  const result = spawnSync(process.execPath, [cli, '--json', file], { encoding: 'utf8' })
+  assert.equal(result.status, 1, result.stderr)
+  assert.ok(JSON.parse(result.stdout).results[0].errors.some((error) => error.code === 'NEGATIVE_ZERO_ALLOCATION' && error.path === '/allocation/budgetDollars'))
+})
+
 test('DecisionOutcome rejects real-spend fields', () => {
   const decision = validDecision()
   decision.realSpend = { dollars: 1000 }
@@ -449,6 +473,36 @@ test('SanitizedExportManifest rejects normalized high-confidence secret names wi
   assert.deepEqual(validateArtifact(prose), { valid: true, errors: [] })
 })
 
+test('SanitizedExportManifest rejects format-character-split sensitive identifiers without echoing them', () => {
+  const sensitiveIdentifiers = [
+    ['path', 'artifacts/to\u200bken.json'],
+    ['path', 'artifacts/se\u200ccret.json'],
+    ['path', 'artifacts/private\u200d-key.json'],
+    ['path', 'artifacts/Private\u2060_Key.json'],
+    ['path', 'artifacts/pri\u202evate\u202c-key.json'],
+    ['artifactClass', 'API\u200b-Key'],
+  ]
+  for (const [field, value] of sensitiveIdentifiers) {
+    const exported = validExport()
+    exported.allowlistedArtifacts[0][field] = value
+    const result = validateArtifact(exported)
+    assert.equal(result.valid, false, value)
+    assert.ok(result.errors.some((error) => error.code === 'SENSITIVE_ARTIFACT_FORBIDDEN'), value)
+    assert.ok(result.errors.every((error) => !error.message.includes(value)), value)
+  }
+
+  const nested = validExport()
+  nested.audit = { nested: { ['se\u200bcret\u200cKey']: 'not-allowed' } }
+  const nestedResult = validateArtifact(nested)
+  assert.equal(nestedResult.valid, false)
+  assert.ok(nestedResult.errors.some((error) => error.code === 'SENSITIVE_FIELD_FORBIDDEN'))
+  assert.doesNotMatch(JSON.stringify(nestedResult), /se\u200bcret\u200cKey/)
+
+  const prose = validExport()
+  prose.id = 'export.tokenization-and-keyword-research'
+  assert.deepEqual(validateArtifact(prose), { valid: true, errors: [] })
+})
+
 test('filesystem-backed export verification rejects symlinks, non-regular files, and tampering', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-root-'))
   const artifactDirectory = path.join(root, 'artifacts')
@@ -526,6 +580,189 @@ test('filesystem verification detects descriptor/path races after a transient an
     path: '/allowlistedArtifacts/0/path',
     message: 'Allowlisted artifact path changed while it was being verified.',
   }])
+})
+
+test('filesystem verification binds containment to the opened descriptor across a restored ancestor-symlink swap', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-descriptor-race-'))
+  const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-external-'))
+  t.after(() => {
+    fs.rmSync(root, { recursive: true, force: true })
+    fs.rmSync(externalRoot, { recursive: true, force: true })
+  })
+  const artifacts = path.join(root, 'artifacts')
+  const stashedArtifacts = path.join(root, 'artifacts-original')
+  const internalFile = path.join(artifacts, 'manifest.json')
+  const externalFile = path.join(externalRoot, 'manifest.json')
+  const contents = 'same public bytes\n'
+  fs.mkdirSync(artifacts)
+  fs.writeFileSync(internalFile, contents)
+  fs.writeFileSync(externalFile, contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifacts/manifest.json',
+    sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+    sizeBytes: Buffer.byteLength(contents),
+  }
+  let openedExternal = false
+
+  const result = verifySanitizedExportFiles(exported, root, {
+    checkpoint(stage) {
+      if (stage === 'beforeOpen') {
+        fs.renameSync(artifacts, stashedArtifacts)
+        fs.symlinkSync(externalRoot, artifacts)
+      }
+      if (stage === 'afterOpen') {
+        fs.unlinkSync(artifacts)
+        fs.renameSync(stashedArtifacts, artifacts)
+      }
+    },
+    descriptorPathResolver(descriptor) {
+      openedExternal = fs.fstatSync(descriptor).ino === fs.statSync(externalFile).ino
+      return externalFile
+    },
+  })
+
+  assert.equal(openedExternal, true)
+  assert.equal(result.valid, false)
+  assert.deepEqual(result.errors, [{
+    code: 'DESCRIPTOR_PATH_OUTSIDE_ROOT',
+    path: '/allowlistedArtifacts/0/path',
+    message: 'Opened artifact is outside the export root.',
+  }])
+})
+
+test('filesystem verification rejects a restored export-root symlink swap using the opened descriptor path', (t) => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-root-swap-'))
+  const root = path.join(parent, 'export-root')
+  const stashedRoot = path.join(parent, 'export-root-original')
+  const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-root-external-'))
+  t.after(() => {
+    fs.rmSync(parent, { recursive: true, force: true })
+    fs.rmSync(externalRoot, { recursive: true, force: true })
+  })
+  const contents = 'same public bytes\n'
+  fs.mkdirSync(path.join(root, 'artifacts'), { recursive: true })
+  fs.mkdirSync(path.join(externalRoot, 'artifacts'))
+  fs.writeFileSync(path.join(root, 'artifacts', 'manifest.json'), contents)
+  const externalFile = path.join(externalRoot, 'artifacts', 'manifest.json')
+  fs.writeFileSync(externalFile, contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifacts/manifest.json',
+    sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+    sizeBytes: Buffer.byteLength(contents),
+  }
+
+  const result = verifySanitizedExportFiles(exported, root, {
+    checkpoint(stage) {
+      if (stage === 'beforeOpen') {
+        fs.renameSync(root, stashedRoot)
+        fs.symlinkSync(externalRoot, root)
+      }
+      if (stage === 'afterOpen') {
+        fs.unlinkSync(root)
+        fs.renameSync(stashedRoot, root)
+      }
+    },
+    descriptorPathResolver: () => externalFile,
+  })
+
+  assert.equal(result.valid, false)
+  assert.equal(result.errors[0].code, 'DESCRIPTOR_PATH_OUTSIDE_ROOT')
+})
+
+test('macOS default descriptor resolver rejects a real restored root-symlink swap', { skip: process.platform !== 'darwin' }, (t) => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-macos-root-swap-'))
+  const root = path.join(parent, 'export-root')
+  const stashedRoot = path.join(parent, 'export-root-original')
+  const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-macos-external-'))
+  t.after(() => {
+    fs.rmSync(parent, { recursive: true, force: true })
+    fs.rmSync(externalRoot, { recursive: true, force: true })
+  })
+  const contents = 'same public bytes\n'
+  fs.mkdirSync(path.join(root, 'artifacts'), { recursive: true })
+  fs.mkdirSync(path.join(externalRoot, 'artifacts'))
+  fs.writeFileSync(path.join(root, 'artifacts', 'manifest.json'), contents)
+  fs.writeFileSync(path.join(externalRoot, 'artifacts', 'manifest.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifacts/manifest.json',
+    sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+    sizeBytes: Buffer.byteLength(contents),
+  }
+
+  const result = verifySanitizedExportFiles(exported, root, {
+    checkpoint(stage) {
+      if (stage === 'beforeOpen') {
+        fs.renameSync(root, stashedRoot)
+        fs.symlinkSync(externalRoot, root)
+      }
+      if (stage === 'afterOpen') {
+        fs.unlinkSync(root)
+        fs.renameSync(stashedRoot, root)
+      }
+    },
+  })
+
+  assert.equal(result.valid, false)
+  assert.equal(result.errors[0].code, 'DESCRIPTOR_PATH_OUTSIDE_ROOT')
+})
+
+test('filesystem verification fails closed when its descriptor resolver is missing, unsupported, malformed, or errors', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-descriptor-resolver-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const artifacts = path.join(root, 'artifacts')
+  const artifactFile = path.join(artifacts, 'manifest.json')
+  const contents = 'public artifact\n'
+  fs.mkdirSync(artifacts)
+  fs.writeFileSync(artifactFile, contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifacts/manifest.json',
+    sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+    sizeBytes: Buffer.byteLength(contents),
+  }
+
+  const unavailable = verifySanitizedExportFiles(exported, root, { descriptorPathResolver: null })
+  assert.equal(unavailable.valid, false)
+  assert.equal(unavailable.errors[0].code, 'DESCRIPTOR_RESOLVER_UNAVAILABLE')
+
+  for (const descriptorPathResolver of [
+    () => ({ path: 123 }),
+    () => { throw new Error('resolver failure') },
+  ]) {
+    const result = verifySanitizedExportFiles(exported, root, { descriptorPathResolver })
+    assert.equal(result.valid, false)
+    assert.equal(result.errors[0].code, 'DESCRIPTOR_PATH_RESOLUTION_FAILED')
+    assert.equal(result.errors[0].path, '/allowlistedArtifacts/0/path')
+  }
+})
+
+test('filesystem verification accepts a legitimate in-root opened descriptor', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-export-descriptor-valid-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const artifacts = path.join(root, 'artifacts')
+  const artifactFile = path.join(artifacts, 'manifest.json')
+  const contents = 'public artifact\n'
+  fs.mkdirSync(artifacts)
+  fs.writeFileSync(artifactFile, contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifacts/manifest.json',
+    sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+    sizeBytes: Buffer.byteLength(contents),
+  }
+
+  let resolvedDescriptor = false
+  const result = verifySanitizedExportFiles(exported, root, {
+    descriptorPathResolver(descriptor) {
+      resolvedDescriptor = fs.fstatSync(descriptor).isFile()
+      return fs.realpathSync(artifactFile)
+    },
+  })
+  assert.equal(resolvedDescriptor, true)
+  assert.deepEqual(result, { valid: true, errors: [] })
 })
 
 test('batch validation resolves evidence references and rejects duplicate artifact ids', () => {
@@ -616,6 +853,31 @@ test('batch validation enforces structured study evidence requirements and study
   result = validateArtifacts([manifest, evidence, wrongKind])
   assert.equal(result.valid, false)
   assert.ok(result.results[2].errors.some((error) => error.code === 'UNRESOLVED_EVIDENCE_REF'))
+})
+
+test('batch validation binds observed EvidenceRef context personas to the declared study arm', () => {
+  const manifest = validManifest()
+  const evidence = validObservedEvidence()
+  assert.equal(validateArtifacts([manifest, evidence]).valid, true)
+
+  const wrongPersona = validObservedEvidence()
+  wrongPersona.context.personaRef = 'persona.unknown'
+  let result = validateArtifacts([manifest, wrongPersona])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[1].errors.some((error) => error.code === 'UNKNOWN_EVIDENCE_PERSONA' && error.path === '/context/personaRef'))
+
+  const wrongArm = validObservedEvidence()
+  wrongArm.armId = 'conversion'
+  result = validateArtifacts([manifest, wrongArm])
+  assert.equal(result.valid, false)
+  assert.ok(result.results[1].errors.some((error) => error.code === 'EVIDENCE_PERSONA_ARM_MISMATCH' && error.path === '/context/personaRef'))
+
+  const studyScopedManifest = validManifest()
+  studyScopedManifest.evidenceRequirements = [{ classification: 'observed', artifactType: 'screenshot', minimumCount: 1 }]
+  const studyScoped = validObservedEvidence()
+  delete studyScoped.armId
+  result = validateArtifacts([studyScopedManifest, studyScoped])
+  assert.equal(result.valid, true)
 })
 
 test('Finding evidence lists are unique, disjoint, and study-context matched', () => {

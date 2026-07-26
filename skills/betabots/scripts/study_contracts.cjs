@@ -1,6 +1,7 @@
 const crypto = require('node:crypto')
 const fs = require('node:fs')
 const path = require('node:path')
+const { spawnSync } = require('node:child_process')
 
 const STUDY_MANIFEST_V1 = 'betabots.study-manifest.v1'
 const EVIDENCE_REF_V1 = 'betabots.evidence-ref.v1'
@@ -17,6 +18,7 @@ const SENSITIVE_IDENTIFIER_TERMS = new Set([
 const SENSITIVE_IDENTIFIER_PHRASES = [
   ['access', 'key'], ['private', 'key'], ['secret', 'key'], ['api', 'key'], ['browser', 'state'],
 ]
+const DEFAULT_IGNORABLE_OR_FORMAT = /[\p{Cf}\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}\u{E0001}\u{E0020}-\u{E007F}]/gu
 
 function issue(code, pointer, message) {
   return { code, path: pointer, message }
@@ -82,6 +84,10 @@ function requiredAllocationNumber(value, pointer, errors, maximum = Infinity) {
     errors.push(issue('INVALID_FINITE_NUMBER', pointer, 'Expected a finite number.'))
     return false
   }
+  if (Object.is(value, -0)) {
+    errors.push(issue('NEGATIVE_ZERO_ALLOCATION', pointer, 'Negative zero is not a permitted allocation amount.'))
+    return false
+  }
   if (value < 0) {
     errors.push(issue('NEGATIVE_ALLOCATION', pointer, 'Allocation dollars and percentages cannot be negative.'))
     return false
@@ -101,7 +107,7 @@ function decimalPlaces(value) {
 }
 
 function dollarCents(value) {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return undefined
+  if (typeof value !== 'number' || !Number.isFinite(value) || Object.is(value, -0) || value < 0) return undefined
   if (decimalPlaces(value) > 2) return undefined
   const cents = Math.round(value * 100)
   return Number.isSafeInteger(cents) ? cents : undefined
@@ -110,6 +116,10 @@ function dollarCents(value) {
 function requiredDollarAmount(value, pointer, errors) {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     errors.push(issue('INVALID_FINITE_NUMBER', pointer, 'Expected a finite number.'))
+    return false
+  }
+  if (Object.is(value, -0)) {
+    errors.push(issue('NEGATIVE_ZERO_ALLOCATION', pointer, 'Negative zero is not a permitted allocation amount.'))
     return false
   }
   if (value < 0) {
@@ -130,7 +140,7 @@ function requiredDollarAmount(value, pointer, errors) {
 function checkKnownFields(value, fields, pointer, errors) {
   if (!isObject(value)) return
   for (const key of Object.keys(value)) {
-    if (!fields.has(key)) errors.push(issue('UNKNOWN_FIELD', `${pointer}/${key}`, 'Unknown fields are not allowed.'))
+    if (!fields.has(key)) errors.push(issue('UNKNOWN_FIELD', isSensitiveIdentifier(key) ? pointer : `${pointer}/${key}`, 'Unknown fields are not allowed.'))
   }
 }
 
@@ -413,19 +423,34 @@ function isSafeRelativePosixPath(value) {
 
 function identifierTokens(value) {
   if (typeof value !== 'string') return []
-  return value
-    .normalize('NFKC')
+  const normalized = value.normalize('NFKC')
+  const forms = [
+    normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ''),
+    normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ' '),
+  ]
+  return forms.flatMap((form) => form
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .toLowerCase()
-    .match(/[a-z0-9]+/g) || []
+    .match(/[a-z0-9]+/g) || [])
 }
 
 function isSensitiveIdentifier(value) {
-  const tokens = identifierTokens(value)
-  if (tokens.some((token) => SENSITIVE_IDENTIFIER_TERMS.has(token))) return true
-  return SENSITIVE_IDENTIFIER_PHRASES.some((phrase) => tokens.some((_, start) => (
-    phrase.every((token, index) => tokens[start + index] === token)
-  )))
+  if (typeof value !== 'string') return false
+  const normalized = value.normalize('NFKC')
+  const forms = [
+    normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ''),
+    normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ' '),
+  ]
+  return forms.some((form) => {
+    const tokens = form
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .toLowerCase()
+      .match(/[a-z0-9]+/g) || []
+    if (tokens.some((token) => SENSITIVE_IDENTIFIER_TERMS.has(token))) return true
+    return SENSITIVE_IDENTIFIER_PHRASES.some((phrase) => tokens.some((_, start) => (
+      phrase.every((token, phraseIndex) => tokens[start + phraseIndex] === token)
+    )))
+  })
 }
 
 function isIdentifierValueField(key) {
@@ -442,7 +467,7 @@ function scanSensitiveFields(value, pointer, errors) {
     const entryPointer = `${pointer}/${key}`
     const declaredAbsence = pointer === '/verification' && ['authenticationStatesAbsent', 'cookiesAbsent', 'tokensAbsent'].includes(key)
     if (!declaredAbsence && isSensitiveIdentifier(key)) {
-      errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', entryPointer, 'Secret-like fields are forbidden in sanitized exports.'))
+      errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', pointer, 'Secret-like fields are forbidden in sanitized exports.'))
     }
     const canonicalArtifactIdentifier = /^\/allowlistedArtifacts\/\d+\/(path|artifactClass)$/.test(entryPointer)
     if (!canonicalArtifactIdentifier && isIdentifierValueField(key) && typeof entry === 'string' && isSensitiveIdentifier(entry)) {
@@ -586,12 +611,29 @@ function validateArtifacts(values) {
       results[index].valid = false
       return
     }
-    if (value.armId === undefined) return
     const manifest = values[manifests[0]]
-    const armIds = new Set(Array.isArray(manifest.arms) ? manifest.arms.map((arm) => arm?.id) : [])
-    if (!armIds.has(value.armId)) {
-      results[index].errors.push(issue('UNKNOWN_EVIDENCE_ARM', '/armId', 'Evidence armId must name a declared arm in its StudyManifest.'))
-      results[index].valid = false
+    const arms = Array.isArray(manifest.arms) ? manifest.arms.filter(isObject) : []
+    if (value.armId !== undefined) {
+      const arm = arms.find((candidate) => candidate.id === value.armId)
+      if (!arm) {
+        results[index].errors.push(issue('UNKNOWN_EVIDENCE_ARM', '/armId', 'Evidence armId must name a declared arm in its StudyManifest.'))
+        results[index].valid = false
+      } else if (isObject(value.context) && typeof value.context.personaRef === 'string' && (!Array.isArray(arm.personaRefs) || !arm.personaRefs.includes(value.context.personaRef))) {
+        const personaExists = arms.some((candidate) => Array.isArray(candidate.personaRefs) && candidate.personaRefs.includes(value.context.personaRef))
+        results[index].errors.push(issue(personaExists ? 'EVIDENCE_PERSONA_ARM_MISMATCH' : 'UNKNOWN_EVIDENCE_PERSONA', '/context/personaRef', personaExists
+          ? 'Evidence context personaRef must be declared in the evidence arm.'
+          : 'Evidence context personaRef must be declared in the StudyManifest.'))
+        results[index].valid = false
+      }
+    } else if (isObject(value.context) && typeof value.context.personaRef === 'string') {
+      const personaArms = arms.filter((candidate) => Array.isArray(candidate.personaRefs) && candidate.personaRefs.includes(value.context.personaRef))
+      if (personaArms.length === 0) {
+        results[index].errors.push(issue('UNKNOWN_EVIDENCE_PERSONA', '/context/personaRef', 'Evidence context personaRef must be declared in the StudyManifest.'))
+        results[index].valid = false
+      } else if (personaArms.length !== 1) {
+        results[index].errors.push(issue('AMBIGUOUS_EVIDENCE_PERSONA', '/context/personaRef', 'Study-scoped evidence context personaRef must resolve to exactly one arm.'))
+        results[index].valid = false
+      }
     }
   })
   values.forEach((value, index) => {
@@ -701,7 +743,57 @@ function artifactPathIssue(code, pointer) {
   return issue('ARTIFACT_NOT_FOUND', pointer, 'Allowlisted artifact does not exist beneath the export root.')
 }
 
-function verifySanitizedExportFiles(value, root, { checkpoint } = {}) {
+function resolveLinuxDescriptorPath(descriptor) {
+  try {
+    return fs.realpathSync(`/proc/self/fd/${descriptor}`)
+  } catch {
+    return { unavailable: true }
+  }
+}
+
+function resolveMacDescriptorPath(descriptor) {
+  const lsof = spawnSync('/usr/sbin/lsof', [
+    '-nP', '-a', '-p', String(process.pid), '-d', String(descriptor), '-Fn0',
+  ], { encoding: 'buffer', timeout: 5000, maxBuffer: 1024 * 1024, windowsHide: true })
+  if (lsof.error?.code === 'ENOENT') return { unavailable: true }
+  if (lsof.error || lsof.status !== 0 || !Buffer.isBuffer(lsof.stdout)) return undefined
+  let currentDescriptor = false
+  let resolvedPath
+  for (const rawField of lsof.stdout.toString('utf8').split('\0')) {
+    const field = rawField.replace(/^\n+/, '')
+    if (field === '') continue
+    if (field.startsWith('f')) {
+      const match = /^f(\d+)/.exec(field)
+      currentDescriptor = match !== null && Number(match[1]) === descriptor
+      continue
+    }
+    if (field.startsWith('n') && currentDescriptor) {
+      if (resolvedPath !== undefined || field.length === 1) return undefined
+      resolvedPath = field.slice(1)
+    }
+  }
+  return resolvedPath
+}
+
+function platformDescriptorPathResolver() {
+  if (process.platform === 'linux' && fs.existsSync('/proc/self/fd')) return resolveLinuxDescriptorPath
+  if (process.platform === 'darwin' && fs.existsSync('/usr/sbin/lsof')) return resolveMacDescriptorPath
+  return null
+}
+
+function resolveOpenedDescriptorPath(resolver, descriptor) {
+  try {
+    const resolved = resolver(descriptor)
+    if (resolved?.unavailable === true) return { unavailable: true }
+    if (typeof resolved !== 'string' || resolved === '' || !path.isAbsolute(resolved)) return { failed: true }
+    return { path: resolved }
+  } catch {
+    return { failed: true }
+  }
+}
+
+function verifySanitizedExportFiles(value, root, options = {}) {
+  const { checkpoint, descriptorPathResolver } = options
   const structural = validateSanitizedExportManifest(value)
   if (!structural.valid) return structural
   const errors = []
@@ -716,6 +808,10 @@ function verifySanitizedExportFiles(value, root, { checkpoint } = {}) {
   if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) return result([issue('INVALID_EXPORT_ROOT', '', 'Export root must be a non-symlink directory.')])
   if (typeof fs.constants.O_NOFOLLOW !== 'number' || fs.constants.O_NOFOLLOW === 0) {
     return result([issue('NOFOLLOW_UNAVAILABLE', '', 'Filesystem verification requires no-follow open semantics.')])
+  }
+  const resolver = descriptorPathResolver === undefined ? platformDescriptorPathResolver() : descriptorPathResolver
+  if (typeof resolver !== 'function') {
+    return result([issue('DESCRIPTOR_RESOLVER_UNAVAILABLE', '', 'Filesystem verification requires a supported descriptor path resolver.')])
   }
   let rootRealpath
   try {
@@ -750,6 +846,19 @@ function verifySanitizedExportFiles(value, root, { checkpoint } = {}) {
       const opened = fs.fstatSync(descriptor)
       if (!opened.isFile()) {
         errors.push(issue('NON_REGULAR_ARTIFACT_FORBIDDEN', `${pointer}/path`, 'Allowlisted artifacts must be regular files.'))
+        continue
+      }
+      const descriptorResolution = resolveOpenedDescriptorPath(resolver, descriptor)
+      if (descriptorResolution.unavailable) {
+        errors.push(issue('DESCRIPTOR_RESOLVER_UNAVAILABLE', `${pointer}/path`, 'Filesystem verification requires a supported descriptor path resolver.'))
+        continue
+      }
+      if (descriptorResolution.failed) {
+        errors.push(issue('DESCRIPTOR_PATH_RESOLUTION_FAILED', `${pointer}/path`, 'Opened artifact path could not be resolved.'))
+        continue
+      }
+      if (!isContainedPath(rootRealpath, descriptorResolution.path)) {
+        errors.push(issue('DESCRIPTOR_PATH_OUTSIDE_ROOT', `${pointer}/path`, 'Opened artifact is outside the export root.'))
         continue
       }
       const contents = fs.readFileSync(descriptor)
