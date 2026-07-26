@@ -80,7 +80,7 @@ function requiredFiniteNumber(value, pointer, errors, { minimum = -Infinity, max
     return false
   }
   if (value < minimum || value > maximum) {
-    errors.push(issue('NUMBER_OUT_OF_RANGE', pointer, `Expected a number from ${minimum} to ${maximum}.`))
+    errors.push(issue('NUMBER_OUT_OF_RANGE', pointer, 'Number is outside the allowed range.'))
     return false
   }
   return true
@@ -100,7 +100,7 @@ function requiredAllocationNumber(value, pointer, errors, maximum = Infinity) {
     return false
   }
   if (value > maximum) {
-    errors.push(issue('NUMBER_OUT_OF_RANGE', pointer, `Expected a number from 0 to ${maximum}.`))
+    errors.push(issue('NUMBER_OUT_OF_RANGE', pointer, 'Number is outside the allowed range.'))
     return false
   }
   return true
@@ -147,7 +147,7 @@ function requiredDollarAmount(value, pointer, errors) {
 function checkKnownFields(value, fields, pointer, errors) {
   if (!isObject(value)) return
   for (const key of Object.keys(value)) {
-    if (!fields.has(key)) errors.push(issue('UNKNOWN_FIELD', isSensitiveIdentifier(key) ? pointer : `${pointer}/${key}`, 'Unknown fields are not allowed.'))
+    if (!fields.has(key)) errors.push(issue('UNKNOWN_FIELD', pointer, 'Unknown fields are not allowed.'))
   }
 }
 
@@ -159,7 +159,7 @@ function result(errors, requiresBatchValidation) {
 
 function validateSchema(value, expected, errors) {
   if (value.schema !== expected) {
-    errors.push(issue('SCHEMA_ID_MISMATCH', '/schema', `Expected ${expected}.`))
+    errors.push(issue('SCHEMA_ID_MISMATCH', '/schema', 'Artifact schema identifier is invalid.'))
   }
 }
 
@@ -479,23 +479,36 @@ function isIdentifierValueField(key) {
   return ['path', 'name', 'class', 'type', 'kind', 'extension', 'context'].some((term) => identifierTokens(key).includes(term))
 }
 
-function scanSensitiveFields(value, pointer, errors) {
+const SAFE_CONTRACT_FIELD_NAMES = new Set([
+  'schema', 'id', 'title', 'researchQuestion', 'hypotheses', 'target', 'app', 'startUrls', 'environment', 'attestationMode',
+  'arms', 'type', 'personaRefs', 'tasks', 'interactionPolicyRef', 'authenticationLifecyclePolicy', 'evidenceRequirements',
+  'classification', 'artifactType', 'minimumCount', 'armId', 'reproducibility', 'seed', 'engine', 'model', 'limitations',
+  'studyId', 'claim', 'artifact', 'ref', 'context', 'sessionId', 'personaRef', 'timestamp', 'recommendation', 'outcome',
+  'allocation', 'hypothetical', 'budgetDollars', 'cash', 'dollars', 'percent', 'sleeves', 'deployed', 'evidenceRefs',
+  'conditions', 'rejectedOpportunities', 'missingEvidence', 'observation', 'affected', 'supportingEvidence',
+  'contradictingEvidence', 'commercialImplication', 'statement', 'confidence', 'allowlistedArtifacts', 'path', 'sha256',
+  'sizeBytes', 'artifactClass', 'excludedSensitiveClasses', 'schemaVersions', 'verification', 'authenticationStatesAbsent',
+  'cookiesAbsent', 'tokensAbsent', 'realSpend', 'linkTarget',
+])
+
+function scanSensitiveFields(value, pointer, errors, safePointer = pointer) {
   if (Array.isArray(value)) {
-    value.forEach((entry, index) => scanSensitiveFields(entry, `${pointer}/${index}`, errors))
+    value.forEach((entry, index) => scanSensitiveFields(entry, `${pointer}/${index}`, errors, `${safePointer}/${index}`))
     return
   }
   if (!isObject(value)) return
   for (const [key, entry] of Object.entries(value)) {
     const entryPointer = `${pointer}/${key}`
+    const safeEntryPointer = SAFE_CONTRACT_FIELD_NAMES.has(key) ? `${safePointer}/${key}` : safePointer
     const declaredAbsence = pointer === '/verification' && ['authenticationStatesAbsent', 'cookiesAbsent', 'tokensAbsent'].includes(key)
     if (!declaredAbsence && isSensitiveIdentifier(key)) {
-      errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', pointer, 'Secret-like fields are forbidden in sanitized exports.'))
+      errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', safePointer, 'Secret-like fields are forbidden in sanitized exports.'))
     }
     const canonicalArtifactIdentifier = /^\/allowlistedArtifacts\/\d+\/(path|artifactClass)$/.test(entryPointer)
     if (!canonicalArtifactIdentifier && isIdentifierValueField(key) && typeof entry === 'string' && isSensitiveIdentifier(entry)) {
-      errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', entryPointer, 'Secret-like identifier values are forbidden in sanitized exports.'))
+      errors.push(issue('SENSITIVE_FIELD_FORBIDDEN', safeEntryPointer, 'Secret-like identifier values are forbidden in sanitized exports.'))
     }
-    scanSensitiveFields(entry, entryPointer, errors)
+    scanSensitiveFields(entry, entryPointer, errors, safeEntryPointer)
   }
 }
 
@@ -538,7 +551,7 @@ function validateSanitizedExportManifestTrusted(value) {
     const seenClasses = new Set()
     for (const sensitiveClass of requiredClasses) {
       if (!value.excludedSensitiveClasses.includes(sensitiveClass)) {
-        errors.push(issue('SENSITIVE_CLASS_EXCLUSION_REQUIRED', '/excludedSensitiveClasses', `Missing required excluded sensitive class: ${sensitiveClass}.`))
+        errors.push(issue('SENSITIVE_CLASS_EXCLUSION_REQUIRED', '/excludedSensitiveClasses', 'All required sensitive classes must be excluded.'))
       }
     }
     for (const [index, sensitiveClass] of value.excludedSensitiveClasses.entries()) {
@@ -606,11 +619,11 @@ function validateArtifactsTrusted(values) {
     entries.push(index)
     idLocations.set(value.id, entries)
   })
-  for (const [id, indices] of idLocations.entries()) {
+  for (const [, indices] of idLocations.entries()) {
     if (indices.length < 2) continue
     for (const index of indices.slice(1)) {
       const code = values[index].schema === EVIDENCE_REF_V1 ? 'DUPLICATE_EVIDENCE_ID' : 'DUPLICATE_ARTIFACT_ID'
-      results[index].errors.push(issue(code, '/id', `Artifact id ${id} must be unique in a batch.`))
+      results[index].errors.push(issue(code, '/id', 'Artifact ids must be unique in a batch.'))
       results[index].valid = false
     }
   }
@@ -724,7 +737,7 @@ function validateArtifactsTrusted(values) {
     for (const [pointer, reference] of referencedEvidence(value)) {
       const allMatches = evidenceIds.get(reference) || []
       if (allMatches.length === 0) {
-        results[index].errors.push(issue('UNRESOLVED_EVIDENCE_REF', pointer, `Evidence reference ${reference} must resolve to exactly one EvidenceRef artifact in this batch.`))
+        results[index].errors.push(issue('UNRESOLVED_EVIDENCE_REF', pointer, 'Evidence reference must resolve to exactly one EvidenceRef artifact in this batch.'))
         results[index].valid = false
         continue
       }
@@ -735,7 +748,7 @@ function validateArtifactsTrusted(values) {
       }
       const matches = validEvidenceIds.get(reference) || []
       if (matches.length !== 1) {
-        results[index].errors.push(issue('UNRESOLVED_EVIDENCE_REF', pointer, `Evidence reference ${reference} must resolve to exactly one EvidenceRef artifact in this batch.`))
+        results[index].errors.push(issue('UNRESOLVED_EVIDENCE_REF', pointer, 'Evidence reference must resolve to exactly one EvidenceRef artifact in this batch.'))
         results[index].valid = false
         continue
       }
@@ -1012,6 +1025,42 @@ function extractVerificationOptions(options) {
   }
 }
 
+function checkpointIssue(code, pointer) {
+  if (code === 'ASYNC_CHECKPOINT_UNSUPPORTED') {
+    return issue(code, pointer, 'Checkpoint callbacks must return undefined synchronously.')
+  }
+  if (code === 'CHECKPOINT_RETURN_VALUE_UNSUPPORTED') {
+    return issue(code, pointer, 'Checkpoint callbacks must return undefined.')
+  }
+  return issue('UNSAFE_CHECKPOINT_CALLBACK', pointer, 'Checkpoint callback could not be safely invoked.')
+}
+
+function invokeCheckpointSafely(checkpoint, stage, pointer) {
+  if (checkpoint === undefined) return undefined
+  let callbackResult
+  try {
+    callbackResult = checkpoint(stage)
+  } catch {
+    return checkpointIssue('UNSAFE_CHECKPOINT_CALLBACK', pointer)
+  }
+  if (callbackResult === undefined) return undefined
+  if (callbackResult !== null && (typeof callbackResult === 'object' || typeof callbackResult === 'function')) {
+    let then
+    try {
+      then = callbackResult.then
+    } catch {
+      return checkpointIssue('ASYNC_CHECKPOINT_UNSUPPORTED', pointer)
+    }
+    if (typeof then === 'function') {
+      try {
+        Promise.resolve(callbackResult).catch(() => {})
+      } catch {}
+      return checkpointIssue('ASYNC_CHECKPOINT_UNSUPPORTED', pointer)
+    }
+  }
+  return checkpointIssue('CHECKPOINT_RETURN_VALUE_UNSUPPORTED', pointer)
+}
+
 function verifySanitizedExportFilesTrusted(value, root, options = {}) {
   const { checkpoint, descriptorPathResolver } = options
   const structural = validateSanitizedExportManifestTrusted(value)
@@ -1057,14 +1106,22 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
     let descriptor
     const errorsBeforeArtifact = errors.length
     try {
-      checkpoint?.('beforeOpen')
+      const beforeOpenCheckpointError = invokeCheckpointSafely(checkpoint, 'beforeOpen', pointer)
+      if (beforeOpenCheckpointError) {
+        errors.push(beforeOpenCheckpointError)
+        continue
+      }
       try {
         descriptor = fs.openSync(target, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW)
       } catch {
         errors.push(issue('ARTIFACT_NOT_FOUND', `${pointer}/path`, 'Allowlisted artifact does not exist beneath the export root.'))
         continue
       }
-      checkpoint?.('afterOpen')
+      const afterOpenCheckpointError = invokeCheckpointSafely(checkpoint, 'afterOpen', pointer)
+      if (afterOpenCheckpointError) {
+        errors.push(afterOpenCheckpointError)
+        continue
+      }
       const opened = fs.fstatSync(descriptor)
       const openedMetadata = fs.fstatSync(descriptor, { bigint: true })
       if (!opened.isFile()) {
@@ -1096,8 +1153,16 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
       if (opened.size !== artifact.sizeBytes) errors.push(issue('ARTIFACT_SIZE_MISMATCH', `${pointer}/sizeBytes`, 'Artifact byte size does not match the manifest.'))
       const digest = crypto.createHash('sha256').update(contents).digest('hex')
       if (digest !== artifact.sha256.toLowerCase()) errors.push(issue('ARTIFACT_HASH_MISMATCH', `${pointer}/sha256`, 'Artifact SHA-256 digest does not match the manifest.'))
-      checkpoint?.('afterPathSnapshotBeforeFinalFstat')
-      checkpoint?.('afterReadBeforeFinalFstat')
+      const afterPathSnapshotCheckpointError = invokeCheckpointSafely(checkpoint, 'afterPathSnapshotBeforeFinalFstat', pointer)
+      if (afterPathSnapshotCheckpointError) {
+        errors.push(afterPathSnapshotCheckpointError)
+        continue
+      }
+      const afterReadCheckpointError = invokeCheckpointSafely(checkpoint, 'afterReadBeforeFinalFstat', pointer)
+      if (afterReadCheckpointError) {
+        errors.push(afterReadCheckpointError)
+        continue
+      }
       let firstFinalDescriptor
       try {
         firstFinalDescriptor = fs.fstatSync(descriptor, { bigint: true })
@@ -1110,7 +1175,11 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
         errors.push(issue('ARTIFACT_MUTATED_DURING_VERIFICATION', `${pointer}/path`, 'Allowlisted artifact changed while it was being verified.'))
         continue
       }
-      checkpoint?.('afterFirstFinalFstat')
+      const afterFirstFinalFstatCheckpointError = invokeCheckpointSafely(checkpoint, 'afterFirstFinalFstat', pointer)
+      if (afterFirstFinalFstatCheckpointError) {
+        errors.push(afterFirstFinalFstatCheckpointError)
+        continue
+      }
       const finalNamespace = snapshotArtifactNamespace(resolvedRoot, segments)
       if (finalNamespace.error
         || !sameArtifactPathSnapshot(before, finalNamespace.snapshot)
@@ -1118,7 +1187,11 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
         errors.push(issue('ARTIFACT_PATH_RACE_DETECTED', `${pointer}/path`, 'Allowlisted artifact path changed while it was being verified.'))
         continue
       }
-      checkpoint?.('beforeFinalDescriptorPathResolution')
+      const beforeFinalDescriptorPathResolutionCheckpointError = invokeCheckpointSafely(checkpoint, 'beforeFinalDescriptorPathResolution', pointer)
+      if (beforeFinalDescriptorPathResolutionCheckpointError) {
+        errors.push(beforeFinalDescriptorPathResolutionCheckpointError)
+        continue
+      }
       const finalDescriptorResolution = resolveOpenedDescriptorPath(resolver, descriptor)
       if (finalDescriptorResolution.unavailable) {
         errors.push(issue('DESCRIPTOR_RESOLVER_UNAVAILABLE', `${pointer}/path`, 'Filesystem verification requires a supported descriptor path resolver.'))
@@ -1139,7 +1212,11 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
         errors.push(issue('ARTIFACT_PATH_RACE_DETECTED', `${pointer}/path`, 'Allowlisted artifact path changed while it was being verified.'))
         continue
       }
-      checkpoint?.('afterFinalDescriptorPathResolutionBeforeFinalFstat')
+      const afterFinalDescriptorPathResolutionCheckpointError = invokeCheckpointSafely(checkpoint, 'afterFinalDescriptorPathResolutionBeforeFinalFstat', pointer)
+      if (afterFinalDescriptorPathResolutionCheckpointError) {
+        errors.push(afterFinalDescriptorPathResolutionCheckpointError)
+        continue
+      }
       let finalDescriptor
       try {
         finalDescriptor = fs.fstatSync(descriptor, { bigint: true })
@@ -1154,7 +1231,7 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
         continue
       }
       if (errors.length === errorsBeforeArtifact) {
-        verifiedArtifacts.push({ path: artifact.path, sha256: digest, sizeBytes: contents.length, dev: opened.dev, ino: opened.ino })
+        verifiedArtifacts.push({ artifactIndex: index, sha256: digest, sizeBytes: contents.length, dev: opened.dev, ino: opened.ino })
       }
     } finally {
       if (descriptor !== undefined) {

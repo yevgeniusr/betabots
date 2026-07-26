@@ -775,6 +775,136 @@ test('filesystem verification accepts a legitimate in-root opened descriptor', (
   assert.equal(result.verificationSemantics, 'descriptor-snapshot')
 })
 
+test('filesystem verification contains synchronous checkpoint throws without leaking callback text', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-checkpoint-throw-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const contents = 'public artifact\n'
+  fs.writeFileSync(path.join(root, 'artifact.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifact.json', sha256: crypto.createHash('sha256').update(contents).digest('hex'), sizeBytes: Buffer.byteLength(contents),
+  }
+  const marker = 'super_secret_checkpoint_throw'
+
+  let result
+  assert.doesNotThrow(() => {
+    result = verifySanitizedExportFiles(exported, root, { checkpoint() { throw new Error(marker) } })
+  })
+  assert.equal(result.valid, false)
+  assert.deepEqual(result.errors, [{
+    code: 'UNSAFE_CHECKPOINT_CALLBACK',
+    path: '/allowlistedArtifacts/0',
+    message: 'Checkpoint callback could not be safely invoked.',
+  }])
+  assert.doesNotMatch(JSON.stringify(result), new RegExp(marker))
+})
+
+test('filesystem verification rejects asynchronous, hostile, and value-returning checkpoints', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-checkpoint-return-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const contents = 'public artifact\n'
+  fs.writeFileSync(path.join(root, 'artifact.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifact.json', sha256: crypto.createHash('sha256').update(contents).digest('hex'), sizeBytes: Buffer.byteLength(contents),
+  }
+  const marker = 'private_key_checkpoint_then'
+  const hostileThenable = {}
+  Object.defineProperty(hostileThenable, 'then', { get() { throw new Error(marker) } })
+
+  for (const [checkpoint, code] of [
+    [() => Promise.resolve(), 'ASYNC_CHECKPOINT_UNSUPPORTED'],
+    [() => hostileThenable, 'ASYNC_CHECKPOINT_UNSUPPORTED'],
+    [() => 'unexpected return', 'CHECKPOINT_RETURN_VALUE_UNSUPPORTED'],
+  ]) {
+    let result
+    assert.doesNotThrow(() => { result = verifySanitizedExportFiles(exported, root, { checkpoint }) })
+    assert.equal(result.valid, false)
+    assert.equal(result.errors[0].code, code)
+    assert.equal(result.errors[0].path, '/allowlistedArtifacts/0')
+    assert.doesNotMatch(JSON.stringify(result), new RegExp(marker))
+  }
+})
+
+test('filesystem verification absorbs rejected checkpoint promises without an unhandled rejection', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-checkpoint-rejection-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const contents = 'public artifact\n'
+  fs.writeFileSync(path.join(root, 'artifact.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifact.json', sha256: crypto.createHash('sha256').update(contents).digest('hex'), sizeBytes: Buffer.byteLength(contents),
+  }
+  const marker = 'authorization_checkpoint_rejection'
+  let unhandled
+  const observeUnhandled = (reason) => { unhandled = reason }
+  process.on('unhandledRejection', observeUnhandled)
+  try {
+    const result = verifySanitizedExportFiles(exported, root, {
+      checkpoint() { return Promise.reject(new Error(marker)) },
+    })
+    assert.equal(result.valid, false)
+    assert.equal(result.errors[0].code, 'ASYNC_CHECKPOINT_UNSUPPORTED')
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.equal(unhandled, undefined)
+    assert.doesNotMatch(JSON.stringify(result), new RegExp(marker))
+  } finally {
+    process.removeListener('unhandledRejection', observeUnhandled)
+  }
+})
+
+test('filesystem verification permits normal undefined checkpoint behavior', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-checkpoint-normal-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const contents = 'public artifact\n'
+  fs.writeFileSync(path.join(root, 'artifact.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifact.json', sha256: crypto.createHash('sha256').update(contents).digest('hex'), sizeBytes: Buffer.byteLength(contents),
+  }
+  const stages = []
+  const result = verifySanitizedExportFiles(exported, root, { checkpoint(stage) { stages.push(stage) } })
+  assert.equal(result.valid, true)
+  assert.ok(stages.includes('beforeOpen'))
+  assert.ok(stages.includes('afterFinalDescriptorPathResolutionBeforeFinalFstat'))
+})
+
+test('batch and CLI validation redact secret-like duplicate and evidence identifiers', (t) => {
+  const duplicateMarker = 'super_secret_token_value'
+  const unresolvedMarker = 'private_key_authorization_value'
+  const invalidMarker = 'authorization_invalid_evidence_value'
+  const manifest = validManifest()
+  const evidence = validObservedEvidence()
+  evidence.id = duplicateMarker
+  const duplicate = { ...evidence, claim: 'Duplicate secret marker evidence.' }
+  const invalidEvidence = { ...validObservedEvidence(), id: invalidMarker, classification: 'not-a-classification' }
+  const decision = validDecision()
+  decision.evidenceRefs = [unresolvedMarker, invalidMarker]
+  decision.allocation.sleeves[0].evidenceRefs = [unresolvedMarker]
+  const direct = validateArtifacts([manifest, evidence, duplicate, invalidEvidence, decision])
+  assert.equal(direct.valid, false)
+  assert.ok(direct.results[2].errors.some((error) => error.code === 'DUPLICATE_EVIDENCE_ID' && error.path === '/id'))
+  assert.ok(direct.results[4].errors.some((error) => error.code === 'UNRESOLVED_EVIDENCE_REF' && error.path === '/evidenceRefs/0'))
+  assert.ok(direct.results[4].errors.some((error) => error.code === 'INVALID_EVIDENCE_REF' && error.path === '/evidenceRefs/1'))
+  for (const marker of [duplicateMarker, unresolvedMarker, invalidMarker]) assert.doesNotMatch(JSON.stringify(direct), new RegExp(marker))
+
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-cli-identifier-redaction-'))
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }))
+  const files = [manifest, evidence, duplicate, invalidEvidence, decision].map((artifact, index) => {
+    const file = path.join(directory, `artifact-${index}.json`)
+    fs.writeFileSync(file, JSON.stringify(artifact))
+    return file
+  })
+  const cli = path.join(__dirname, '..', 'scripts', 'validate-study-artifacts.cjs')
+  for (const args of [[ '--json', ...files ], files]) {
+    const run = spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' })
+    assert.equal(run.status, 1)
+    for (const output of [run.stdout, run.stderr]) {
+      for (const marker of [duplicateMarker, unresolvedMarker, invalidMarker]) assert.doesNotMatch(output, new RegExp(marker))
+    }
+  }
+})
+
 test('batch validation resolves evidence references and rejects duplicate artifact ids', () => {
   const manifest = validManifest()
   const evidence = validObservedEvidence()
@@ -1327,7 +1457,7 @@ test('filesystem verification treats hostile options as unsafe input and records
   assert.equal(verified.valid, true)
   assert.equal(verified.verificationSemantics, 'descriptor-snapshot')
   assert.deepEqual(verified.verifiedArtifacts, [{
-    path: 'artifact.json',
+    artifactIndex: 0,
     sha256: crypto.createHash('sha256').update(contents).digest('hex'),
     sizeBytes: Buffer.byteLength(contents),
     dev: fs.statSync(path.join(root, 'artifact.json')).dev,
