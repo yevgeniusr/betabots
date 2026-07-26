@@ -22,6 +22,10 @@ const SENSITIVE_IDENTIFIER_COMPACT_DENYLIST = new Set([
   'apikey', 'secretkey', 'privatekey', 'accesskey', 'authorization', 'authtoken', 'bearertoken', 'sessiontoken', 'browserstate',
 ])
 const DEFAULT_IGNORABLE_OR_FORMAT = /[\p{Cf}\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}\u{E0001}\u{E0020}-\u{E007F}]/gu
+const CONFUSABLE_IDENTIFIER_SKELETON = new Map([
+  ['\u0430', 'a'], ['\u0432', 'b'], ['\u0441', 'c'], ['\u0435', 'e'], ['\u0433', 'r'], ['\u0456', 'i'], ['\u0458', 'j'], ['\u043e', 'o'], ['\u0440', 'p'], ['\u0455', 's'], ['\u0442', 't'], ['\u0445', 'x'], ['\u0443', 'y'],
+  ['\u03b1', 'a'], ['\u03b2', 'b'], ['\u03b5', 'e'], ['\u03b9', 'i'], ['\u03ba', 'k'], ['\u03bc', 'u'], ['\u03bd', 'v'], ['\u03bf', 'o'], ['\u03c1', 'p'], ['\u03c4', 't'], ['\u03c5', 'y'], ['\u03c7', 'x'],
+])
 
 function issue(code, pointer, message) {
   return { code, path: pointer, message }
@@ -426,7 +430,9 @@ function isSafeRelativePosixPath(value) {
 
 function normalizedIdentifierForms(value) {
   if (typeof value !== 'string') return { tokens: [], compact: [] }
-  const normalized = value.normalize('NFKC')
+  const normalized = Array.from(value.normalize('NFKC'), (character) => (
+    CONFUSABLE_IDENTIFIER_SKELETON.get(character.toLowerCase()) || character
+  )).join('')
   const forms = [
     normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ''),
     normalized.replace(DEFAULT_IGNORABLE_OR_FORMAT, ' '),
@@ -437,10 +443,19 @@ function normalizedIdentifierForms(value) {
     const boundaryNormalized = form
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
       .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
-    tokens.push(...(boundaryNormalized.toLowerCase().match(/[a-z0-9]+/g) || []))
+    const formTokens = boundaryNormalized.toLowerCase().match(/[a-z0-9]+/g) || []
+    tokens.push(...formTokens)
     for (const component of form.split(/[\\/.:\s]+/u)) {
       const separatorFree = component.replace(/[^a-z0-9]/giu, '').toLowerCase()
       if (separatorFree !== '') compact.push(separatorFree)
+    }
+    for (let start = 0; start < formTokens.length; start += 1) {
+      let joined = ''
+      for (let end = start; end < formTokens.length; end += 1) {
+        joined += formTokens[end]
+        if (joined.length > 32) break
+        compact.push(joined)
+      }
     }
   }
   return { tokens, compact }
@@ -453,7 +468,7 @@ function identifierTokens(value) {
 function isSensitiveIdentifier(value) {
   if (typeof value !== 'string') return false
   const { tokens, compact } = normalizedIdentifierForms(value)
-  if (compact.some((candidate) => SENSITIVE_IDENTIFIER_COMPACT_DENYLIST.has(candidate))) return true
+  if (compact.some((candidate) => SENSITIVE_IDENTIFIER_COMPACT_DENYLIST.has(candidate) || SENSITIVE_IDENTIFIER_TERMS.has(candidate))) return true
   if (tokens.some((token) => SENSITIVE_IDENTIFIER_TERMS.has(token))) return true
   return SENSITIVE_IDENTIFIER_PHRASES.some((phrase) => tokens.some((_, start) => (
     phrase.every((token, phraseIndex) => tokens[start + phraseIndex] === token)
@@ -520,12 +535,15 @@ function validateSanitizedExportManifestTrusted(value) {
   }
   if (requiredStringArray(value.excludedSensitiveClasses, '/excludedSensitiveClasses', errors)) {
     const requiredClasses = ['authentication-state', 'cookies', 'tokens']
+    const seenClasses = new Set()
     for (const sensitiveClass of requiredClasses) {
       if (!value.excludedSensitiveClasses.includes(sensitiveClass)) {
         errors.push(issue('SENSITIVE_CLASS_EXCLUSION_REQUIRED', '/excludedSensitiveClasses', `Missing required excluded sensitive class: ${sensitiveClass}.`))
       }
     }
     for (const [index, sensitiveClass] of value.excludedSensitiveClasses.entries()) {
+      if (seenClasses.has(sensitiveClass)) errors.push(issue('DUPLICATE_EXCLUDED_SENSITIVE_CLASS', `/excludedSensitiveClasses/${index}`, 'Excluded sensitive classes must be unique.'))
+      seenClasses.add(sensitiveClass)
       if (!requiredClasses.includes(sensitiveClass)) errors.push(issue('INVALID_SENSITIVE_CLASS', `/excludedSensitiveClasses/${index}`, 'Only authentication-state, cookies, and tokens are supported sensitive classes.'))
     }
   }
@@ -690,9 +708,32 @@ function validateArtifactsTrusted(values) {
       }
     }
   })
+  const validEvidenceIds = new Map()
+  const invalidEvidenceIds = new Set()
+  values.forEach((value, index) => {
+    if (!isObject(value) || value.schema !== EVIDENCE_REF_V1 || typeof value.id !== 'string' || value.id.trim() === '') return
+    if (results[index].valid) {
+      const entries = validEvidenceIds.get(value.id) || []
+      entries.push(index)
+      validEvidenceIds.set(value.id, entries)
+    } else {
+      invalidEvidenceIds.add(value.id)
+    }
+  })
   values.forEach((value, index) => {
     for (const [pointer, reference] of referencedEvidence(value)) {
-      const matches = evidenceIds.get(reference) || []
+      const allMatches = evidenceIds.get(reference) || []
+      if (allMatches.length === 0) {
+        results[index].errors.push(issue('UNRESOLVED_EVIDENCE_REF', pointer, `Evidence reference ${reference} must resolve to exactly one EvidenceRef artifact in this batch.`))
+        results[index].valid = false
+        continue
+      }
+      if (invalidEvidenceIds.has(reference)) {
+        results[index].errors.push(issue('INVALID_EVIDENCE_REF', pointer, 'Evidence reference resolves to an invalid EvidenceRef artifact.'))
+        results[index].valid = false
+        continue
+      }
+      const matches = validEvidenceIds.get(reference) || []
       if (matches.length !== 1) {
         results[index].errors.push(issue('UNRESOLVED_EVIDENCE_REF', pointer, `Evidence reference ${reference} must resolve to exactly one EvidenceRef artifact in this batch.`))
         results[index].valid = false
@@ -717,13 +758,21 @@ function cloneUntrustedValue(value, visiting = new WeakSet()) {
   try {
     if (visiting.has(value)) return { code: 'CYCLIC_INPUT' }
     visiting.add(value)
-    const copy = Array.isArray(value) ? [] : {}
-    const schema = value.schema
-    if (schema !== undefined) copy.schema = schema
+    const copy = Array.isArray(value) ? [] : Object.create(null)
+    // Probe the discriminator through the normal access path so hostile get traps
+    // cannot be mistaken for an ordinary unsupported artifact.
+    void value.schema
     for (const key of Object.keys(value)) {
-      const child = cloneUntrustedValue(value[key], visiting)
+      const descriptor = Object.getOwnPropertyDescriptor(value, key)
+      if (!descriptor || !Object.hasOwn(descriptor, 'value')) return { code: 'UNSAFE_INPUT_ACCESS' }
+      const child = cloneUntrustedValue(descriptor.value, visiting)
       if (child.code) return child
-      copy[key] = child.value
+      Object.defineProperty(copy, key, {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: child.value,
+      })
     }
     visiting.delete(value)
     return { value: copy }
@@ -874,6 +923,25 @@ function snapshotArtifactPath(resolvedRoot, rootRealpath, segments) {
   return { ancestors, leaf }
 }
 
+function snapshotArtifactNamespace(resolvedRoot, segments) {
+  let rootRealpath
+  try {
+    rootRealpath = fs.realpathSync(resolvedRoot)
+  } catch {
+    return { error: 'ARTIFACT_NOT_FOUND' }
+  }
+  const snapshot = snapshotArtifactPath(resolvedRoot, rootRealpath, segments)
+  if (snapshot.error) return snapshot
+  return { rootRealpath, snapshot }
+}
+
+function sameArtifactPathSnapshot(left, right) {
+  return sameFileIdentity(left.leaf, right.leaf)
+    && left.ancestors.length === right.ancestors.length
+    && left.ancestors.every((snapshot, ancestorIndex) => samePathSnapshot(snapshot, right.ancestors[ancestorIndex]))
+    && samePathSnapshot(left.leaf, right.leaf)
+}
+
 function artifactPathIssue(code, pointer) {
   if (code === 'SYMLINK_ARTIFACT_FORBIDDEN') return issue(code, pointer, 'Allowlisted artifacts and their ancestors must not be symlinks.')
   if (code === 'NON_REGULAR_ARTIFACT_FORBIDDEN') return issue(code, pointer, 'Allowlisted artifacts must be regular files.')
@@ -930,6 +998,20 @@ function resolveOpenedDescriptorPath(resolver, descriptor) {
   }
 }
 
+function extractVerificationOptions(options) {
+  try {
+    if (options === null || (typeof options !== 'object' && typeof options !== 'function')) return { code: 'UNSAFE_INPUT_ACCESS' }
+    Object.keys(options)
+    const checkpoint = options.checkpoint
+    const descriptorPathResolver = options.descriptorPathResolver
+    if (checkpoint !== undefined && typeof checkpoint !== 'function') return { code: 'UNSAFE_INPUT_ACCESS' }
+    if (descriptorPathResolver !== undefined && descriptorPathResolver !== null && typeof descriptorPathResolver !== 'function') return { code: 'UNSAFE_INPUT_ACCESS' }
+    return { value: { checkpoint, descriptorPathResolver } }
+  } catch {
+    return { code: 'UNSAFE_INPUT_ACCESS' }
+  }
+}
+
 function verifySanitizedExportFilesTrusted(value, root, options = {}) {
   const { checkpoint, descriptorPathResolver } = options
   const structural = validateSanitizedExportManifestTrusted(value)
@@ -957,6 +1039,7 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
   } catch {
     return result([issue('INVALID_EXPORT_ROOT', '', 'Export root does not exist.')])
   }
+  const verifiedArtifacts = []
   for (const [index, artifact] of value.allowlistedArtifacts.entries()) {
     const pointer = `/allowlistedArtifacts/${index}`
     const segments = artifact.path.split('/')
@@ -972,6 +1055,7 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
       continue
     }
     let descriptor
+    const errorsBeforeArtifact = errors.length
     try {
       checkpoint?.('beforeOpen')
       try {
@@ -1005,26 +1089,72 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
       if (after.error
         || !sameFileIdentity(before.leaf, opened)
         || !sameFileIdentity(after.leaf, opened)
-        || before.ancestors.length !== after.ancestors.length
-        || before.ancestors.some((snapshot, ancestorIndex) => !samePathSnapshot(snapshot, after.ancestors[ancestorIndex]))) {
+        || !sameArtifactPathSnapshot(before, after)) {
         errors.push(issue('ARTIFACT_PATH_RACE_DETECTED', `${pointer}/path`, 'Allowlisted artifact path changed while it was being verified.'))
         continue
       }
       if (opened.size !== artifact.sizeBytes) errors.push(issue('ARTIFACT_SIZE_MISMATCH', `${pointer}/sizeBytes`, 'Artifact byte size does not match the manifest.'))
       const digest = crypto.createHash('sha256').update(contents).digest('hex')
       if (digest !== artifact.sha256.toLowerCase()) errors.push(issue('ARTIFACT_HASH_MISMATCH', `${pointer}/sha256`, 'Artifact SHA-256 digest does not match the manifest.'))
+      checkpoint?.('afterPathSnapshotBeforeFinalFstat')
       checkpoint?.('afterReadBeforeFinalFstat')
+      let firstFinalDescriptor
+      try {
+        firstFinalDescriptor = fs.fstatSync(descriptor, { bigint: true })
+      } catch {
+        errors.push(issue('ARTIFACT_MUTATED_DURING_VERIFICATION', `${pointer}/path`, 'Allowlisted artifact changed while it was being verified.'))
+        continue
+      }
+      if (!sameDescriptorMetadata(descriptorMetadataSnapshot(openedMetadata), descriptorMetadataSnapshot(firstFinalDescriptor))
+        || firstFinalDescriptor.size !== BigInt(contents.length)) {
+        errors.push(issue('ARTIFACT_MUTATED_DURING_VERIFICATION', `${pointer}/path`, 'Allowlisted artifact changed while it was being verified.'))
+        continue
+      }
+      checkpoint?.('afterFirstFinalFstat')
+      const finalNamespace = snapshotArtifactNamespace(resolvedRoot, segments)
+      if (finalNamespace.error
+        || !sameArtifactPathSnapshot(before, finalNamespace.snapshot)
+        || !sameFileIdentity(finalNamespace.snapshot.leaf, opened)) {
+        errors.push(issue('ARTIFACT_PATH_RACE_DETECTED', `${pointer}/path`, 'Allowlisted artifact path changed while it was being verified.'))
+        continue
+      }
+      checkpoint?.('beforeFinalDescriptorPathResolution')
+      const finalDescriptorResolution = resolveOpenedDescriptorPath(resolver, descriptor)
+      if (finalDescriptorResolution.unavailable) {
+        errors.push(issue('DESCRIPTOR_RESOLVER_UNAVAILABLE', `${pointer}/path`, 'Filesystem verification requires a supported descriptor path resolver.'))
+        continue
+      }
+      if (finalDescriptorResolution.failed) {
+        errors.push(issue('DESCRIPTOR_PATH_RESOLUTION_FAILED', `${pointer}/path`, 'Opened artifact path could not be resolved.'))
+        continue
+      }
+      let currentRootRealpath
+      try {
+        currentRootRealpath = fs.realpathSync(resolvedRoot)
+      } catch {
+        errors.push(issue('ARTIFACT_PATH_RACE_DETECTED', `${pointer}/path`, 'Allowlisted artifact path changed while it was being verified.'))
+        continue
+      }
+      if (currentRootRealpath !== finalNamespace.rootRealpath || !isContainedPath(currentRootRealpath, finalDescriptorResolution.path)) {
+        errors.push(issue('ARTIFACT_PATH_RACE_DETECTED', `${pointer}/path`, 'Allowlisted artifact path changed while it was being verified.'))
+        continue
+      }
+      checkpoint?.('afterFinalDescriptorPathResolutionBeforeFinalFstat')
       let finalDescriptor
       try {
-        // This final descriptor fstat is the verification linearization point; later mutations are post-verification.
         finalDescriptor = fs.fstatSync(descriptor, { bigint: true })
       } catch {
         errors.push(issue('ARTIFACT_MUTATED_DURING_VERIFICATION', `${pointer}/path`, 'Allowlisted artifact changed while it was being verified.'))
         continue
       }
       if (!sameDescriptorMetadata(descriptorMetadataSnapshot(openedMetadata), descriptorMetadataSnapshot(finalDescriptor))
+        || !sameDescriptorMetadata(descriptorMetadataSnapshot(firstFinalDescriptor), descriptorMetadataSnapshot(finalDescriptor))
         || finalDescriptor.size !== BigInt(contents.length)) {
         errors.push(issue('ARTIFACT_MUTATED_DURING_VERIFICATION', `${pointer}/path`, 'Allowlisted artifact changed while it was being verified.'))
+        continue
+      }
+      if (errors.length === errorsBeforeArtifact) {
+        verifiedArtifacts.push({ path: artifact.path, sha256: digest, sizeBytes: contents.length, dev: opened.dev, ino: opened.ino })
       }
     } finally {
       if (descriptor !== undefined) {
@@ -1032,13 +1162,20 @@ function verifySanitizedExportFilesTrusted(value, root, options = {}) {
       }
     }
   }
-  return result(errors)
+  const output = result(errors)
+  if (output.valid) {
+    output.verificationSemantics = 'descriptor-snapshot'
+    output.verifiedArtifacts = verifiedArtifacts
+  }
+  return output
 }
 
 function verifySanitizedExportFiles(value, root, options = {}) {
   const cloned = cloneUntrustedValue(value)
   if (cloned.code) return inputSafetyResult(cloned.code)
-  return verifySanitizedExportFilesTrusted(cloned.value, root, options)
+  const safeOptions = extractVerificationOptions(options)
+  if (safeOptions.code) return inputSafetyResult(safeOptions.code)
+  return verifySanitizedExportFilesTrusted(cloned.value, root, safeOptions.value)
 }
 
 module.exports = {

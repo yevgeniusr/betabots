@@ -522,7 +522,10 @@ test('filesystem-backed export verification rejects symlinks, non-regular files,
     sizeBytes: Buffer.byteLength(contents),
   }
 
-  assert.deepEqual(verifySanitizedExportFiles(exported, root), { valid: true, errors: [] })
+  const verified = verifySanitizedExportFiles(exported, root)
+  assert.equal(verified.valid, true)
+  assert.deepEqual(verified.errors, [])
+  assert.equal(verified.verificationSemantics, 'descriptor-snapshot')
 
   const symlink = path.join(artifactDirectory, 'linked.json')
   fs.symlinkSync('manifest.json', symlink)
@@ -767,7 +770,9 @@ test('filesystem verification accepts a legitimate in-root opened descriptor', (
     },
   })
   assert.equal(resolvedDescriptor, true)
-  assert.deepEqual(result, { valid: true, errors: [] })
+  assert.equal(result.valid, true)
+  assert.deepEqual(result.errors, [])
+  assert.equal(result.verificationSemantics, 'descriptor-snapshot')
 })
 
 test('batch validation resolves evidence references and rejects duplicate artifact ids', () => {
@@ -909,7 +914,7 @@ test('Finding evidence lists are unique, disjoint, and study-context matched', (
   const linkedFinding = { ...finding, supportingEvidence: ['evidence.other'], contradictingEvidence: [] }
   const result = validateArtifacts([manifest, evidence, wrongStudyEvidence, linkedFinding])
   assert.equal(result.valid, false)
-  assert.ok(result.results[3].errors.some((error) => error.code === 'EVIDENCE_STUDY_MISMATCH'))
+  assert.ok(result.results[3].errors.some((error) => error.code === 'INVALID_EVIDENCE_REF'))
 })
 
 test('batch validation ignores invalid evidence for requirements and resolves referring study ids', () => {
@@ -1057,6 +1062,57 @@ test('SanitizedExportManifest rejects acronym, camel-case, Unicode, format, and 
   assert.ok(result.errors.some((error) => error.code === 'SENSITIVE_FIELD_FORBIDDEN'))
 })
 
+test('SanitizedExportManifest rejects mixed-script and slash-split secret identifiers without rejecting multilingual prose', () => {
+  for (const [field, identifier] of [
+    ['path', 'artifacts/s\u0435cret.json'],
+    ['path', 'artifacts/\u0455\u0435\u0441\u0433\u0435\u0442.json'],
+    ['path', 'artifacts/t\u03bfken.json'],
+    ['path', 'artifacts/se/cret.json'],
+    ['path', 'artifacts/to/ken.json'],
+    ['path', 'artifacts/api/key.json'],
+    ['path', 'artifacts/private/key.json'],
+    ['artifactClass', 'author/ization'],
+  ]) {
+    const exported = validExport()
+    exported.allowlistedArtifacts[0][field] = identifier
+    const result = validateArtifact(exported)
+    assert.equal(result.valid, false, identifier)
+    assert.ok(result.errors.some((error) => error.code === 'SENSITIVE_ARTIFACT_FORBIDDEN'), identifier)
+    assert.doesNotMatch(JSON.stringify(result), new RegExp(identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  }
+
+  const nested = validExport()
+  nested.audit = { context: 'se/cret' }
+  const nestedResult = validateArtifact(nested)
+  assert.equal(nestedResult.valid, false)
+  assert.ok(nestedResult.errors.some((error) => error.code === 'SENSITIVE_FIELD_FORBIDDEN'))
+
+  const safe = validExport()
+  safe.id = 'export.rapport-\u5206\u6790'
+  safe.allowlistedArtifacts[0].path = 'artifacts/\u043e\u0442\u0447\u0451\u0442-\u5206\u6790.json'
+  assert.deepEqual(validateArtifact(safe), { valid: true, errors: [] })
+})
+
+test('public validation preserves own prototype-special keys without prototype pollution', () => {
+  const parsedProto = JSON.parse(`${JSON.stringify(validExport()).slice(0, -1)},"__proto__":{"secret":"not-exportable"}}`)
+  assert.equal(Object.hasOwn(parsedProto, '__proto__'), true)
+  const parsedConstructor = JSON.parse(JSON.stringify({
+    ...validExport(),
+    constructor: { token: 'not-exportable' },
+    prototype: { password: 'not-exportable' },
+    audit: { constructor: { token: 'not-exportable' }, prototype: { password: 'not-exportable' } },
+  }))
+
+  for (const hostile of [parsedProto, parsedConstructor]) {
+    const result = validateArtifact(hostile)
+    assert.equal(result.valid, false)
+    assert.ok(result.errors.some((error) => error.code === 'SENSITIVE_FIELD_FORBIDDEN'))
+  }
+  assert.equal(Object.prototype.secret, undefined)
+  assert.equal(Object.prototype.token, undefined)
+  assert.equal(Object.prototype.password, undefined)
+})
+
 test('contract CLI redacts unsafe input paths from JSON and human errors', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-cli-redaction-'))
   const secretBasename = 'ＡＰＩＫｅｙ-authorization-input.json'
@@ -1186,4 +1242,132 @@ test('batch validation binds Finding affected arms and personas to its exact Stu
 
   const otherStudyFinding = { ...finding, id: 'finding.other-study', studyId: otherStudy.id, supportingEvidence: [otherEvidence.id], affected: { arms: ['other-arm'], personas: ['persona.other'], surfaces: ['checkout'] } }
   assert.equal(validateArtifacts([manifest, evidence, otherStudy, otherEvidence, otherStudyFinding]).valid, true)
+})
+
+test('batch validation rejects DecisionOutcome and Finding references to present but invalid EvidenceRefs', () => {
+  const manifest = validManifest()
+  const validEvidence = validObservedEvidence()
+  validEvidence.id = 'evidence.valid'
+  const invalidClassification = validObservedEvidence()
+  invalidClassification.id = 'evidence.invalid-classification'
+  invalidClassification.classification = 'invalid'
+  const invalidContext = validObservedEvidence()
+  invalidContext.id = 'evidence.invalid-context'
+  delete invalidContext.context
+  const otherStudyInvalid = validObservedEvidence()
+  otherStudyInvalid.id = 'evidence.invalid-other-study'
+  otherStudyInvalid.studyId = 'other-study'
+  otherStudyInvalid.artifact.type = 'invalid'
+  const decision = validDecision()
+  decision.evidenceRefs = [validEvidence.id, invalidClassification.id]
+  decision.allocation.sleeves[0].evidenceRefs = [invalidContext.id]
+  const finding = {
+    schema: 'betabots.finding.v1', id: 'finding.invalid-evidence', studyId: manifest.id,
+    observation: 'Invalid evidence must not resolve.',
+    affected: { arms: ['neutral'], personas: ['persona.new-shopper'], surfaces: ['checkout'] },
+    supportingEvidence: [invalidClassification.id, otherStudyInvalid.id], contradictingEvidence: [invalidContext.id],
+    commercialImplication: { classification: 'inferred', statement: 'This remains an inference.' },
+    confidence: 0.5, limitations: ['Synthetic evidence.'],
+  }
+
+  const result = validateArtifacts([manifest, validEvidence, invalidClassification, invalidContext, otherStudyInvalid, decision, finding])
+  assert.equal(result.valid, false)
+  for (const index of [5, 6]) {
+    assert.ok(result.results[index].errors.some((error) => error.code === 'INVALID_EVIDENCE_REF'))
+  }
+  assert.ok(result.results[5].errors.some((error) => error.path === '/evidenceRefs/1'))
+  assert.ok(result.results[5].errors.some((error) => error.path === '/allocation/sleeves/0/evidenceRefs/0'))
+  assert.ok(result.results[6].errors.some((error) => error.path === '/supportingEvidence/0'))
+  assert.ok(result.results[6].errors.some((error) => error.path === '/supportingEvidence/1'))
+  assert.ok(result.results[6].errors.some((error) => error.path === '/contradictingEvidence/0'))
+})
+
+test('SanitizedExportManifest enforces unique excluded sensitive classes in module and CLI validation', () => {
+  const exported = validExport()
+  exported.excludedSensitiveClasses = ['authentication-state', 'cookies', 'tokens', 'tokens']
+  const direct = validateArtifact(exported)
+  assert.equal(direct.valid, false)
+  assert.ok(direct.errors.some((error) => error.code === 'DUPLICATE_EXCLUDED_SENSITIVE_CLASS'))
+
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-duplicate-sensitive-class-'))
+  const file = path.join(directory, 'export.json')
+  fs.writeFileSync(file, JSON.stringify(exported))
+  const cli = path.join(__dirname, '..', 'scripts', 'validate-study-artifacts.cjs')
+  const run = spawnSync(process.execPath, [cli, '--json', file], { encoding: 'utf8' })
+  assert.equal(run.status, 1)
+  assert.ok(JSON.parse(run.stdout).results[0].errors.some((error) => error.code === 'DUPLICATE_EXCLUDED_SENSITIVE_CLASS'))
+  fs.rmSync(directory, { recursive: true, force: true })
+})
+
+test('filesystem verification treats hostile options as unsafe input and records descriptor snapshots', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-hostile-options-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const contents = 'public artifact\n'
+  fs.writeFileSync(path.join(root, 'artifact.json'), contents)
+  const exported = validExport()
+  exported.allowlistedArtifacts[0] = {
+    path: 'artifact.json', sha256: crypto.createHash('sha256').update(contents).digest('hex'), sizeBytes: Buffer.byteLength(contents),
+  }
+  const throwingGet = new Proxy({}, { get() { throw new Error('unsafe options get text') } })
+  const throwingOwnKeys = new Proxy({}, { ownKeys() { throw new Error('unsafe options ownKeys text') } })
+  const revoked = Proxy.revocable({}, {})
+  revoked.revoke()
+  const cyclic = {}
+  cyclic.checkpoint = cyclic
+
+  for (const options of [throwingGet, throwingOwnKeys, revoked.proxy, cyclic]) {
+    let result
+    assert.doesNotThrow(() => { result = verifySanitizedExportFiles(exported, root, options) })
+    assert.equal(result.valid, false)
+    assert.equal(result.errors[0].code, 'UNSAFE_INPUT_ACCESS')
+    assert.doesNotMatch(JSON.stringify(result), /unsafe options (get|ownKeys) text/)
+  }
+
+  const verified = verifySanitizedExportFiles(exported, root)
+  assert.equal(verified.valid, true)
+  assert.equal(verified.verificationSemantics, 'descriptor-snapshot')
+  assert.deepEqual(verified.verifiedArtifacts, [{
+    path: 'artifact.json',
+    sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+    sizeBytes: Buffer.byteLength(contents),
+    dev: fs.statSync(path.join(root, 'artifact.json')).dev,
+    ino: fs.statSync(path.join(root, 'artifact.json')).ino,
+  }])
+})
+
+test('filesystem verification rejects namespace replacement throughout final descriptor stabilization', () => {
+  const stages = [
+    'afterPathSnapshotBeforeFinalFstat',
+    'afterFirstFinalFstat',
+    'beforeFinalDescriptorPathResolution',
+  ]
+  for (const stageToReplace of stages) {
+    const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'betabots-final-namespace-race-'))
+    const root = path.join(parent, 'export-root')
+    const stashedRoot = path.join(parent, 'export-root-opened')
+    const replacement = path.join(parent, 'replacement-root')
+    const contents = 'public artifact\n'
+    fs.mkdirSync(root)
+    fs.mkdirSync(replacement)
+    fs.writeFileSync(path.join(root, 'artifact.json'), contents)
+    fs.writeFileSync(path.join(replacement, 'artifact.json'), contents)
+    const exported = validExport()
+    exported.allowlistedArtifacts[0] = {
+      path: 'artifact.json', sha256: crypto.createHash('sha256').update(contents).digest('hex'), sizeBytes: Buffer.byteLength(contents),
+    }
+    let replaced = false
+    const result = verifySanitizedExportFiles(exported, root, {
+      checkpoint(stage) {
+        if (stage === stageToReplace && !replaced) {
+          replaced = true
+          fs.renameSync(root, stashedRoot)
+          fs.renameSync(replacement, root)
+        }
+      },
+      descriptorPathResolver: () => fs.realpathSync(path.join(replaced ? stashedRoot : root, 'artifact.json')),
+    })
+    assert.equal(replaced, true, stageToReplace)
+    assert.equal(result.valid, false, stageToReplace)
+    fs.rmSync(parent, { recursive: true, force: true })
+  }
 })
