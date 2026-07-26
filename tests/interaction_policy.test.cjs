@@ -79,3 +79,26 @@ test('network backstop blocks prohibited mutations but allows community reads an
   })
   assert.deepEqual(calls, ['abort', 'continue'])
 })
+
+test('request-scoped patterns do not block analytics or harmless bodies from protected pages', () => {
+  const policy = normalizeInteractionPolicy({
+    requestDenyRules: [{
+      id: 'community-endpoint-mutations',
+      methods: ['POST', 'PUT', 'PATCH', 'DELETE'],
+      requestUrlPatterns: ['/community/', '/comments'],
+    }],
+  })
+  const collector = createPolicyEventCollector()
+  const evaluate = (requestUrl, currentUrl, requestBody) => evaluateNetworkRequestPolicy(policy, {
+    method: 'POST',
+    requestUrl,
+    currentUrl,
+    requestBody,
+    collector,
+  })
+
+  assert.equal(evaluate('https://app.test/community/comments', 'https://app.test/community', 'comment=hello').ok, false)
+  assert.equal(evaluate('https://analytics.test/collect', 'https://app.test/community', 'event=page-view').ok, true)
+  assert.equal(evaluate('https://app.test/research/search', 'https://app.test/research', 'query=post-quantum').ok, true)
+  assert.equal(collector.blocked, 1)
+})

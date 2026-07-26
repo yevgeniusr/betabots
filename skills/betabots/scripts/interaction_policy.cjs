@@ -12,6 +12,7 @@ function normalizeRule(rule = {}, index, kind) {
     actionTypes: strings(rule.actionTypes || rule.types),
     methods: strings(rule.methods),
     urlPatterns: strings(rule.urlPatterns || rule.urls),
+    requestUrlPatterns: strings(rule.requestUrlPatterns || rule.requestUrls),
     controlNamePatterns: strings(rule.controlNamePatterns || rule.controlNames || rule.names),
     controlKindPatterns: strings(rule.controlKindPatterns || rule.controlKinds || rule.kinds),
     hrefPatterns: strings(rule.hrefPatterns || rule.hrefs),
@@ -51,6 +52,7 @@ function actionRuleMatches(rule, input = {}) {
 
 function requestRuleMatches(rule, input = {}) {
   if (rule.methods.length && !rule.methods.includes(String(input.method || '').toLowerCase())) return false
+  if (rule.requestUrlPatterns.length && !includesAny(input.requestUrl, rule.requestUrlPatterns)) return false
   const indicators = [input.requestUrl, input.currentUrl, input.requestBody]
   if (rule.urlPatterns.length && !indicators.some((value) => includesAny(value, rule.urlPatterns))) return false
   if (rule.valuePatterns.length && !indicators.some((value) => includesAny(value, rule.valuePatterns))) return false

@@ -1,0 +1,490 @@
+{
+  "appName": "Cryptonary",
+  "researchSources": [
+    "operator guidance: investors with different budgets must explore broadly and distribute hypothetical capital (2026-07-26)",
+    "authenticated production evidence from run cryptonary-betabots-20260726-105610-cohort10",
+    "assumption-labeled investor jobs; no product API or source inspection"
+  ],
+  "audienceResearch": {
+    "status": "operator-guided and assumption-labeled",
+    "note": "Budgets, mandates, horizons, and constraints are deliberate research hypotheses, not claims about Cryptonary customers. Every allocation is hypothetical and must cite only visible product evidence."
+  },
+  "audienceSegments": [
+    {
+      "name": "self-directed retail allocators",
+      "weight": 35,
+      "evidence": "Operator requested investors with varied budgets and serious capital-distribution intent.",
+      "jobs": ["learn enough to avoid random bets", "compare crypto, stock, yield, and prediction ideas", "turn research into a bounded allocation"],
+      "objections": ["promotional language", "unclear downside", "too many tools without a decision path"],
+      "deviceBias": "mixed mobile and desktop",
+      "assumptions": ["Budgets from $1,000 to $30,000 represent exploratory retail capital."]
+    },
+    {
+      "name": "affluent multi-asset allocators",
+      "weight": 35,
+      "evidence": "Operator requested meaningful budget diversity and capital distribution.",
+      "jobs": ["protect liquidity", "compare cross-asset opportunities", "understand yield and portfolio construction"],
+      "objections": ["weak provenance", "no portfolio-level risk view", "unclear liquidity or time horizon"],
+      "deviceBias": "desktop-first with mobile follow-up",
+      "assumptions": ["Budgets from $75,000 to $750,000 require stronger risk and allocation evidence."]
+    },
+    {
+      "name": "professional and high-net-worth allocators",
+      "weight": 30,
+      "evidence": "Operator explicitly wants investors who are genuinely interested in distributing capital.",
+      "jobs": ["separate signal from noise", "triangulate research, market regime, and portfolio construction", "document an investable thesis and rejection criteria"],
+      "objections": ["missing methodology", "insufficient source attribution", "consumer-grade risk framing"],
+      "deviceBias": "desktop",
+      "assumptions": ["Budgets from $1.5 million to $10 million test institutional-depth expectations without implying actual customer assets."]
+    }
+  ],
+  "requiresSocialAction": false,
+  "socialActionsAllowed": false,
+  "interactionPolicy": {
+    "actionDenyRules": [
+      {
+        "id": "deny-community-page-actions",
+        "actionTypes": ["click", "fill", "select"],
+        "urlPatterns": ["/community"]
+      },
+      {
+        "id": "deny-social-write-controls",
+        "actionTypes": ["click", "fill", "select"],
+        "controlNamePatterns": ["comment", "reply", "post", "reaction", "like", "follow", "message", "share", "publish"]
+      },
+      {
+        "id": "deny-capital-commitment-controls",
+        "actionTypes": ["click", "select"],
+        "controlNamePatterns": ["buy now", "sell now", "place order", "execute order", "connect wallet", "deposit", "withdraw", "transfer funds", "swap", "stake", "unstake", "claim", "redeem", "go pro now", "subscribe", "start trial", "add a card", "add card", "checkout", "pay now", "confirm purchase", "confirm order"]
+      },
+      {
+        "id": "deny-personal-state-mutations",
+        "actionTypes": ["click", "select"],
+        "controlNamePatterns": ["customize", "save portfolio", "edit portfolio", "add to portfolio", "remove from portfolio", "add to watchlist", "remove from watchlist", "favorite", "unfavorite", "bookmark"]
+      },
+      {
+        "id": "deny-trading-league-entry",
+        "actionTypes": ["click"],
+        "urlPatterns": ["/home"],
+        "controlNamePatterns": ["enter"]
+      }
+    ],
+    "requestDenyRules": [
+      {
+        "id": "deny-community-mutation-endpoints",
+        "methods": ["POST", "PUT", "PATCH", "DELETE"],
+        "requestUrlPatterns": ["/community/", "/comments", "/replies", "/messages", "/reactions", "/likes", "/follows", "/posts"]
+      },
+      {
+        "id": "deny-financial-commitment-endpoints",
+        "methods": ["POST", "PUT", "PATCH", "DELETE"],
+        "requestUrlPatterns": ["/checkout", "/payment", "/subscription", "/billing", "/orders", "/trades", "/wallet", "/claim", "/redeem", "/stake", "/league/enter", "api.stripe.com"]
+      }
+    ]
+  },
+  "screenSizeDistribution": [
+    {
+      "category": "mobile",
+      "weight": 25,
+      "devices": [{ "name": "iPhone 15", "width": 393, "height": 852, "deviceScaleFactor": 3, "isMobile": true, "hasTouch": true }]
+    },
+    {
+      "category": "tablet",
+      "weight": 10,
+      "devices": [{ "name": "iPad Air", "width": 820, "height": 1180, "deviceScaleFactor": 2, "isMobile": true, "hasTouch": true }]
+    },
+    {
+      "category": "desktop",
+      "weight": 65,
+      "devices": [{ "name": "Investor workstation", "width": 1440, "height": 1000, "deviceScaleFactor": 1 }]
+    }
+  ],
+  "routes": [
+    { "labels": ["home", "feed", "briefing", "watchlist"], "fallback": "/home" },
+    { "labels": ["intel", "ask ai"], "fallback": "/intel" },
+    { "labels": ["research", "all research", "deep dives", "research reports", "market update"], "fallback": "/all-research" },
+    { "labels": ["markets"], "fallback": "/markets" },
+    { "labels": ["cpt index"], "fallback": "/cpt-index" },
+    { "labels": ["market direction"], "fallback": "/market-direction" },
+    { "labels": ["portfolio"], "fallback": "/portfolio" },
+    { "labels": ["yield watch"], "fallback": "/yield-watch" },
+    { "labels": ["crypto", "stocks", "prediction"], "fallback": "/picks" },
+    { "labels": ["airdrops"], "fallback": "/airdrops" },
+    { "labels": ["trading league"], "fallback": "/trading-league" },
+    { "labels": ["help", "guide", "getting started"], "fallback": "/help" }
+  ],
+  "evidenceRequirements": {
+    "minAiUserTurns": 0,
+    "minCompletedActivities": 0,
+    "aiChatUrlPatterns": ["/intel", "/ai"],
+    "aiSubmitControlPatterns": ["Ask AI", "Send", "Submit question"]
+  },
+  "keywords": {
+    "value": ["research", "thesis", "market", "portfolio", "yield", "watchlist", "prediction", "stocks", "crypto", "ai key takeaways", "market direction", "cpt index"],
+    "trust": ["source", "methodology", "updated", "risk", "downside", "author", "data", "allocation", "liquidity"],
+    "risk": ["guaranteed", "failed", "unavailable", "error", "undefined", "no downside", "act now"],
+    "empty": ["empty", "no results", "nothing yet", "no data"]
+  },
+  "ideaRules": [
+    { "when": ["portfolio"], "idea": "Show how every proposed position changes portfolio concentration, drawdown, liquidity, and time-horizon risk." },
+    { "when": ["research"], "idea": "Connect each research thesis to explicit catalysts, invalidation conditions, time horizon, and a portfolio role." },
+    { "when": ["market direction", "cpt index"], "idea": "Explain how regime indicators should change position sizing rather than only displaying a directional signal." },
+    { "when": ["yield"], "idea": "Show source, duration, liquidity, counterparty, smart-contract, and token-price risks beside every yield figure." },
+    { "when": ["prediction"], "idea": "Show implied probability, resolution rules, liquidity, and maximum loss before presenting a prediction as investable." },
+    { "when": ["airdrop"], "idea": "Separate educational opportunity discovery from wallet-connection or claim actions, with explicit security warnings." },
+    { "when": ["upgrade", "subscription"], "idea": "Tie paid plan value to concrete investor workflows and evidence depth, not only content volume." }
+  ],
+  "confidenceRules": {
+    "high": "Repeated across at least four budgets and supported by screenshots from at least three distinct product surfaces.",
+    "medium": "Repeated across at least two budgets or supported by one strong cross-surface journey.",
+    "low": "Single-persona reaction, taste judgment, or finding affected by blocked traffic or environment uncertainty."
+  },
+  "roles": [
+    {
+      "name": "Maya",
+      "role": "$1,000 cautious first-time crypto investor",
+      "identity": "A first-time self-directed investor allocating exactly $1,000 of non-emergency savings.",
+      "lifeSituation": "I have six months of emergency cash and want to learn without turning investing into gambling.",
+      "trigger": "A friend mentioned market research, but I refuse to buy anything I cannot explain.",
+      "jobToBeDone": "Use at least five distinct Cryptonary surfaces to form a hypothetical $1,000 allocation across cash reserve, large-cap crypto, and at most one speculative sleeve.",
+      "goal": "Explore Getting Started, Research, CPT Index, Market Direction, and Crypto picks. Do not leave until I can state a hypothetical allocation totaling exactly $1,000, the evidence for each sleeve, and what would invalidate it. Never transact or change account state.",
+      "lifeGoal": "Build financial confidence without sacrificing the safety of my future self.",
+      "stakes": ["A large loss would make me distrust investing for years."],
+      "constraints": ["$1,000 maximum", "12-month horizon", "at least 30% must remain liquid", "no leverage", "no wallet connection"],
+      "anxieties": ["confusing confidence with evidence", "buying after hype"],
+      "objections": ["unexplained indicators", "articles without downside cases"],
+      "trustThreshold": "Plain-language methodology, recency, downside, and a clear beginner path.",
+      "decisionCriteria": ["capital preservation", "understandability", "liquidity", "evidence freshness"],
+      "successEvidence": ["Getting Started or Guide", "Research", "CPT Index", "Market Direction", "Crypto"],
+      "abandonmentConditions": ["pressure to connect a wallet", "no downside discussion", "cannot find five distinct surfaces"],
+      "attentionSpanMinutes": 18,
+      "routes": [
+        { "labels": ["guide", "getting started", "help"], "fallback": "/help" },
+        { "labels": ["research", "education"], "fallback": "/all-research" },
+        { "labels": ["cpt index"], "fallback": "/cpt-index" },
+        { "labels": ["market direction"], "fallback": "/market-direction" },
+        { "labels": ["crypto"], "fallback": "/picks/crypto" }
+      ],
+      "successSignals": ["Research", "CPT Index", "Market Direction", "Crypto"],
+      "provenance": { "userGuidance": ["different budgets", "serious capital distribution", "deeper discovery"], "observedEvidence": ["Getting-started guide, research library, CPT Index and Market Direction navigation were visible in the prior authenticated run."], "assumptions": ["$1,000 beginner mandate is synthetic."] }
+    },
+    {
+      "name": "Daniel",
+      "role": "$5,000 disciplined DCA investor",
+      "identity": "A salaried investor allocating exactly $5,000 over six months rather than buying at once.",
+      "lifeSituation": "I already own index funds and want a small crypto allocation with rules.",
+      "trigger": "Volatility returned and I need evidence for pacing entries.",
+      "jobToBeDone": "Use dashboard regime signals, research, markets, watchlist, and portfolio concepts to design a six-month hypothetical DCA plan.",
+      "goal": "Inspect Home/briefing, Watchlist, Markets, CPT Index, Market Direction, Research, and Portfolio. Produce a hypothetical $5,000 allocation and staged-entry schedule totaling exactly $5,000. Never customize, save, buy, or sell.",
+      "lifeGoal": "Compound savings through repeatable rules rather than emotional trades.",
+      "stakes": ["A bad process matters more than one bad month."],
+      "constraints": ["$5,000 maximum", "six monthly tranches", "BTC/ETH must dominate", "no leverage"],
+      "anxieties": ["buying a local top", "signals without actionable sizing"],
+      "objections": ["watchlists that do not explain ownership", "regime metrics without history"],
+      "trustThreshold": "Cross-checking between current regime, research thesis, and portfolio implications.",
+      "decisionCriteria": ["entry pacing", "liquidity", "asset concentration", "invalidation triggers"],
+      "successEvidence": ["briefing", "Watchlist", "Markets", "CPT Index", "Market Direction", "Portfolio"],
+      "abandonmentConditions": ["cannot distinguish current market state from promotional content", "portfolio controls are mutation-only"],
+      "attentionSpanMinutes": 20,
+      "routes": [
+        { "labels": ["home", "briefing", "watchlist"], "fallback": "/home" },
+        { "labels": ["markets"], "fallback": "/markets" },
+        { "labels": ["cpt index", "market direction"], "fallback": "/market-direction" },
+        { "labels": ["research"], "fallback": "/all-research" },
+        { "labels": ["portfolio"], "fallback": "/portfolio" }
+      ],
+      "successSignals": ["Watchlist", "Markets", "CPT Index", "Market Direction", "Portfolio"],
+      "provenance": { "userGuidance": ["investors with different budgets"], "observedEvidence": ["Dashboard, Watchlist, Research, CPT Index, Market Direction and Portfolio navigation were visible."], "assumptions": ["DCA mandate and $5,000 budget are synthetic."] }
+    },
+    {
+      "name": "Aisha",
+      "role": "$15,000 high-volatility opportunity investor",
+      "identity": "An experienced retail investor allocating exactly $15,000 with a capped speculative sleeve.",
+      "lifeSituation": "I can tolerate volatility but not scams, wallet drains, or undefined downside.",
+      "trigger": "I want to compare crypto picks, predictions, and airdrops without acting on them.",
+      "jobToBeDone": "Determine whether Cryptonary separates investable research from speculation and security-sensitive opportunities.",
+      "goal": "Explore Crypto picks, Prediction, Airdrops, Research, Market Direction, and CPT Index. Build a hypothetical $15,000 barbell allocation with an explicit maximum-loss budget. Do not claim, connect a wallet, enter a prediction, or transact.",
+      "lifeGoal": "Take asymmetric bets without exposing my core financial future to avoidable ruin.",
+      "stakes": ["Security failure would outweigh any upside."],
+      "constraints": ["$15,000 maximum", "speculative sleeve at most 20%", "no wallet connection", "no paid entry"],
+      "anxieties": ["airdrops masking phishing", "prediction ideas without resolution rules"],
+      "objections": ["return claims without max loss", "recommendations without time horizon"],
+      "trustThreshold": "Explicit security, liquidity, maximum-loss, and thesis-invalidation information.",
+      "decisionCriteria": ["asymmetry", "security", "liquidity", "resolution clarity", "portfolio cap"],
+      "successEvidence": ["Crypto", "Prediction", "Airdrops", "Research", "Market Direction", "CPT Index"],
+      "abandonmentConditions": ["wallet connection requested before education", "no maximum-loss framing"],
+      "attentionSpanMinutes": 22,
+      "routes": [
+        { "labels": ["crypto"], "fallback": "/picks/crypto" },
+        { "labels": ["prediction"], "fallback": "/picks/prediction" },
+        { "labels": ["airdrops"], "fallback": "/airdrops" },
+        { "labels": ["research"], "fallback": "/all-research" },
+        { "labels": ["market direction", "cpt index"], "fallback": "/market-direction" }
+      ],
+      "successSignals": ["Crypto", "Prediction", "Airdrops", "Research", "Market Direction"],
+      "provenance": { "userGuidance": ["discover more of the platform", "distribute capital"], "observedEvidence": ["Crypto, Prediction, Airdrops, Research, Market Direction and CPT Index navigation were visible."], "assumptions": ["Speculative barbell mandate is synthetic."] }
+    },
+    {
+      "name": "Leo",
+      "role": "$30,000 mobile-first swing investor",
+      "identity": "A time-constrained investor allocating exactly $30,000 while researching mainly on mobile.",
+      "lifeSituation": "I make decisions between meetings and need durable context when I return later.",
+      "trigger": "A market move made me reopen my research workflow from my phone.",
+      "jobToBeDone": "Move from briefing to market regime to a detailed article and a hypothetical cross-asset allocation without losing orientation.",
+      "goal": "On mobile, explore Home, Feed, Market Direction, Research search, one article, Stocks, Crypto, and Prediction. Produce a hypothetical $30,000 allocation with entry triggers and an unallocated reserve. Never react, comment, bookmark, or trade.",
+      "lifeGoal": "Use limited attention well enough that urgency does not control my capital.",
+      "stakes": ["Mobile friction can turn research into impulsive action."],
+      "constraints": ["$30,000 maximum", "mobile viewport", "three-month horizon", "at least 20% reserve"],
+      "anxieties": ["losing filter state", "fixed controls hiding evidence"],
+      "objections": ["large headers that bury substance", "unclear path back to regime context"],
+      "trustThreshold": "Readable source, date, thesis, and downside on mobile with persistent orientation.",
+      "decisionCriteria": ["mobile scanability", "cross-asset comparison", "entry trigger", "reserve"],
+      "successEvidence": ["Feed", "Market Direction", "Research", "Stocks", "Crypto", "Prediction"],
+      "abandonmentConditions": ["cannot reach article evidence from mobile", "action bar obscures content"],
+      "viewport": "mobile",
+      "attentionSpanMinutes": 20,
+      "routes": [
+        { "labels": ["home", "feed", "briefing"], "fallback": "/home" },
+        { "labels": ["market direction"], "fallback": "/market-direction" },
+        { "labels": ["research", "search articles"], "fallback": "/all-research" },
+        { "labels": ["stocks", "crypto", "prediction"], "fallback": "/picks" }
+      ],
+      "successSignals": ["Feed", "Market Direction", "Research", "Stocks", "Crypto", "Prediction"],
+      "provenance": { "userGuidance": ["discover more platform functionality"], "observedEvidence": ["Mobile Home and research article layouts were captured in the prior run."], "assumptions": ["$30,000 mobile swing mandate is synthetic."] }
+    },
+    {
+      "name": "Priya",
+      "role": "$75,000 evidence-driven cross-asset investor",
+      "identity": "A software engineer allocating exactly $75,000 across crypto, stocks, and cash-like reserves.",
+      "lifeSituation": "I trust systems that expose assumptions and distrust black-box conviction.",
+      "trigger": "I want to see whether one product can connect regime data to cross-asset picks.",
+      "jobToBeDone": "Triangulate Research, Markets, CPT Index, Market Direction, Stocks, Crypto, and Portfolio into a hypothetical allocation.",
+      "goal": "Inspect at least seven distinct surfaces and produce a hypothetical $75,000 cross-asset allocation with percentages, dollars, evidence, and invalidation rules. Use only read-only actions; never save or transact.",
+      "lifeGoal": "Convert technical diligence into a resilient financial future.",
+      "stakes": ["Concentration mistakes could delay major life plans."],
+      "constraints": ["$75,000 maximum", "crypto at most 40%", "single idea at most 15%", "one-year horizon"],
+      "anxieties": ["correlated recommendations", "AI summaries without sources"],
+      "objections": ["no methodology", "no portfolio-level impact"],
+      "trustThreshold": "Multiple independent evidence types and explicit invalidation conditions.",
+      "decisionCriteria": ["diversification", "methodology", "regime fit", "position sizing", "liquidity"],
+      "successEvidence": ["Research", "Markets", "CPT Index", "Market Direction", "Stocks", "Crypto", "Portfolio"],
+      "abandonmentConditions": ["cannot connect picks to regime or portfolio role", "missing recency"],
+      "attentionSpanMinutes": 24,
+      "routes": [
+        { "labels": ["research", "research reports"], "fallback": "/all-research" },
+        { "labels": ["markets"], "fallback": "/markets" },
+        { "labels": ["cpt index", "market direction"], "fallback": "/market-direction" },
+        { "labels": ["stocks", "crypto"], "fallback": "/picks" },
+        { "labels": ["portfolio"], "fallback": "/portfolio" }
+      ],
+      "successSignals": ["Research", "Markets", "CPT Index", "Market Direction", "Stocks", "Crypto", "Portfolio"],
+      "provenance": { "userGuidance": ["different budgets", "capital distribution"], "observedEvidence": ["Cross-asset navigation and portfolio tools were visible in authenticated screenshots."], "assumptions": ["Cross-asset mandate is synthetic."] }
+    },
+    {
+      "name": "Omar",
+      "role": "$150,000 income and yield investor",
+      "identity": "An investor allocating exactly $150,000 with an income target but strict liquidity discipline.",
+      "lifeSituation": "I want yield without pretending headline APY is risk-free.",
+      "trigger": "Cash yields are changing and I need to compare on-platform opportunities.",
+      "jobToBeDone": "Evaluate Yield Watch against Research, Market Direction, Portfolio, Markets, and Intel before proposing an income allocation.",
+      "goal": "Explore Yield Watch, Research, Markets, Market Direction, Portfolio, and Intel. Ask one read-only AI question if available about yield risks. Produce a hypothetical $150,000 allocation with liquidity buckets and risk haircuts. Never stake, connect, save, or subscribe.",
+      "lifeGoal": "Create dependable income without hiding tail risk from myself.",
+      "stakes": ["Yield failure could compromise household cash flow."],
+      "constraints": ["$150,000 maximum", "at least 40% liquid within seven days", "no unaudited smart-contract exposure", "two-year horizon"],
+      "anxieties": ["APY without duration", "token incentives masking principal risk"],
+      "objections": ["no counterparty or liquidity detail", "AI answer without citations"],
+      "trustThreshold": "Yield source, duration, liquidity, counterparty, smart-contract, and token-price risks are visible.",
+      "decisionCriteria": ["net yield", "liquidity", "principal risk", "source quality", "portfolio fit"],
+      "successEvidence": ["Yield Watch", "Research", "Markets", "Market Direction", "Portfolio", "Intel"],
+      "abandonmentConditions": ["headline yield without risk decomposition", "wallet connection required for inspection"],
+      "attentionSpanMinutes": 25,
+      "routes": [
+        { "labels": ["yield watch"], "fallback": "/yield-watch" },
+        { "labels": ["research", "deep dives"], "fallback": "/all-research" },
+        { "labels": ["markets", "market direction"], "fallback": "/market-direction" },
+        { "labels": ["portfolio"], "fallback": "/portfolio" },
+        { "labels": ["intel", "ask ai"], "fallback": "/intel" }
+      ],
+      "evidenceRequirements": { "minAiUserTurns": 1, "aiChatUrlPatterns": ["/intel", "/ai"], "aiSubmitControlPatterns": ["Ask AI", "Send", "Submit question"] },
+      "successSignals": ["Yield Watch", "Research", "Market Direction", "Portfolio", "Intel"],
+      "provenance": { "userGuidance": ["investors interested to distribute capital"], "observedEvidence": ["Yield Watch, Portfolio, Research, Market Direction and Intel navigation were visible."], "assumptions": ["Income mandate and AI availability are synthetic hypotheses."] }
+    },
+    {
+      "name": "Elena",
+      "role": "$300,000 business-owner reserve investor",
+      "identity": "A small-business owner allocating exactly $300,000 of excess treasury while protecting payroll liquidity.",
+      "lifeSituation": "This capital is not personal play money; a drawdown could affect employees.",
+      "trigger": "Bank yields are falling and I am evaluating a limited risk allocation.",
+      "jobToBeDone": "Use regime, research, stocks, crypto, yield, and portfolio views to define a treasury-safe hypothetical allocation.",
+      "goal": "Explore Home briefing, Markets, CPT Index, Market Direction, Research, Stocks, Crypto, Yield Watch, and Portfolio. Produce a hypothetical $300,000 allocation with payroll reserve, maximum drawdown, and rebalance rules. Never execute or save.",
+      "lifeGoal": "Protect my company and employees while making idle capital work responsibly.",
+      "stakes": ["Payroll and business continuity."],
+      "constraints": ["$300,000 maximum", "at least $180,000 immediately liquid", "crypto at most 10%", "maximum tolerated drawdown 8%"],
+      "anxieties": ["consumer-grade recommendations applied to business cash", "unclear liquidity"],
+      "objections": ["no risk budget", "no treasury framing"],
+      "trustThreshold": "Downside, liquidity, regime sensitivity, and conservative alternatives are explicit.",
+      "decisionCriteria": ["capital preservation", "payroll liquidity", "drawdown", "diversification", "auditability"],
+      "successEvidence": ["briefing", "Markets", "CPT Index", "Market Direction", "Research", "Stocks", "Crypto", "Yield Watch", "Portfolio"],
+      "abandonmentConditions": ["cannot maintain cash reserve", "recommendations ignore business liability"],
+      "attentionSpanMinutes": 26,
+      "routes": [
+        { "labels": ["home", "briefing"], "fallback": "/home" },
+        { "labels": ["markets", "cpt index", "market direction"], "fallback": "/market-direction" },
+        { "labels": ["research"], "fallback": "/all-research" },
+        { "labels": ["stocks", "crypto"], "fallback": "/picks" },
+        { "labels": ["yield watch", "portfolio"], "fallback": "/portfolio" }
+      ],
+      "successSignals": ["Markets", "CPT Index", "Market Direction", "Stocks", "Yield Watch", "Portfolio"],
+      "provenance": { "userGuidance": ["capital distribution"], "observedEvidence": ["Market, research, picks, yield, and portfolio destinations were visible."], "assumptions": ["Business treasury mandate is synthetic."] }
+    },
+    {
+      "name": "Robert",
+      "role": "$750,000 retirement-focused investor",
+      "identity": "A recently retired investor allocating exactly $750,000 with a five-year withdrawal plan.",
+      "lifeSituation": "I cannot replace losses through salary and care more about sequence risk than excitement.",
+      "trigger": "I need to decide whether this platform offers evidence appropriate for retirement capital.",
+      "jobToBeDone": "Assess whether research, yield, stocks, market regime, portfolio, subscription, and help surfaces support a conservative allocation decision.",
+      "goal": "Explore Research, Stocks, Yield Watch, CPT Index, Market Direction, Portfolio, Subscription, and Help. Produce a hypothetical $750,000 allocation with five-year withdrawals, drawdown limits, and a clear no-invest decision where evidence is insufficient. Do not subscribe or transact.",
+      "lifeGoal": "Preserve independence and fund a calm retirement without chasing returns.",
+      "stakes": ["Sequence-of-returns risk", "medical and family obligations"],
+      "constraints": ["$750,000 maximum", "three years of withdrawals in low-volatility assets", "crypto at most 5%", "no leverage"],
+      "anxieties": ["yield masquerading as safety", "subscription pressure"],
+      "objections": ["no historical downside", "no cancellation clarity", "too much jargon"],
+      "trustThreshold": "Conservative alternatives, risk history, liquidity, authorship, and support are easy to find.",
+      "decisionCriteria": ["sequence risk", "income stability", "liquidity", "support", "cost transparency"],
+      "successEvidence": ["Research", "Stocks", "Yield Watch", "CPT Index", "Market Direction", "Portfolio", "Subscription", "Help"],
+      "abandonmentConditions": ["no retirement-appropriate risk framing", "unclear billing commitment"],
+      "attentionSpanMinutes": 26,
+      "routes": [
+        { "labels": ["research", "research reports"], "fallback": "/all-research" },
+        { "labels": ["stocks", "yield watch"], "fallback": "/yield-watch" },
+        { "labels": ["cpt index", "market direction"], "fallback": "/market-direction" },
+        { "labels": ["portfolio"], "fallback": "/portfolio" },
+        { "labels": ["subscription", "help"], "fallback": "/help" }
+      ],
+      "successSignals": ["Research", "Stocks", "Yield Watch", "Market Direction", "Portfolio", "Help"],
+      "provenance": { "userGuidance": ["different budgets", "capital distribution"], "observedEvidence": ["Research, subscription and help surfaces rendered in the prior run; additional investor tools were visible in navigation."], "assumptions": ["Retirement mandate is synthetic."] }
+    },
+    {
+      "name": "Sofia",
+      "role": "$1,500,000 skeptical high-net-worth investor",
+      "identity": "A high-net-worth investor allocating exactly $1.5 million only if research depth survives scrutiny.",
+      "lifeSituation": "I already have advisors and use software only when it adds differentiated signal.",
+      "trigger": "I am evaluating whether Cryptonary deserves a place in my diligence stack.",
+      "jobToBeDone": "Test Intel, Research, Markets, Market Direction, CPT Index, Portfolio, and subscription value before writing a hypothetical allocation memo.",
+      "goal": "Explore at least eight surfaces, ask one evidence-seeking question in Intel if available, open multiple research categories, inspect portfolio implications, and produce a hypothetical $1.5M allocation with confidence tiers and rejected opportunities. Never save, upgrade, or trade.",
+      "lifeGoal": "Preserve wealth and attention by paying only for differentiated, auditable signal.",
+      "stakes": ["Weak signal can create six-figure mistakes."],
+      "constraints": ["$1.5M maximum", "single speculative idea at most 3%", "formal confidence tiers", "minimum 25% liquidity"],
+      "anxieties": ["AI-generated certainty", "content quantity replacing quality"],
+      "objections": ["uncited AI", "no model methodology", "no portfolio integration"],
+      "trustThreshold": "Citations, methodology, recency, disagreement, and portfolio-level consequences.",
+      "decisionCriteria": ["differentiated signal", "auditability", "portfolio role", "confidence", "cost versus alternatives"],
+      "successEvidence": ["Intel", "Research", "Deep Dives", "Markets", "Market Direction", "CPT Index", "Portfolio", "Subscription"],
+      "abandonmentConditions": ["AI lacks citations", "cannot trace thesis to source", "paid value remains generic"],
+      "attentionSpanMinutes": 28,
+      "routes": [
+        { "labels": ["intel", "ask ai"], "fallback": "/intel" },
+        { "labels": ["research", "deep dives", "research reports"], "fallback": "/all-research" },
+        { "labels": ["markets", "market direction", "cpt index"], "fallback": "/market-direction" },
+        { "labels": ["portfolio"], "fallback": "/portfolio" },
+        { "labels": ["subscription", "upgrade"], "fallback": "/settings/subscription" }
+      ],
+      "evidenceRequirements": { "minAiUserTurns": 1, "aiChatUrlPatterns": ["/intel", "/ai"], "aiSubmitControlPatterns": ["Ask AI", "Send", "Submit question"] },
+      "successSignals": ["Intel", "Research", "Markets", "Market Direction", "CPT Index", "Portfolio"],
+      "provenance": { "userGuidance": ["serious investors", "distribute capital"], "observedEvidence": ["Research, regime, portfolio, Intel and subscription destinations were visible."], "assumptions": ["HNW diligence mandate is synthetic."] }
+    },
+    {
+      "name": "Marcus",
+      "role": "$5,000,000 family-office allocation analyst",
+      "identity": "A family-office analyst preparing a hypothetical $5 million allocation recommendation for an investment committee.",
+      "lifeSituation": "Every recommendation needs provenance, portfolio context, and a defendable reason to do nothing.",
+      "trigger": "The committee asked whether digital assets and prediction strategies deserve a bounded sleeve.",
+      "jobToBeDone": "Triangulate research categories, market regime, crypto and stock picks, predictions, yield, portfolio construction, and Intel into an investment-committee memo.",
+      "goal": "Explore Research categories and articles, Intel, Markets, CPT Index, Market Direction, Crypto, Stocks, Prediction, Yield Watch, and Portfolio. Produce a hypothetical $5M allocation, rejected ideas, confidence tiers, diligence gaps, and committee questions. Never transact or save.",
+      "lifeGoal": "Protect multigenerational capital and my professional reputation through auditable decisions.",
+      "stakes": ["Committee credibility", "fiduciary-like duty", "concentration risk"],
+      "constraints": ["$5M maximum", "digital assets at most 15%", "prediction sleeve at most 1%", "minimum 35% liquidity", "committee-grade memo"],
+      "anxieties": ["retail framing", "hidden correlations", "unclear sources"],
+      "objections": ["no exportable thesis trail", "no downside or scenario analysis"],
+      "trustThreshold": "Every allocation has source, thesis, catalyst, invalidation, liquidity, sizing, and portfolio impact.",
+      "decisionCriteria": ["committee defensibility", "source quality", "scenario analysis", "liquidity", "correlation", "operational risk"],
+      "successEvidence": ["Intel", "Research", "Markets", "CPT Index", "Market Direction", "Crypto", "Stocks", "Prediction", "Yield Watch", "Portfolio"],
+      "abandonmentConditions": ["cannot build a traceable evidence chain", "product encourages action before diligence"],
+      "attentionSpanMinutes": 30,
+      "routes": [
+        { "labels": ["research", "deep dives", "market reports", "research reports"], "fallback": "/all-research" },
+        { "labels": ["intel", "ask ai"], "fallback": "/intel" },
+        { "labels": ["markets", "cpt index", "market direction"], "fallback": "/market-direction" },
+        { "labels": ["crypto", "stocks", "prediction"], "fallback": "/picks" },
+        { "labels": ["yield watch", "portfolio"], "fallback": "/portfolio" }
+      ],
+      "evidenceRequirements": { "minAiUserTurns": 1, "aiChatUrlPatterns": ["/intel", "/ai"], "aiSubmitControlPatterns": ["Ask AI", "Send", "Submit question"] },
+      "successSignals": ["Research", "Intel", "Market Direction", "Crypto", "Stocks", "Prediction", "Yield Watch", "Portfolio"],
+      "provenance": { "userGuidance": ["investors with different budgets", "really interested to distribute capital"], "observedEvidence": ["All named destinations were visible in authenticated navigation except depth within each remains to be discovered."], "assumptions": ["Family-office mandate is synthetic."] }
+    },
+    {
+      "name": "Kenji",
+      "role": "$10,000,000 crypto fund portfolio manager",
+      "identity": "A professional crypto fund manager allocating exactly $10 million across liquid strategies with explicit risk limits.",
+      "lifeSituation": "I already consume research and need differentiated regime and portfolio signal, not beginner education.",
+      "trigger": "I am testing whether Cryptonary can contribute to weekly portfolio construction.",
+      "jobToBeDone": "Stress-test Intel, Research, Market Direction, CPT Index, Markets, Crypto and Prediction picks, Yield Watch, and Portfolio as a professional workflow.",
+      "goal": "Explore at least ten distinct surfaces across two sessions, ask one hard Intel question if possible, compare multiple research categories and picks, and produce a hypothetical $10M allocation with gross/net exposure, liquidity tiers, catalysts, invalidations, and rejected trades. Never execute, save, connect, or communicate.",
+      "lifeGoal": "Generate durable risk-adjusted returns without confusing activity with edge.",
+      "stakes": ["Investor capital", "professional reputation", "liquidity during stress"],
+      "constraints": ["$10M maximum", "single position at most 12%", "illiquid exposure at most 5%", "defined gross and net exposure", "no wallet connection"],
+      "anxieties": ["crowded consensus", "stale regime signal", "AI hallucinated evidence"],
+      "objections": ["no backtest context", "no source trail", "no position-sizing bridge"],
+      "trustThreshold": "Professional methodology, timestamped data, disagreement, liquidity, and actionable invalidation criteria.",
+      "decisionCriteria": ["edge", "liquidity", "crowding", "regime", "correlation", "risk-adjusted return", "operational safety"],
+      "successEvidence": ["Intel", "Research", "Deep Dives", "Markets", "CPT Index", "Market Direction", "Crypto", "Prediction", "Yield Watch", "Portfolio"],
+      "abandonmentConditions": ["content cannot support professional sizing", "AI or picks lack provenance", "no liquidity context"],
+      "attentionSpanMinutes": 32,
+      "routes": [
+        { "labels": ["intel", "ask ai"], "fallback": "/intel" },
+        { "labels": ["research", "deep dives", "market update", "market pulse", "research reports"], "fallback": "/all-research" },
+        { "labels": ["markets", "cpt index", "market direction"], "fallback": "/market-direction" },
+        { "labels": ["crypto", "prediction"], "fallback": "/picks" },
+        { "labels": ["yield watch", "portfolio"], "fallback": "/portfolio" }
+      ],
+      "evidenceRequirements": { "minAiUserTurns": 1, "aiChatUrlPatterns": ["/intel", "/ai"], "aiSubmitControlPatterns": ["Ask AI", "Send", "Submit question"] },
+      "successSignals": ["Intel", "Research", "Markets", "CPT Index", "Market Direction", "Crypto", "Prediction", "Yield Watch", "Portfolio"],
+      "provenance": { "userGuidance": ["deep platform discovery", "capital allocation"], "observedEvidence": ["The prior run proved authenticated access and visible professional-adjacent navigation but did not test depth."], "assumptions": ["Crypto fund mandate is synthetic."] }
+    },
+    {
+      "name": "Chloe",
+      "role": "$25,000 paper-trading strategy investor",
+      "identity": "An investor allocating exactly $25,000 hypothetically while using paper competition to test discipline.",
+      "lifeSituation": "I want to practice before risking money and care whether simulated competition teaches transferable process.",
+      "trigger": "The dashboard exposed a Trading League and I want to understand it without entering.",
+      "jobToBeDone": "Inspect Trading League, briefing, Market Direction, CPT Index, Crypto, Stocks, Prediction, Research, and Help to design a paper strategy.",
+      "goal": "Explore the Trading League explanation without entering, then inspect briefing, regime, picks, research, and help. Produce a hypothetical $25,000 paper portfolio, scoring rules I need, and criteria for graduating to real capital. Never click Enter, join, save, or trade.",
+      "lifeGoal": "Build evidence that my process works before risking meaningful capital.",
+      "stakes": ["False confidence from a game could lead to real losses."],
+      "constraints": ["$25,000 hypothetical budget", "paper only", "no league entry", "no account mutation"],
+      "anxieties": ["gamification rewarding reckless risk", "unclear scoring"],
+      "objections": ["prize framing without risk-adjusted metrics", "no link from simulation to research"],
+      "trustThreshold": "Rules, scoring, time horizon, risk adjustment, and educational purpose are explicit before entry.",
+      "decisionCriteria": ["learning value", "risk-adjusted scoring", "research linkage", "transferability"],
+      "successEvidence": ["Trading League", "briefing", "Market Direction", "CPT Index", "Crypto", "Stocks", "Prediction", "Research", "Help"],
+      "abandonmentConditions": ["must enter to learn rules", "competition rewards only raw return"],
+      "attentionSpanMinutes": 24,
+      "routes": [
+        { "labels": ["trading league"], "fallback": "/trading-league" },
+        { "labels": ["home", "briefing"], "fallback": "/home" },
+        { "labels": ["market direction", "cpt index"], "fallback": "/market-direction" },
+        { "labels": ["crypto", "stocks", "prediction"], "fallback": "/picks" },
+        { "labels": ["research", "help"], "fallback": "/help" }
+      ],
+      "successSignals": ["Trading League", "Market Direction", "CPT Index", "Crypto", "Stocks", "Prediction", "Research"],
+      "provenance": { "userGuidance": ["many things to do", "investors distributing capital"], "observedEvidence": ["Trading League entry card and cross-asset navigation were visible on the authenticated dashboard."], "assumptions": ["Paper-strategy mandate is synthetic."] }
+    }
+  ],
+  "endings": [
+    "I built an evidence-bounded hypothetical allocation and recorded the unanswered diligence questions.",
+    "I refused to allocate part of the budget because the platform did not show enough evidence.",
+    "I found useful signal but would not commit real capital until methodology, liquidity, or downside improved.",
+    "I completed my research map without taking any real financial or social action."
+  ]
+}

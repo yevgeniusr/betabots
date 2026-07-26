@@ -117,8 +117,12 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 - `interactionPolicy`: Optional generic runtime guard with `actionDenyRules`
   and `requestDenyRules`. Action rules can match `actionTypes`, `urlPatterns`,
   `controlNamePatterns`, `controlKindPatterns`, `hrefPatterns`, and
-  `valuePatterns`. Request rules can match `methods` and `urlPatterns`; matching
-  state-changing requests are aborted and recorded only as redacted events.
+  `valuePatterns`. Request rules can match `methods`, legacy `urlPatterns`
+  across request URL/current page/body, or `requestUrlPatterns` against the
+  request URL only. Prefer `requestUrlPatterns` for production guards so page
+  context, harmless form values, analytics, and read-only POSTs do not create
+  false positives. Matching requests are aborted and recorded only as redacted
+  events.
 - `audienceResearch`: Optional object or text summary of source evidence, segment assumptions, traffic mix, vocabulary, and objections.
 - `researchSources`: Optional array of evidence sources used to design the cohort. Use source labels, not secrets.
 - `audienceSegments`: Optional array of weighted audience segments. Each segment can include `name`, `weight`, `evidence`, `jobs`, `objections`, `deviceBias`, `vocabulary`, and `assumptions`.
