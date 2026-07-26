@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"betabots.decision-outcome.v1","type":"object","required":["schema","id","outcome"],"properties":{"schema":{"const":"betabots.decision-outcome.v1"},"outcome":{"enum":["allocate","reject","conditional","inconclusive"]},"allocation":{"type":"object"}}}

@@ -12,6 +12,10 @@
     "node": ">=18"
   },
   "scripts": {
+    "test": "bash tests/smoke.sh",
+    "test:contracts": "node --test tests/study_contracts.test.cjs",
+    "validate:contracts": "node scripts/validate-study-artifacts.cjs",
+    "validate:contracts:json": "node scripts/validate-study-artifacts.cjs --json",
     "install:deps": "node scripts/install-deps.cjs --all",
     "install:chromium": "node scripts/install-browsers.cjs",
     "smoke": "tests/smoke.sh",

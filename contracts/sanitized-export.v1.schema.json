@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"betabots.sanitized-export.v1","type":"object","required":["schema","id","allowlistedArtifacts","excludedSensitiveClasses","schemaVersions","verification"],"properties":{"schema":{"const":"betabots.sanitized-export.v1"},"allowlistedArtifacts":{"type":"array"},"verification":{"type":"object"}}}

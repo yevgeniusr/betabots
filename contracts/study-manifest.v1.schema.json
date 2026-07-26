@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "betabots.study-manifest.v1",
+  "type": "object",
+  "required": ["schema", "id", "title", "researchQuestion", "hypotheses", "target", "environment", "arms", "interactionPolicyRef", "authenticationLifecyclePolicy", "evidenceRequirements", "reproducibility", "limitations"],
+  "properties": {"schema":{"const":"betabots.study-manifest.v1"},"id":{"type":"string"},"title":{"type":"string"},"researchQuestion":{"type":"string"},"hypotheses":{"type":"array"},"target":{"type":"object"},"environment":{"type":"object"},"arms":{"type":"array"},"limitations":{"type":"array"}}
+}

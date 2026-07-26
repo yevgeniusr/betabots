@@ -49,6 +49,7 @@ Then start a new agent thread and ask it to use Betabots against a local or stag
 - [Logo](docs/logo-concepts.md): selected Betabots identity and asset paths.
 - [Usage guide](docs/usage.md): practical setup and run flow for browser Betabots.
 - [Truthful personalities](docs/truthful-personalities.md): the core Betabots model for non-performative synthetic users.
+- [Study contracts](contracts/README.md): versioned public study artifacts and validation commands.
 
 ## What Betabots Do
 

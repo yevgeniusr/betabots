@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"betabots.evidence-ref.v1","type":"object","required":["schema","id","classification","claim"],"properties":{"schema":{"const":"betabots.evidence-ref.v1"},"classification":{"enum":["observed","inferred","recommendation","external","unverified"]}}}

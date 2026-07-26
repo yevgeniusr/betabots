@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+NODE_TEST_ARGS=()
+if node --help | grep -q -- '--test-force-exit'; then
+  NODE_TEST_ARGS=(--test-force-exit)
+fi
 python3 "$ROOT/skills/betabots/scripts/generate_cohort.py" --count 3 --seed 42 --product "Smoke app" >/tmp/betabots-cohort.json
 python3 -m json.tool /tmp/betabots-cohort.json >/dev/null
 python3 - <<'PY'
@@ -45,35 +49,39 @@ node --check "$ROOT/skills/betabots/scripts/persona_generation.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/social_provenance.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/product_evidence.cjs" >/dev/null
 node --check "$ROOT/skills/betabots/scripts/vision_payload.cjs" >/dev/null
-node --test "$ROOT/tests/environment_integrity.test.cjs" >/dev/null
-node --test "$ROOT/tests/screen_identity.test.cjs" >/dev/null
-node --test "$ROOT/tests/keyword_scoring.test.cjs" >/dev/null
-node --test "$ROOT/tests/session_scoring.test.cjs" >/dev/null
-node --test "$ROOT/tests/goal_evidence.test.cjs" >/dev/null
-node --test "$ROOT/tests/curiosity_memory.test.cjs" >/dev/null
-node --test "$ROOT/tests/confidence_tiers.test.cjs" >/dev/null
-node --test "$ROOT/tests/route_planning.test.cjs" >/dev/null
-node --test "$ROOT/tests/thinking_body.test.cjs" >/dev/null
-node --test "$ROOT/tests/thinking_body_browser.test.cjs" >/dev/null
-node --test "$ROOT/tests/install_deps.test.cjs" >/dev/null
-node --test "$ROOT/tests/install_symlink_safety.test.cjs" >/dev/null
-node --test "$ROOT/tests/verify_clean_install.test.cjs" >/dev/null
-node --test "$ROOT/tests/generate_cohort_cli.test.cjs" >/dev/null
-node --test "$ROOT/tests/thinking_body_runner.test.cjs" >/dev/null
-node --test "$ROOT/tests/session_scheduler.test.cjs" >/dev/null
-node --test "$ROOT/tests/interaction_policy.test.cjs" >/dev/null
-node --test "$ROOT/tests/cryptonary_cohort.test.cjs" >/dev/null
-node --test "$ROOT/tests/export_storage_state_from_cdp.test.cjs" >/dev/null
-node --test "$ROOT/tests/safe_cohort_runner.test.cjs" >/dev/null
-node --test "$ROOT/tests/session_state_browser.test.cjs" >/dev/null
-node --test "$ROOT/tests/browser_issue_recovery.test.cjs" >/dev/null
-node --test "$ROOT/tests/request_failure_browser.test.cjs" >/dev/null
-node --test "$ROOT/tests/destiny_actions.test.cjs" >/dev/null
-node --test "$ROOT/tests/persona_generation.test.cjs" >/dev/null
-node --test "$ROOT/tests/persona_generation_runner.test.cjs" >/dev/null
-node --test "$ROOT/tests/social_provenance.test.cjs" >/dev/null
-node --test "$ROOT/tests/product_evidence.test.cjs" >/dev/null
-node --test "$ROOT/tests/vision_payload.test.cjs" >/dev/null
+node --check "$ROOT/skills/betabots/scripts/study_contracts.cjs" >/dev/null
+node --check "$ROOT/scripts/validate-study-artifacts.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/study_contracts.test.cjs" >/dev/null
+node "$ROOT/scripts/validate-study-artifacts.cjs" "$ROOT"/contracts/fixtures/*.json >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/environment_integrity.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/screen_identity.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/keyword_scoring.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/session_scoring.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/goal_evidence.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/curiosity_memory.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/confidence_tiers.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/route_planning.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/thinking_body.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/thinking_body_browser.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/install_deps.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/install_symlink_safety.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/verify_clean_install.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/generate_cohort_cli.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/thinking_body_runner.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/session_scheduler.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/interaction_policy.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/cryptonary_cohort.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/export_storage_state_from_cdp.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/safe_cohort_runner.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/session_state_browser.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/browser_issue_recovery.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/request_failure_browser.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/destiny_actions.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/persona_generation.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/persona_generation_runner.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/social_provenance.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/product_evidence.test.cjs" >/dev/null
+node --test "${NODE_TEST_ARGS[@]}" "$ROOT/tests/vision_payload.test.cjs" >/dev/null
 node --check "$ROOT/web/server.cjs" >/dev/null
 test ! -e "$ROOT/skills/betabots/scripts/multi_session_betabots.cjs"
 test ! -e "$ROOT/skills/betabots/references/live-simulation.md"
