@@ -1,35 +1,77 @@
 #!/usr/bin/env node
 const fs = require('node:fs')
 const path = require('node:path')
-const { validateArtifact } = require('../skills/betabots/scripts/study_contracts.cjs')
+const {
+  SANITIZED_EXPORT_V1,
+  validateArtifacts,
+  verifySanitizedExportFiles,
+} = require('../skills/betabots/scripts/study_contracts.cjs')
 
 const args = process.argv.slice(2)
-const json = args[0] === '--json'
-const files = args.filter((arg) => arg !== '--json')
+let json = false
+let verifyExportFiles = false
+let exportRoot
+const files = []
+let usageError
 
-if (files.length === 0) {
-  console.error('Usage: node scripts/validate-study-artifacts.cjs [--json] <artifact.json> [...]')
+for (let index = 0; index < args.length; index += 1) {
+  const argument = args[index]
+  if (argument === '--json') json = true
+  else if (argument === '--verify-export-files') verifyExportFiles = true
+  else if (argument === '--export-root') {
+    exportRoot = args[index + 1]
+    index += 1
+    if (!exportRoot) usageError = '--export-root requires a directory.'
+  } else files.push(argument)
+}
+
+if (files.length === 0) usageError = usageError || 'At least one artifact JSON file is required.'
+if (exportRoot && !verifyExportFiles) usageError = usageError || '--export-root requires --verify-export-files.'
+
+function print(output) {
+  if (json) {
+    process.stdout.write(`${JSON.stringify(output, null, 2)}\n`)
+    return
+  }
+  for (const entry of output.results) {
+    console.log(`${entry.valid ? 'valid' : 'invalid'} ${path.relative(process.cwd(), entry.file) || entry.file}`)
+    for (const error of entry.errors) console.log(`  ${error.code} ${error.path}: ${error.message}`)
+  }
+}
+
+if (usageError) {
+  const output = { valid: false, results: [{ file: '', valid: false, errors: [{ code: 'USAGE_ERROR', path: '', message: usageError }] }] }
+  print(output)
+  if (!json) console.error('Usage: node scripts/validate-study-artifacts.cjs [--json] [--verify-export-files [--export-root <directory>]] <artifact.json> [...]')
   process.exitCode = 2
 } else {
-  const results = files.map((file) => {
+  const parsed = files.map((file, index) => {
     try {
-      return { file, ...validateArtifact(JSON.parse(fs.readFileSync(file, 'utf8'))) }
+      return { index, file, value: JSON.parse(fs.readFileSync(file, 'utf8')) }
     } catch (error) {
-      return {
-        file,
-        valid: false,
-        errors: [{ code: 'INVALID_JSON', path: '', message: error.message }],
-      }
+      return { index, file, error: { code: 'INVALID_JSON', path: '', message: error.message } }
     }
   })
-  const valid = results.every((result) => result.valid)
-  if (json) {
-    process.stdout.write(`${JSON.stringify({ valid, results }, null, 2)}\n`)
-  } else {
-    for (const result of results) {
-      console.log(`${result.valid ? 'valid' : 'invalid'} ${path.relative(process.cwd(), result.file) || result.file}`)
-      for (const error of result.errors) console.log(`  ${error.code} ${error.path}: ${error.message}`)
+  const validInputs = parsed.filter((entry) => !entry.error)
+  const batch = validateArtifacts(validInputs.map((entry) => entry.value))
+  const results = parsed.map((entry) => {
+    if (entry.error) return { file: entry.file, valid: false, errors: [entry.error] }
+    const batchIndex = validInputs.indexOf(entry)
+    const artifactResult = batch.results[batchIndex]
+    return { file: entry.file, ...artifactResult }
+  })
+  if (verifyExportFiles) {
+    for (const [index, entry] of parsed.entries()) {
+      if (entry.error || entry.value?.schema !== SANITIZED_EXPORT_V1 || !results[index].valid) continue
+      const root = exportRoot || path.dirname(path.resolve(entry.file))
+      const filesystemResult = verifySanitizedExportFiles(entry.value, root)
+      if (!filesystemResult.valid) {
+        results[index].valid = false
+        results[index].errors.push(...filesystemResult.errors)
+      }
     }
   }
-  if (!valid) process.exitCode = 1
+  const output = { valid: results.every((entry) => entry.valid), results }
+  print(output)
+  if (!output.valid) process.exitCode = 1
 }
