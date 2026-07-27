@@ -49,6 +49,7 @@ Then start a new agent thread and ask it to use Betabots against a local or stag
 - [Logo](docs/logo-concepts.md): selected Betabots identity and asset paths.
 - [Usage guide](docs/usage.md): practical setup and run flow for browser Betabots.
 - [Truthful personalities](docs/truthful-personalities.md): the core Betabots model for non-performative synthetic users.
+- [Study contracts](contracts/README.md): versioned public study artifacts and validation commands.
 
 ## What Betabots Do
 
@@ -86,6 +87,36 @@ For return visits, set `BETABOT_SESSION_COUNT` and
 `BETABOT_SESSION_GAP_MINUTES` together with a unique per-bot
 `BETABOT_STORAGE_STATE_TEMPLATE`. The runner writes browser state after every
 visit and produces one combined first-person storyline per bot.
+
+For an authenticated cohort, seed one user-approved Playwright storage-state
+file into isolated bot files before any persona preflight or browser work. The
+seed is validated as a state object with `cookies` and `origins` arrays, is
+never logged, and is never used as a write-back destination. Every bot path
+must be unique, including concurrent single-session runs:
+
+```bash
+BETABOT_STORAGE_STATE_SEED=/absolute/path/user-approved-auth-state.json \
+BETABOT_STORAGE_STATE_TEMPLATE='/tmp/betabots-auth/{id}.json' \
+BETABOT_COHORT_FILE=demo-cohorts/cryptonary-authenticated-platform.json \
+node skills/betabots/scripts/thoughtful_browser_betabots.cjs
+```
+
+Do not combine a storage-state seed with injected local-storage authentication.
+Use the optional CDP exporter only for a user-approved local browser endpoint;
+it requires an explicit loopback endpoint, target page URL, and new output
+path, and never prints state values:
+
+```bash
+node skills/betabots/scripts/export_storage_state_from_cdp.cjs \
+  --cdp http://127.0.0.1:9222 \
+  --target-url https://cryptonary.com/settings/account \
+  --output /absolute/path/user-approved-auth-state.json
+```
+
+An `interactionPolicy` in a cohort (or `BETABOT_INTERACTION_POLICY` JSON)
+denies matching UI actions and state-changing network requests independently of
+the persona prompt. Policy block artifacts contain only rule IDs, action types,
+methods, and categories—never request bodies, headers, cookies, or tokens.
 
 Betabots use an actual multimodal LLM mind layer continuously during browser use. Screenshots and visible-control IDs are sent with each decision so the model chooses the next action instead of merely narrating one:
 

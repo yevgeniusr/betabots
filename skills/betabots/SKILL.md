@@ -52,6 +52,13 @@ For authenticated products, set `BETABOT_PERSONA_PREFLIGHT_STORAGE_STATE` or a
 resolvable `BETABOT_STORAGE_STATE_TEMPLATE` so analysis sees the same product
 surface as the bots.
 
+When one approved real-browser state must seed a cohort, use
+`BETABOT_STORAGE_STATE_SEED` with a unique per-bot
+`BETABOT_STORAGE_STATE_TEMPLATE`. The runner validates and copies the seed
+before preflight, preserves the seed, and writes bot state with mode `0600`.
+Use a cohort `interactionPolicy` as the hard UI and network guard for forbidden
+operations; it remains in force for semantic retries and recovered controls.
+
 Deep personas should include life situation, trigger, job to be done, prior
 attempts, stakes, constraints, anxieties, objections, trust threshold, decision
 criteria, vocabulary, digital habits, social context, success evidence,

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "betabots.evidence-ref.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "studyId", "classification", "claim"],
+  "properties": {
+    "schema": {"const": "betabots.evidence-ref.v1"},
+    "id": {"type": "string", "minLength": 1},
+    "studyId": {"type": "string", "minLength": 1},
+    "armId": {"type": "string", "minLength": 1},
+    "classification": {"enum": ["observed", "inferred", "recommendation", "external", "unverified"]},
+    "claim": {"type": "string", "minLength": 1},
+    "artifact": {"$ref": "#/$defs/artifact"},
+    "context": {"$ref": "#/$defs/context"},
+    "recommendation": {"type": "string", "minLength": 1}
+  },
+  "allOf": [{"if": {"properties": {"classification": {"const": "observed"}}}, "then": {"required": ["artifact", "context"]}}],
+  "$defs": {
+    "artifact": {"type": "object", "additionalProperties": false, "required": ["type", "ref"], "properties": {"type": {"enum": ["screenshot", "event", "path"]}, "ref": {"type": "string", "minLength": 1}}},
+    "context": {"type": "object", "additionalProperties": false, "required": ["sessionId", "personaRef", "timestamp"], "properties": {"sessionId": {"type": "string", "minLength": 1}, "personaRef": {"type": "string", "minLength": 1}, "timestamp": {"type": "string", "minLength": 1}}}
+  }
+}

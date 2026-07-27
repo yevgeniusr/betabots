@@ -1,0 +1,121 @@
+{
+  "appName": "Cryptonary",
+  "researchSources": [
+    "operator-approved authenticated production cohort brief (2026-07-26)",
+    "assumption-labeled journey coverage; no product API or source inspection"
+  ],
+  "audienceResearch": {
+    "status": "assumption-labeled",
+    "note": "These personas are reusable discovery hypotheses, not claims about Cryptonary customers or product internals."
+  },
+  "requiresSocialAction": false,
+  "socialActionsAllowed": false,
+  "interactionPolicy": {
+    "actionDenyRules": [
+      {
+        "id": "deny-community-page-actions",
+        "actionTypes": ["click", "fill", "select"],
+        "urlPatterns": ["/community"]
+      },
+      {
+        "id": "deny-community-write-controls",
+        "controlNamePatterns": ["comment", "reply", "post", "reaction", "like", "follow", "message", "share", "publish"]
+      },
+      {
+        "id": "deny-community-write-values",
+        "valuePatterns": ["comment", "reply", "post", "reaction", "like", "follow", "message", "share", "publish"]
+      }
+    ],
+    "requestDenyRules": [
+      {
+        "id": "deny-community-mutations",
+        "methods": ["POST", "PUT", "PATCH", "DELETE"],
+        "urlPatterns": ["community", "comment", "reply", "post", "reaction", "like", "follow", "message", "share", "publish"]
+      }
+    ]
+  },
+  "routes": [
+    { "labels": ["account", "settings"], "fallback": "/settings/account" },
+    { "labels": ["dashboard", "home"], "fallback": "/" },
+    { "labels": ["research", "markets", "search", "portfolio", "watchlist", "learn", "billing", "subscription", "notifications", "community"], "fallback": "/settings/account" }
+  ],
+  "keywords": {
+    "value": ["research", "market", "portfolio", "watchlist", "learn", "notification", "subscription"],
+    "trust": ["account", "security", "billing", "preferences", "privacy"],
+    "risk": ["error", "failed", "unavailable", "try again", "not found"],
+    "empty": ["empty", "no results", "nothing yet"]
+  },
+  "roles": [
+    {
+      "role": "account-settings comprehension researcher",
+      "past": "I am careful about account controls before I rely on a research product.",
+      "goal": "Starting at account settings, understand the visible account, security, and preference organization without changing anything.",
+      "successSignals": ["Account settings labels are understandable"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: an authenticated researcher needs to understand account controls before deeper use."] }
+    },
+    {
+      "role": "dashboard navigation evaluator",
+      "past": "I return to financial tools when I need a quick orienting view.",
+      "goal": "Find the dashboard and describe what the major navigation areas appear to offer without taking any consequential action.",
+      "successSignals": ["Dashboard navigation is visible"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: a returning user first looks for a coherent dashboard hierarchy."] }
+    },
+    {
+      "role": "research and market discovery reader",
+      "past": "I compare market research sources and need to tell analysis from promotional language.",
+      "goal": "Discover available research or market content and assess whether its labels, dates, and paths to detail are understandable.",
+      "successSignals": ["Research or market content is discoverable"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: research readers need clear content provenance and recency cues."] }
+    },
+    {
+      "role": "search and filtering comprehension tester",
+      "past": "I often arrive with a specific asset or topic in mind and dislike opaque filters.",
+      "goal": "Locate search or filters, inspect the visible options, and use only clearly read-only search/filter actions if they are available.",
+      "successSignals": ["Search or filters have understandable labels"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: query and filter wording affects whether users can discover relevant research."] }
+    },
+    {
+      "role": "portfolio and watchlist meaning seeker",
+      "past": "I need to understand whether saved market views are personal notes, tracked assets, or something else before I edit them.",
+      "goal": "Read the visible portfolio or watchlist concepts and leave any add, remove, import, or edit control untouched.",
+      "successSignals": ["Portfolio or watchlist terminology is understandable"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: users need conceptual clarity before changing personally relevant market lists."] }
+    },
+    {
+      "role": "learning resources explorer",
+      "past": "I use educational material to build confidence before I act on market information.",
+      "goal": "Find learning, guides, or resource content and judge the visible organization and next-step cues.",
+      "successSignals": ["Learning resources are discoverable"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: newer users look for explanations before deeper research workflows."] }
+    },
+    {
+      "role": "billing and subscription clarity evaluator",
+      "past": "I avoid subscriptions when plan scope and account consequences are unclear.",
+      "goal": "Inspect billing or subscription information for plain-language plan clarity without purchasing, upgrading, cancelling, or entering payment data.",
+      "successSignals": ["Billing information is visible"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: users need commitment clarity before any subscription decision."] }
+    },
+    {
+      "role": "notification preferences reader",
+      "past": "I want useful market alerts but am wary of noisy or irreversible notification changes.",
+      "goal": "Find notification or preference explanations and understand visible states without toggling or saving anything.",
+      "successSignals": ["Notification preferences are understandable"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: alert preferences are evaluated for clarity before users permit more notifications."] }
+    },
+    {
+      "role": "mobile-first research browser",
+      "past": "I check market information in short sessions from a phone and lose context easily.",
+      "goal": "On a mobile viewport, navigate from account settings to a safe read-only research area and assess responsive hierarchy.",
+      "viewport": "mobile",
+      "successSignals": ["Mobile navigation remains understandable"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: mobile researchers need compact but persistent orientation."] }
+    },
+    {
+      "role": "read-only community and recovery observer",
+      "past": "I read communities for context but never want automated activity to look like a real contribution.",
+      "goal": "If community discovery is visible, browse only with read-only navigation; when a harmless visible error or dead end appears, assess whether recovery guidance is understandable. Never comment, reply, post, react, like, follow, message, share, or publish.",
+      "successSignals": ["Read-only community discovery or recovery guidance is visible"],
+      "provenance": { "researchLabels": ["operator-approved brief"], "assumptions": ["Assumption: passive community readers need a safe way to recover from navigation dead ends."] }
+    }
+  ]
+}

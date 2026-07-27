@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "betabots.sanitized-export.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "allowlistedArtifacts", "excludedSensitiveClasses", "schemaVersions", "verification"],
+  "properties": {
+    "schema": {"const": "betabots.sanitized-export.v1"},
+    "id": {"type": "string", "minLength": 1},
+    "allowlistedArtifacts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/artifact"}},
+    "excludedSensitiveClasses": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["authentication-state", "cookies", "tokens"]}, "allOf": [{"contains": {"const": "authentication-state"}}, {"contains": {"const": "cookies"}}, {"contains": {"const": "tokens"}}]},
+    "schemaVersions": {"type": "array", "minItems": 1, "items": {"enum": ["betabots.study-manifest.v1", "betabots.evidence-ref.v1", "betabots.decision-outcome.v1", "betabots.finding.v1", "betabots.sanitized-export.v1"]}},
+    "verification": {"$ref": "#/$defs/verification"}
+  },
+  "$defs": {
+    "artifact": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "sizeBytes"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"}, "sizeBytes": {"type": "integer", "minimum": 0}, "artifactClass": {"type": "string", "minLength": 1}}},
+    "verification": {"type": "object", "additionalProperties": false, "required": ["authenticationStatesAbsent", "cookiesAbsent", "tokensAbsent"], "properties": {"authenticationStatesAbsent": {"const": true}, "cookiesAbsent": {"const": true}, "tokensAbsent": {"const": true}}}
+  }
+}

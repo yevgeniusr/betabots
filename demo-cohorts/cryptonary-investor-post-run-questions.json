@@ -1,0 +1,9 @@
+{
+  "questions": [
+    "Using only evidence you actually saw during this run, give your final hypothetical capital allocation. List every sleeve with both dollars and percentages, include unallocated cash, and make the dollars sum exactly to your assigned budget and percentages sum to 100%. Do not invent assets, yields, prices, or product evidence you did not see.",
+    "For each allocated sleeve, name the exact Cryptonary surface or visible evidence that influenced it, your thesis, time horizon, catalyst, invalidation condition, liquidity assumption, and maximum acceptable loss. If the product did not provide enough evidence, say so and allocate zero rather than guessing.",
+    "Which opportunities did you explicitly reject, and what missing methodology, provenance, risk, liquidity, pricing, or portfolio information caused the rejection?",
+    "Which Cryptonary features did you successfully discover, which remained undiscovered, and what three next read-only actions would you take in another session?",
+    "Would you distribute real capital based on this experience? Answer yes, no, or only after conditions. State the minimum product evidence and workflow changes required before real allocation."
+  ]
+}

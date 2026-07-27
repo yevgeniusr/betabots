@@ -13,6 +13,7 @@ const {
 } = require('./environment_integrity.cjs')
 const { screenFingerprint } = require('./screen_identity.cjs')
 const { newKeywordMatches } = require('./keyword_scoring.cjs')
+const { extractCommittedDollars } = require('./truth_pressure.cjs')
 const { scoreMultiSessionJourney, scoreSession } = require('./session_scoring.cjs')
 const {
   appendGoalEvidence,
@@ -54,9 +55,15 @@ const {
 } = require('./product_evidence.cjs')
 const {
   normalizeSessionPlan,
+  prepareSeededStorageStates,
   persistContextStorageState,
   runSessionSequence,
 } = require('./session_scheduler.cjs')
+const {
+  createPolicyEventCollector,
+  installNetworkMutationBackstop,
+  normalizeInteractionPolicy,
+} = require('./interaction_policy.cjs')
 const { codexImageArgs, openRouterUserContent } = require('./vision_payload.cjs')
 const {
   normalizeRouteMode,
@@ -103,6 +110,8 @@ const config = {
   authLocalStorageKey: process.env.BETABOT_AUTH_LOCAL_STORAGE_KEY || '',
   authTokenTemplate: process.env.BETABOT_AUTH_TOKEN_TEMPLATE || '',
   storageStateTemplate: process.env.BETABOT_STORAGE_STATE_TEMPLATE || '',
+  storageStateSeed: process.env.BETABOT_STORAGE_STATE_SEED || '',
+  interactionPolicy: process.env.BETABOT_INTERACTION_POLICY || '',
   requireRealBackend: String(process.env.BETABOT_REQUIRE_REAL_BACKEND || 'false') === 'true',
   environmentAttestationUrl: process.env.BETABOT_ENVIRONMENT_ATTESTATION_URL || '',
   environmentAttestationTimeoutMs: Number(process.env.BETABOT_ENVIRONMENT_ATTESTATION_TIMEOUT_MS || 5000),
@@ -368,6 +377,10 @@ function loadCohortConfig(personasOverride = null, sourceOverride = '') {
     source = file
   }
   const audienceResearchFromFile = loadAudienceResearchFile()
+  const environmentPolicy = config.interactionPolicy
+    ? parseJsonEnv(config.interactionPolicy, 'BETABOT_INTERACTION_POLICY')
+    : {}
+  const cohortPolicy = override.interactionPolicy || override.interaction_policy || {}
 
   const cohort = {
     appName: override.appName || defaultCohort.appName,
@@ -380,6 +393,17 @@ function loadCohortConfig(personasOverride = null, sourceOverride = '') {
     discoveries: normalizeList(override.discoveries, defaultCohort.discoveries),
     roles: normalizeSuppliedPersonas(personasOverride || normalizeList(override.roles || override.personas, defaultCohort.roles)),
     requiresSocialAction: Boolean(override.requiresSocialAction ?? defaultCohort.requiresSocialAction),
+    socialActionsAllowed: override.socialActionsAllowed !== false,
+    interactionPolicy: normalizeInteractionPolicy({
+      actionDenyRules: [
+        ...(cohortPolicy.actionDenyRules || []),
+        ...(environmentPolicy.actionDenyRules || []),
+      ],
+      requestDenyRules: [
+        ...(cohortPolicy.requestDenyRules || []),
+        ...(environmentPolicy.requestDenyRules || []),
+      ],
+    }),
     routes: normalizeRoutes(override.routes || defaultCohort.routes),
     evidenceRequirements: normalizeEvidenceRequirements(override.evidenceRequirements || {}),
     screenSizeDistribution: screenDistributionFromEnv() || normalizeScreenSizeDistribution(override.screenSizeDistribution || override.screen_size_distribution || override.screenSizes || override.screen_sizes || override.viewports, defaultCohort.screenSizeDistribution),
@@ -392,6 +416,10 @@ function loadCohortConfig(personasOverride = null, sourceOverride = '') {
 }
 
 let cohort = loadCohortConfig()
+if (!cohort.socialActionsAllowed) {
+  config.betabookEnabled = false
+  config.destinyEnabled = false
+}
 let roles = cohort.roles
 const names = cohort.names
 const baselines = cohort.baselines
@@ -557,11 +585,13 @@ function terminateProcessTree(child) {
 }
 
 function publicConfig() {
-  const { openrouterApiKey, authTokenTemplate, ...safeConfig } = config
+  const { openrouterApiKey, authTokenTemplate, storageStateSeed, interactionPolicy, ...safeConfig } = config
   return {
     ...safeConfig,
     authTokenTemplate: authTokenTemplate ? '[redacted]' : '',
     openrouterApiKey: openrouterApiKey ? '[redacted]' : '',
+    storageStateSeed: storageStateSeed ? '[redacted]' : '',
+    interactionPolicy: interactionPolicy ? '[configured]' : '',
   }
 }
 
@@ -583,6 +613,12 @@ function validateRunConfig() {
   })
   if (config.sessionCount > 1 && !config.storageStateTemplate) {
     throw new Error('BETABOT_STORAGE_STATE_TEMPLATE is required when BETABOT_SESSION_COUNT is greater than 1.')
+  }
+  if (config.storageStateSeed && !config.storageStateTemplate) {
+    throw new Error('BETABOT_STORAGE_STATE_TEMPLATE is required when BETABOT_STORAGE_STATE_SEED is set.')
+  }
+  if (config.storageStateSeed && (config.authLocalStorageKey || config.authTokenTemplate)) {
+    throw new Error('Storage-state seed runs cannot use injected local-storage authentication.')
   }
 }
 
@@ -1157,11 +1193,6 @@ function createMortalityLedger(bot) {
     deathReason: '',
     entries: [],
   }
-}
-
-function extractCommittedDollars(text) {
-  const matches = String(text || '').match(/\$[\d,]+(?:\.\d+)?/g) || []
-  return matches.reduce((sum, token) => sum + Number(token.replace(/[$,]/g, '')), 0)
 }
 
 function chargeLife(ledger, kind, amount, reason) {
@@ -2079,7 +2110,17 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
       window.localStorage.setItem(key, token)
     }, [config.authLocalStorageKey, authToken])
   }
-  const page = await context.newPage()
+  const policyEventCollector = createPolicyEventCollector()
+  const policyBlockedRequests = new WeakSet()
+  let page
+  await installNetworkMutationBackstop(
+    context,
+    runtime.interactionPolicy,
+    () => page?.url?.() || '',
+    policyEventCollector,
+    { onBlockedRequest: (request) => policyBlockedRequests.add(request) },
+  )
+  page = await context.newPage()
   page.on('response', async (response) => {
     if (!isProductUrl([config.appUrl, ...config.appOrigins], response.url())) return
     const headers = await response.allHeaders().catch(() => ({}))
@@ -2123,6 +2164,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     externalRequestFailures: 0,
     mindActions: 0,
     mindActionFailures: 0,
+    policyBlocks: 0,
   }
   let step = 1
   let value = 0
@@ -2212,6 +2254,13 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     })
   })
   page.on('requestfailed', (request) => {
+    if (policyBlockedRequests.has(request)) {
+      log('A prohibited request was blocked by the safety policy.', {
+        type: 'policy-block',
+        noEvidence: true,
+      })
+      return
+    }
     const failure = trackBrowserRequestFailure(browserIssueRecovery, {
       requestId: browserRequestIds.get(request),
       method: request.method(),
@@ -2241,6 +2290,8 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     fallbackUrl: config.appUrl,
     actionTimeoutMs: config.actionTimeoutMs,
     bodyActionTimeoutMs: config.bodyActionTimeoutMs,
+    interactionPolicy: runtime.interactionPolicy,
+    policyEventCollector,
     beforeTargetAction: ({ action, control }) => {
       if (action.type !== 'click' || !control?.href) return
       trackNavigationIntent(browserIssueRecovery, {
@@ -2765,6 +2816,7 @@ async function runBotSession(browser, bot, runtime = {}, session = {}) {
     endedByChoice: shouldEndSession,
     goalAssessment,
   })
+  stats.policyBlocks = policyEventCollector.blocked
   const botIntegrity = evaluateEnvironmentIntegrity({
     ...(runtime.environmentIntegrityInput || {}),
     detectedMockHeaders: [...(runtime.detectedMockHeaders || [])],
@@ -2822,6 +2874,8 @@ ${notes.join('\n')}
     messages: stats.messages,
     mindActions: stats.mindActions,
     mindActionFailures: stats.mindActionFailures,
+    policyBlocks: stats.policyBlocks,
+    policyBlockEvents: policyEventCollector.events,
     decisionRecords,
     unprovenancedMindActions: Math.max(0, stats.mindActions - decisionRecords.length),
     repeatedScreens: stats.repeatedScreens,
@@ -2863,6 +2917,7 @@ const SUMMED_RESULT_FIELDS = [
   'messages',
   'mindActions',
   'mindActionFailures',
+  'policyBlocks',
   'repeatedScreens',
   'meaningfulSocialActions',
   'loopHelpRequests',
@@ -2897,6 +2952,7 @@ function combineBotSessions(bot, sessions, evidenceRequirements, mortality) {
     sessionResults: sessions.map(({ storyline, memory, mortality: ignoredMortality, ...session }) => session),
     evidenceRequirements,
     externalRequestFailureDetails: sessions.flatMap((session) => session.externalRequestFailureDetails || []),
+    policyBlockEvents: sessions.flatMap((session) => session.policyBlockEvents || []),
     decisionRecords: sessions.flatMap((session) => session.decisionRecords || []),
     unprovenancedMindActions: sessions.reduce(
       (sum, session) => sum + Number(session.unprovenancedMindActions || 0),
@@ -2969,6 +3025,8 @@ ${sessions.map((session) => session.storyline).join('\n')}
 - Destiny nudges presented to persona reflection: ${result.destinyMoments}
 - Autonomous mind actions executed: ${result.mindActions}
 - Mind actions rejected or failed: ${result.mindActionFailures}
+- Safety policy blocks: ${result.policyBlocks || 0}
+- Safety policy events: ${result.policyBlockEvents?.length ? result.policyBlockEvents.map((event) => `${event.surface}:${event.ruleId}`).join(', ') : 'none'}
 - Browser issues recorded: ${result.browserIssues}
 - Life years remaining: ${result.mortality.yearsRemaining.toFixed(2)}
 - Life years spent on actions: ${result.mortality.yearsSpentOnActions.toFixed(2)}
@@ -3052,6 +3110,8 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
       roleCount: cohort.roles.length,
       routeCount: cohort.routes.length,
       requiresSocialAction: cohort.requiresSocialAction,
+      socialActionsAllowed: cohort.socialActionsAllowed,
+      interactionPolicy: cohort.interactionPolicy,
       screenSizeDistribution: cohort.screenSizeDistribution,
     },
     betabook: betabookState?.enabled ? {
@@ -3082,6 +3142,8 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
     topIdeas,
     confidenceRows,
     results,
+    policyBlocks: results.reduce((sum, result) => sum + Number(result.policyBlocks || 0), 0),
+    policyBlockEvents: results.flatMap((result) => result.policyBlockEvents || []),
   }
   fs.writeFileSync(path.join(config.runDir, 'summary.json'), JSON.stringify(summary, null, 2))
   fs.writeFileSync(path.join(config.runDir, 'analysis.md'), `# Thoughtful Browser Betabot Analysis
@@ -3158,6 +3220,7 @@ function writeAnalysis(results, startedAt, betabookState, destinyState, environm
 - AI user turns verified: ${productEvidenceSummary.aiUserTurns}
 - Activity interactions observed: ${productEvidenceSummary.activityInteractions}
 - Completed activities verified: ${productEvidenceSummary.completedActivities}
+- Safety policy blocks: ${summary.policyBlocks}
 - Error bots: ${errorBots.length}
 
 ## Truth Pressure
@@ -3241,6 +3304,8 @@ function writeCohortSnapshot(bots, environmentIntegrity, personaPreparation) {
       confidenceRules: cohort.confidenceRules,
       roles: cohort.roles,
       requiresSocialAction: cohort.requiresSocialAction,
+      socialActionsAllowed: cohort.socialActionsAllowed,
+      interactionPolicy: cohort.interactionPolicy,
       evidenceRequirements: cohort.evidenceRequirements,
       routes: cohort.routes.map((route) => ({
         labels: route.labels.map((label) => label.toString()),
@@ -3261,6 +3326,23 @@ async function main() {
   const startedAt = Date.now()
   validateRunConfig()
   mkdirs()
+  const initialBots = Array.from({ length: config.count }, (_, index) => personaAt(index))
+  const initialStoragePaths = initialBots.map((bot) => resolveStorageStatePath(config.storageStateTemplate, bot))
+  if (config.storageStateTemplate && new Set(initialStoragePaths).size !== initialStoragePaths.length) {
+    throw new Error('BETABOT_STORAGE_STATE_TEMPLATE must resolve to a unique path for every bot.')
+  }
+  if (config.storageStateSeed) {
+    const previewBot = {
+      id: 'thoughtful-betabot-001',
+      name: 'persona-preflight',
+      role: 'persona-preflight',
+    }
+    const preflightPath = resolveStorageStatePath(config.storageStateTemplate, previewBot)
+    prepareSeededStorageStates({
+      seedPath: config.storageStateSeed,
+      destinations: [...new Set([...initialStoragePaths, preflightPath])],
+    })
+  }
   const personaPreparation = await preparePersonas()
   const bots = Array.from({ length: config.count }, (_, index) => personaAt(index))
   if (!personaPreparation.proceeded) {
@@ -3280,10 +3362,10 @@ async function main() {
       .filter((file) => !fs.existsSync(file))
       .map((file) => `missing ${file}`)
     : []
-  if (config.sessionCount > 1) {
+  if (config.storageStateTemplate) {
     const resolvedPaths = bots.map((bot) => resolveStorageStatePath(config.storageStateTemplate, bot))
     if (new Set(resolvedPaths).size !== resolvedPaths.length) {
-      throw new Error('BETABOT_STORAGE_STATE_TEMPLATE must resolve to a unique path for every bot in a multi-session run.')
+      throw new Error('BETABOT_STORAGE_STATE_TEMPLATE must resolve to a unique path for every bot.')
     }
   }
   const integrityProbe = await probeEnvironmentIntegrity({
@@ -3349,6 +3431,7 @@ async function main() {
             environmentIntegrityInput: integrityInput,
             mortality: journey.mortality,
             evidenceTracker: journey.evidenceTracker,
+            interactionPolicy: cohort.interactionPolicy,
             storageStatePath: journey.storageStatePath,
             previousSessions: journey.sessions.map((result) => result.memory),
           }, session)
