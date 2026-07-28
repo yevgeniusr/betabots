@@ -131,3 +131,42 @@ test('overview leads with source-derived study highlights before complete notes'
     await browser.close()
   }
 })
+
+test('selected bot stories lead with source facts and keep the full 133-event timeline closed', async () => {
+  const browser = await chromium.launch({ headless: true })
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  try {
+    await page.goto(baseUrl, { waitUntil: 'networkidle' })
+    await page.locator('[data-run="decision-allocation-treatment"]').click()
+    await page.getByRole('tab', { name: 'Bot stories' }).click()
+    await page.locator('[data-bot="thoughtful-betabot-001"]').click()
+
+    const detail = page.locator('#bot-story-detail .bot-detail')
+    await detail.waitFor()
+    for (const text of [
+      'Life goal',
+      'End reason',
+      'Ideas',
+      'Action evidence',
+      'Truth assessments',
+      'Life-cost decisions',
+    ]) {
+      const source = detail.getByText(text, { exact: true }).first()
+      assert.equal(await source.isVisible(), true, `${text} is visible in the selected story`)
+    }
+
+    const timeline = detail.locator('details.story-timeline-disclosure')
+    assert.equal(await timeline.count(), 1)
+    assert.equal(await timeline.getAttribute('open'), null)
+    assert.equal(await timeline.locator('summary').innerText(), 'Open full evidence timeline (133 events)')
+    assert.equal(await timeline.locator('li').count(), 133)
+
+    const sourceEnd = await detail.getByRole('heading', { name: 'Life-cost decisions' }).evaluate((heading) => {
+      const timeline = heading.parentElement?.parentElement?.querySelector('details.story-timeline-disclosure')
+      return Boolean(timeline && (heading.compareDocumentPosition(timeline) & Node.DOCUMENT_POSITION_FOLLOWING))
+    })
+    assert.equal(sourceEnd, true, 'source-derived sections precede the raw event timeline')
+  } finally {
+    await browser.close()
+  }
+})

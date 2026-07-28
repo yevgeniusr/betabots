@@ -92,15 +92,17 @@ function renderOverview(run) {
 }
 
 function botDetail(bot, run) {
+  const events = bot.evidenceEvents || []
   const actions = bot.actionEvidence || []
-  const mindEvents = (bot.evidenceEvents || []).filter((event) => event.kind === 'mind')
-  const activity = (bot.evidenceEvents || []).map((event) => `<li><code>${escapeHtml(event.elapsed || event.at || 'n/a')}</code><span>${escapeHtml(eventText(event))}</span>${event.screenshot ? `<a href="${fileUrl(run, event.screenshot)}" target="_blank" rel="noreferrer">Screenshot</a>` : ''}</li>`).join('')
+  const mindEvents = events.filter((event) => event.kind === 'mind')
+  const activity = events.map((event) => `<li><code>${escapeHtml(event.elapsed || event.at || 'n/a')}</code><span>${escapeHtml(eventText(event))}</span>${event.screenshot ? `<a href="${fileUrl(run, event.screenshot)}" target="_blank" rel="noreferrer">Screenshot</a>` : ''}</li>`).join('')
   return `<article class="bot-detail panel" tabindex="-1"><div class="detail-heading">${renderAvatar(bot, 'bot-avatar bot-avatar-large')}<div><span class="section-kicker">Selected bot story</span><h3>${escapeHtml(bot.name || bot.id)}</h3><p>${escapeHtml(bot.role || 'No role recorded')}</p></div></div>
-    <div class="detail-facts"><div><span>Life goal</span><strong>${escapeHtml(bot.lifeGoal || 'Not recorded')}</strong></div><div><span>End reason</span><strong>${escapeHtml(bot.endReason || 'Not recorded')}</strong></div><div><span>Score</span><strong>${escapeHtml(fmt(bot.score))}</strong></div><div><span>Mind events</span><strong>${mindEvents.length}</strong></div></div>
-    <section><h4>What this bot did</h4>${activity ? `<ul class="story-timeline">${activity}</ul>` : '<p class="muted">No evidence JSONL was recorded for this bot.</p>'}</section>
+    <div class="detail-facts"><div><span>Life goal</span><strong>${escapeHtml(bot.lifeGoal || 'Not recorded')}</strong></div><div><span>End reason</span><strong>${escapeHtml(bot.endReason || 'Not recorded')}</strong></div><div><span>Score</span><strong>${escapeHtml(fmt(bot.score))}</strong></div><div><span>Mind events</span><strong>${mindEvents.length}</strong></div><div><span>Evidence events</span><strong>${events.length}</strong></div></div>
+    <section><h4>Ideas</h4>${bot.ideas?.length ? `<ul class="compact-list">${bot.ideas.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '<p class="muted">No ideas were recorded.</p>'}</section>
     <section><h4>Action evidence</h4>${actions.length ? `<ul class="compact-list">${actions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '<p class="muted">No explicit UI action evidence was recorded.</p>'}</section>
     <section><h4>Truth assessments</h4><p>${escapeHtml((bot.truthAssessments || []).join(' ') || 'None recorded.')}</p></section>
     <section><h4>Life-cost decisions</h4><p>${escapeHtml((bot.lifeDecisions || []).join(' ') || 'None recorded.')}</p></section>
+    <details class="source-disclosure story-timeline-disclosure"><summary>Open full evidence timeline (${escapeHtml(plural(events.length, 'event'))})</summary>${activity ? `<ul class="story-timeline">${activity}</ul>` : '<p class="muted">No evidence JSONL was recorded for this bot.</p>'}</details>
     <details class="source-disclosure"><summary>Read raw persona story</summary><pre>${escapeHtml(bot.raw || 'No raw story file was recorded.')}</pre></details>
   </article>`
 }
