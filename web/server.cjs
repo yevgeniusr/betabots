@@ -172,7 +172,7 @@ function summarizeDestiny(destiny, summary = {}) {
 function listDirs(dir) {
   try {
     return fs.readdirSync(dir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
       .map((entry) => {
         const full = path.join(dir, entry.name)
         return { name: entry.name, full, stat: fs.statSync(full) }
@@ -373,6 +373,7 @@ function serveStatic(reqUrl, res) {
     '.css': 'text/css; charset=utf-8',
     '.js': 'text/javascript; charset=utf-8',
     '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
   }[ext] || 'application/octet-stream'
   res.writeHead(200, { 'content-type': type })
   fs.createReadStream(file).pipe(res)

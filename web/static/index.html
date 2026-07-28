@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Betabots Dashboard</title>
+    <title>BetaBots study report</title>
     <link rel="icon" type="image/png" href="/betabots-mark.png">
     <link rel="stylesheet" href="/styles.css">
   </head>
@@ -12,89 +12,51 @@
       <header class="topbar">
         <div class="brand">
           <img class="botmark" src="/betabots-logo.png" alt="" aria-hidden="true">
-          <div>
-            <h1>Betabots Dashboard</h1>
-            <p>Local artifact browser</p>
-          </div>
+          <div><h1>BetaBots</h1><p>Read-only study report</p></div>
         </div>
-        <div class="pathbay">
-          <span class="label">Runs Root</span>
-          <code id="runs-root">loading...</code>
-        </div>
-        <button id="refresh-button" class="button" type="button">Refresh</button>
+        <p class="topbar-note">What real bot sessions observed — with the source evidence kept close.</p>
+        <button id="refresh-button" class="button" type="button" aria-label="Refresh available study reports">Refresh reports</button>
       </header>
 
-      <main class="console">
-        <aside class="runs-panel panel">
-          <div class="panel-head">
-            <span class="label">Runs</span>
-            <span id="run-count" class="muted">0</span>
-          </div>
-          <div id="run-list" class="run-list" aria-live="polite"></div>
-        </aside>
+      <main class="report-shell">
+        <section class="run-picker" aria-labelledby="run-picker-title">
+          <div class="picker-copy"><span class="eyebrow">Choose a study</span><h2 id="run-picker-title">Available runs <span id="run-count">0</span></h2></div>
+          <div id="run-list" class="run-list" aria-live="polite" aria-label="Available study runs"></div>
+        </section>
 
-        <section class="main-panel">
+        <section class="main-panel" aria-label="Selected BetaBots study report">
           <div id="empty-state" class="empty panel">
-            <span class="led yellow"></span>
-            <h2>No run selected</h2>
-            <p>Start the dashboard from a project root with <code>.betabots/runs</code>, or pass <code>--runs /path/to/.betabots/runs</code>.</p>
+            <span class="led yellow"></span><h2>No run selected</h2>
+            <p>No visible run directories were found. Start the dashboard with a directory containing public run artifacts.</p>
           </div>
 
           <div id="run-view" class="hidden">
-            <section class="overview panel">
-              <div class="run-title">
-                <span class="label">Selected Run</span>
-                <h2 id="run-title">Run</h2>
-                <p id="run-subtitle" class="muted">App</p>
+            <section class="report-hero" aria-labelledby="run-title">
+              <div class="hero-copy">
+                <span class="eyebrow">BetaBots study · read-only</span>
+                <h2 id="run-title">Run</h2><p id="run-subtitle" class="hero-app">App</p>
+                <p class="hero-lede">A source-derived report of what the selected bot cohort recorded. Open a story or evidence whenever you need the underlying trail.</p>
               </div>
-              <div class="metric-grid">
-                <div class="metric"><span>Bots</span><strong id="metric-bots">0</strong></div>
-                <div class="metric"><span>Median</span><strong id="metric-median">n/a</strong></div>
-                <div class="metric"><span>LLM Fallbacks</span><strong id="metric-fallbacks">0</strong></div>
-                <div class="metric"><span>Truth Assessments</span><strong id="metric-truth">0</strong></div>
-                <div class="metric"><span>Screens</span><strong id="metric-screens">0</strong></div>
-                <div class="metric"><span>Actions</span><strong id="metric-actions">0</strong></div>
-                <div class="metric"><span>Loading Flags</span><strong id="metric-loading">0</strong></div>
-              </div>
+              <img class="journey-art" src="/betabots-journey.webp" alt="" aria-hidden="true">
             </section>
 
-            <nav class="tabs" aria-label="Run views">
-              <button class="tab active" data-tab="analysis" type="button">Analysis</button>
-              <button class="tab" data-tab="bots" type="button">Bots</button>
-              <button class="tab" data-tab="actions" type="button">Actions</button>
-              <button class="tab" data-tab="screenshots" type="button">Screenshots</button>
-              <button class="tab" data-tab="truth" type="button">Truth</button>
-              <button class="tab" data-tab="betabook" type="button">Betabook</button>
-              <button class="tab" data-tab="destiny" type="button">Destiny</button>
-              <button class="tab" data-tab="files" type="button">Files</button>
+            <nav class="tabs" role="tablist" aria-label="Study report sections">
+              <button class="tab active" data-tab="overview" id="tab-control-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" type="button">Overview</button>
+              <button class="tab" data-tab="bots" id="tab-control-bots" role="tab" aria-selected="false" aria-controls="tab-bots" tabindex="-1" type="button">Bot stories</button>
+              <button class="tab" data-tab="evidence" id="tab-control-evidence" role="tab" aria-selected="false" aria-controls="tab-evidence" tabindex="-1" type="button">Evidence</button>
+              <button class="tab" data-tab="technical" id="tab-control-technical" role="tab" aria-selected="false" aria-controls="tab-technical" tabindex="-1" type="button">Technical details</button>
             </nav>
 
-            <section class="tab-panel panel" id="tab-analysis"></section>
-            <section class="tab-panel panel hidden" id="tab-bots"></section>
-            <section class="tab-panel panel hidden" id="tab-actions"></section>
-            <section class="tab-panel panel hidden" id="tab-screenshots"></section>
-            <section class="tab-panel panel hidden" id="tab-truth"></section>
-            <section class="tab-panel panel hidden" id="tab-betabook"></section>
-            <section class="tab-panel panel hidden" id="tab-destiny"></section>
-            <section class="tab-panel panel hidden" id="tab-files"></section>
+            <section class="tab-panel" id="tab-overview" role="tabpanel" aria-labelledby="tab-control-overview"></section>
+            <section class="tab-panel hidden" id="tab-bots" role="tabpanel" aria-labelledby="tab-control-bots"></section>
+            <section class="tab-panel hidden" id="tab-evidence" role="tabpanel" aria-labelledby="tab-control-evidence"></section>
+            <!-- analysis.md · Betabook · Destiny · Files & artifacts -->
+            <section id="tab-technical" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-control-technical"><p class="sr-only">analysis.md · Betabook · Destiny · Files &amp; artifacts</p></section>
           </div>
         </section>
-
-        <aside class="inspector panel">
-          <div class="panel-head">
-            <span class="label">Inspector</span>
-            <span id="inspector-status" class="chip">idle</span>
-          </div>
-          <div id="inspector-body" class="inspector-body">
-            <p class="muted">Select a run, then select a bot.</p>
-          </div>
-        </aside>
       </main>
 
-      <footer class="commandbar">
-        <span class="label">Command</span>
-        <code>node web/server.cjs --runs /path/to/.betabots/runs --port 3999</code>
-      </footer>
+      <footer class="commandbar" aria-label="Read-only report notice">Evidence is shown as recorded. This dashboard does not edit or share run artifacts.</footer>
     </div>
     <script src="/app.js"></script>
   </body>

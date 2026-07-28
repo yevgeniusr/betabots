@@ -119,7 +119,7 @@ grep -q "lifeCostJustification" "$ROOT/skills/betabots/scripts/thoughtful_browse
 grep -q "Screenshot evidence" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "betabook.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
 grep -q "destiny.json" "$ROOT/skills/betabots/scripts/thoughtful_browser_betabots.cjs"
-grep -q "Betabots Dashboard" "$ROOT/web/static/index.html"
+grep -q "<title>BetaBots study report</title>" "$ROOT/web/static/index.html"
 grep -q "betabots-logo.png" "$ROOT/web/static/index.html"
 grep -q "betabots-mark.png" "$ROOT/web/static/index.html"
 grep -q "Betabots" "$ROOT/assets/betabots.svg"

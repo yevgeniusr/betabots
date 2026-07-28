@@ -12,6 +12,8 @@
     "node": ">=18"
   },
   "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:dashboard": "node --test tests/public_dashboard.test.cjs",
     "install:deps": "node scripts/install-deps.cjs --all",
     "install:chromium": "node scripts/install-browsers.cjs",
     "smoke": "tests/smoke.sh",

@@ -1,8 +1,8 @@
 # Local Dashboard
 
-Betabots includes a minimal local dashboard for reading `.betabots/runs` artifacts.
+Betabots includes a local, read-only study report for artifacts in `.betabots/runs`. It turns a selected run into a human-facing report while keeping the recorded source material available for inspection.
 
-The dashboard is intentionally read-only. It does not run bots, edit cohorts, or mutate target projects. It is a local artifact browser for run summaries, raw bot logs, screenshots, truth assessments, and files.
+The dashboard never runs bots, edits cohorts, writes run artifacts, or changes the target project. Refreshing the report only reads the configured run directory again. It also omits dot-prefixed run directories (for example, runtime or temporary directories) from the run picker.
 
 ## Start
 
@@ -20,37 +20,38 @@ node web/server.cjs \
   --port 3999
 ```
 
-Open `http://127.0.0.1:3999`.
+The server binds to `127.0.0.1` by default, so `http://127.0.0.1:3999` is available only on the local machine.
 
-You can also set:
+You can also set the runs directory and port with environment variables:
 
 ```bash
 BETABOTS_RUNS_DIR=/path/to/.betabots/runs PORT=3999 node web/server.cjs
 ```
 
-## Views
+### Tailnet access
 
-- `Runs`: recent run folders, status, bot count, timestamps.
-- `Analysis`: rendered `analysis.md` as a readable console document.
-- `Bots`: raw bot personas, scores, endings, and truth note counts.
-- `Screenshots`: screenshot gallery from `screenshots/<bot-id>`.
-- `Truth`: recorded `Truth assessment:` lines from raw logs.
-- `Files`: direct links to run artifacts.
-- `Inspector`: selected run or selected bot details, including life goal and life-cost decisions.
+`HOST` is optional. To let devices on the same Tailscale tailnet read the report, bind the server to that machine's specific Tailscale IPv4 address—not to all interfaces. Replace the example address with the value from `tailscale ip -4` on the machine running the dashboard:
 
-## Design
+```bash
+HOST=100.64.0.2 PORT=3999 node web/server.cjs \
+  --runs /path/to/target-app/.betabots/runs
+```
 
-![Dashboard design proposal](assets/dashboard-design-proposal.png)
+Then open `http://<that-tailscale-ip>:3999` from an authorized tailnet device. This is local/tailnet access only; the dashboard does not publish, host, or deploy reports to the public internet.
 
-The first version follows the Stitch-generated Lab Console direction:
+## Report structure
 
-- off-white surfaces;
-- graphite text and 1px technical borders;
-- safety-yellow active states;
-- teal LED status dots;
-- dense three-pane layout;
-- tiny robot accent only in the dashboard mark.
+Choose a visible run to open a four-part study report:
 
-Stitch project: `8699747739188585304`.
+- **Overview** leads with source-derived highlights from `analysis.md`, compact artifact counts, and the complete study notes behind a disclosure.
+- **Bot stories** lets readers open a bot's account with recorded goals, outcome, ideas, action evidence, truth assessments, and life-cost decisions. The complete event timeline and raw persona story stay available on demand.
+- **Evidence** groups the recorded bot timelines and action evidence, screenshots, explicit loading flags, and truth assessments.
+- **Technical details** retains provenance and lower-level artifacts, including run metadata, LLM and fallback/debug counters, Betabook, Destiny, and the complete files-and-artifacts list.
 
-The dashboard should remain a supporting devtool. Betabots itself stays CLI/script/agent-first.
+The report is intentionally evidence-led: artifact counts are not conclusions, and empty states make missing or partial material explicit. Raw logs, full timelines, study notes, and technical artifacts are preserved behind progressive disclosure so that the main report remains readable without hiding the underlying record.
+
+## Visual direction and accessibility
+
+The interface uses a warm editorial study-report treatment rather than a dense console: readable notes and stories lead, with supporting evidence close by. Its hero uses the bundled, generated, text-free journey artwork solely as decoration; it has empty alternative text and must not be treated as run evidence or a depiction of a recorded session.
+
+The report is responsive at 390, 900, 1024, and 1440 pixel viewport widths. The four section tabs use semantic tab roles and support mouse, touch, and keyboard operation: use Left/Right Arrow to move between tabs and Home/End for the first/last tab. Disclosures keep their source details accessible by keyboard, and reduced-motion preferences are honored.
