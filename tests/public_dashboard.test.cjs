@@ -134,12 +134,12 @@ test('overview leads with source-derived study highlights before complete notes'
 
 test('selected bot stories lead with source facts and keep the full 133-event timeline closed', async () => {
   const browser = await chromium.launch({ headless: true })
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   try {
     await page.goto(baseUrl, { waitUntil: 'networkidle' })
     await page.locator('[data-run="decision-allocation-treatment"]').click()
     await page.getByRole('tab', { name: 'Bot stories' }).click()
-    await page.locator('[data-bot="thoughtful-betabot-001"]').click()
+    await page.locator('.bot-card').first().click()
 
     const detail = page.locator('#bot-story-detail .bot-detail')
     await detail.waitFor()
@@ -160,6 +160,12 @@ test('selected bot stories lead with source facts and keep the full 133-event ti
     assert.equal(await timeline.getAttribute('open'), null)
     assert.equal(await timeline.locator('summary').innerText(), 'Open full evidence timeline (133 events)')
     assert.equal(await timeline.locator('li').count(), 133)
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, '390px selected story has no horizontal overflow')
+    assert.ok((await timeline.locator('summary').boundingBox()).height >= 44, 'timeline summary has a 44px touch target')
+
+    const rawPersona = detail.locator('details.source-disclosure').filter({ hasText: 'Read raw persona story' })
+    assert.equal(await rawPersona.count(), 1)
+    assert.ok((await rawPersona.locator('summary').boundingBox()).height >= 44, 'raw persona summary has a 44px touch target')
 
     const sourceEnd = await detail.getByRole('heading', { name: 'Life-cost decisions' }).evaluate((heading) => {
       const timeline = heading.parentElement?.parentElement?.querySelector('details.story-timeline-disclosure')
