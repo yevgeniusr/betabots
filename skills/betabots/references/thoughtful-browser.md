@@ -105,7 +105,9 @@ node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 
 Provider knobs:
 
-- `BETABOT_LLM_PROVIDER=codex|openrouter`
+- `BETABOT_LLM_PROVIDER=codex|openrouter|minimax|opencode` — see `references/llm-minds.md`
+  for the full env-var matrix per provider, including the `minimax` provider
+  that mirrors the production-mind model and the `opencode` dev-only mode.
 - `BETABOT_LLM_MODEL`
 - `BETABOT_CODEX_COMMAND`
 - `BETABOT_LLM_TIMEOUT_MS`

@@ -58,6 +58,8 @@ const {
   runSessionSequence,
 } = require('./session_scheduler.cjs')
 const { codexImageArgs, openRouterUserContent } = require('./vision_payload.cjs')
+const { callMiniMax } = require('./minimax_provider.cjs')
+const { callOpencode } = require('./opencode_provider.cjs')
 const {
   normalizeRouteMode,
 } = require('./route_planning.cjs')
@@ -566,9 +568,9 @@ function publicConfig() {
 }
 
 function validateRunConfig() {
-  const validProviders = new Set(['codex', 'openrouter'])
+  const validProviders = new Set(['codex', 'openrouter', 'minimax', 'opencode'])
   if (!validProviders.has(config.llmProvider)) {
-    throw new Error(`Thoughtful betabots require an LLM mind layer. Set BETABOT_LLM_PROVIDER to "codex" or "openrouter"; "${config.llmProvider}" is not allowed.`)
+    throw new Error(`Thoughtful betabots require an LLM mind layer. Set BETABOT_LLM_PROVIDER to "codex", "openrouter", "minimax", or "opencode"; "${config.llmProvider}" is not allowed.`)
   }
   if (config.requestedTimeScale < 1) {
     console.warn(`BETABOT_TIME_SCALE=${config.requestedTimeScale} was requested, but thoughtful mode is human-paced. Using BETABOT_TIME_SCALE=1.`)
@@ -727,6 +729,21 @@ async function callOpenRouter(prompt, imagePaths = []) {
   }
 }
 
+async function invokeLlmProvider(prompt, imagePaths = []) {
+  switch (config.llmProvider) {
+    case 'openrouter':
+      return callOpenRouter(prompt, imagePaths)
+    case 'codex':
+      return callCodex(prompt, imagePaths)
+    case 'minimax':
+      return callMiniMax(prompt, imagePaths)
+    case 'opencode':
+      return callOpencode(prompt, imagePaths)
+    default:
+      throw new Error(`Unknown BETABOT_LLM_PROVIDER: ${config.llmProvider}`)
+  }
+}
+
 async function llmJson(task, payload, fallback, options = {}) {
   if (config.llmProvider === 'none') {
     throw new Error('Thoughtful betabots require an LLM provider; BETABOT_LLM_PROVIDER=none is not allowed.')
@@ -756,9 +773,7 @@ ${JSON.stringify(fallback, null, 2)}
 `
 
   try {
-    const raw = config.llmProvider === 'openrouter'
-      ? await callOpenRouter(prompt, options.imagePaths)
-      : await callCodex(prompt, options.imagePaths)
+    const raw = await invokeLlmProvider(prompt, options.imagePaths)
     const parsed = extractJson(raw)
     return options.mergeFallback === false ? parsed : { ...fallback, ...parsed }
   } catch (error) {

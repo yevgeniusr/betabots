@@ -3,6 +3,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { spawn } = require('node:child_process')
 const os = require('node:os')
+const { callMiniMax } = require('./minimax_provider.cjs')
+const { callOpencode } = require('./opencode_provider.cjs')
 
 function argValue(name, fallback = '') {
   const index = process.argv.indexOf(name)
@@ -44,9 +46,9 @@ function validateConfig() {
   if (!fs.existsSync(path.join(config.runDir, 'raw'))) {
     throw new Error(`raw session folder not found: ${path.join(config.runDir, 'raw')}`)
   }
-  const validProviders = new Set(['codex', 'openrouter'])
+  const validProviders = new Set(['codex', 'openrouter', 'minimax', 'opencode'])
   if (!validProviders.has(config.llmProvider)) {
-    throw new Error(`Post-run questions require an LLM provider. Use codex or openrouter, not "${config.llmProvider}".`)
+    throw new Error(`Post-run questions require an LLM provider. Use codex, openrouter, minimax, or opencode, not "${config.llmProvider}".`)
   }
 }
 
@@ -170,10 +172,20 @@ function extractJson(text) {
   throw new Error(`could not parse JSON from LLM response: ${trimmed.slice(0, 200)}`)
 }
 
+async function callMiniMaxWrapper(prompt) {
+  return callMiniMax(prompt)
+}
+
+async function callOpencodeWrapper(prompt) {
+  return callOpencode(prompt)
+}
+
 async function llmJson(prompt) {
-  const raw = config.llmProvider === 'openrouter'
-    ? await callOpenRouter(prompt)
-    : await callCodex(prompt)
+  let raw
+  if (config.llmProvider === 'openrouter') raw = await callOpenRouter(prompt)
+  else if (config.llmProvider === 'minimax') raw = await callMiniMaxWrapper(prompt)
+  else if (config.llmProvider === 'opencode') raw = await callOpencodeWrapper(prompt)
+  else raw = await callCodex(prompt)
   return extractJson(raw)
 }
 
