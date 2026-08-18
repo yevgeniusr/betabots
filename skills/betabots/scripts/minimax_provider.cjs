@@ -11,7 +11,11 @@
  *                                when set so existing OpenAI-compatible keys
  *                                do not have to be renamed.
  *   BETABOT_MINIMAX_BASE_URL  – defaults to https://api.minimax.io/v1.
- *   BETABOT_MINIMAX_MODEL     – defaults to `minimax/minimax-m3`.
+ *   BETABOT_MINIMAX_MODEL     – defaults to `MiniMax-M3` (the canonical
+ *                                direct-API name). OpenRouter aliases this as
+ *                                `minimax/minimax-m3`, so production traffic
+ *                                routed through OpenRouter continues to work
+ *                                with the same model family.
  *   BETABOT_MINIMAX_TIMEOUT_MS – per-request timeout (default 90s).
  *
  * The provider is intentionally OpenAI-compatible so it can also be pointed
@@ -22,7 +26,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const MINIMAX_DEFAULT_BASE_URL = 'https://api.minimax.io/v1'
-const MINIMAX_DEFAULT_MODEL = 'minimax/minimax-m3'
+const MINIMAX_DEFAULT_MODEL = 'MiniMax-M3'
 
 function existingImages(imagePaths = []) {
   return (Array.isArray(imagePaths) ? imagePaths : []).filter(

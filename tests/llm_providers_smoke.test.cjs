@@ -22,7 +22,7 @@ const opencode = require(path.join(ROOT, 'skills/betabots/scripts/opencode_provi
   assert.equal(typeof minimax.callMiniMax, 'function');
   assert.equal(typeof minimax.minimaxUserContent, 'function');
   assert.equal(minimax.MINIMAX_DEFAULT_BASE_URL, 'https://api.minimax.io/v1');
-  assert.equal(minimax.MINIMAX_DEFAULT_MODEL, 'minimax/minimax-m3');
+  assert.equal(minimax.MINIMAX_DEFAULT_MODEL, 'MiniMax-M3');
 
   assert.equal(typeof opencode.callOpencode, 'function');
   assert.equal(typeof opencode.resolveConfig, 'function');

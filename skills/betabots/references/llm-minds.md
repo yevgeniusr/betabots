@@ -10,7 +10,7 @@ variables each one reads, and the kind of run it is appropriate for.
 | ------------ | ------------------------------ | ---------------------------- | ---------- | -------------------------------------------------------------- |
 | `codex`      | (signed-in Codex CLI)          | whatever Codex CLI defaults  | yes        | Local Codex account, fastest path during development           |
 | `openrouter` | `OPENROUTER_API_KEY`           | `openai/gpt-4.1-mini`        | yes        | Hosted models on OpenRouter, including MiniMax M3 and GPT-5    |
-| `minimax`    | `BETABOT_MINIMAX_API_KEY`      | `minimax/minimax-m3`         | yes        | Production-mind mirror: same model production routes through OpenRouter |
+| `minimax`    | `BETABOT_MINIMAX_API_KEY`      | `MiniMax-M3`                 | yes        | Production-mind mirror: same M3 family production routes through OpenRouter (OpenRouter alias `minimax/minimax-m3`) |
 | `opencode`   | `BETABOT_OPENCODE_COMMAND`     | whatever `opencode` defaults | no         | Dev-only smoke runs; not for product-quality evaluation        |
 
 The bundled runner rejects `BETABOT_LLM_PROVIDER=none`. A run without a real
@@ -59,7 +59,7 @@ different vendor.
 ```bash
 BETABOT_LLM_PROVIDER=minimax \
 BETABOT_MINIMAX_API_KEY=... \
-BETABOT_LLM_MODEL=minimax/minimax-m3 \
+BETABOT_LLM_MODEL=MiniMax-M3 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
@@ -68,7 +68,7 @@ Knobs:
 - `BETABOT_MINIMAX_API_KEY` (falls back to `OPENAI_COMPAT_API_KEY` for shared
   credentials)
 - `BETABOT_MINIMAX_BASE_URL` (default `https://api.minimax.io/v1`)
-- `BETABOT_MINIMAX_MODEL` (default `minimax/minimax-m3`)
+- `BETABOT_MINIMAX_MODEL` (default `MiniMax-M3`)
 - `BETABOT_MINIMAX_TIMEOUT_MS`
 - `BETABOT_MINIMAX_SITE_URL` and `BETABOT_MINIMAX_APP_NAME` (for OpenRouter-style referer headers when proxying)
 
@@ -85,7 +85,7 @@ them. Useful for offline smoke runs and CI gating.
 ```bash
 BETABOT_LLM_PROVIDER=opencode \
 BETABOT_OPENCODE_COMMAND=opencode \
-BETABOT_OPENCODE_MODEL=minimax/minimax-m3 \
+BETABOT_OPENCODE_MODEL=MiniMax-M3 \
 node skills/betabots/scripts/thoughtful_browser_betabots.cjs
 ```
 
