@@ -655,14 +655,20 @@ function runProcess(command, args, input, timeoutMs) {
 function extractJson(text) {
   const trimmed = String(text || '').trim()
   if (!trimmed) throw new Error('empty LLM response')
+  // Strip reasoning tags some providers prefix or suffix their replies with
+  // (e.g. minimax wraps thinking blocks in <thinking>...</thinking>).
+  const stripped = trimmed
+    .replace(/<\/?thinking>/giu, '')
+    .replace(/<\/?reasoning>/giu, '')
+    .trim()
   try {
-    return JSON.parse(trimmed)
+    return JSON.parse(stripped)
   } catch {}
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  const fenced = stripped.match(/```(?:json)?\s*([\s\S]*?)```/i)
   if (fenced) return JSON.parse(fenced[1])
-  const start = trimmed.indexOf('{')
-  const end = trimmed.lastIndexOf('}')
-  if (start >= 0 && end > start) return JSON.parse(trimmed.slice(start, end + 1))
+  const start = stripped.indexOf('{')
+  const end = stripped.lastIndexOf('}')
+  if (start >= 0 && end > start) return JSON.parse(stripped.slice(start, end + 1))
   throw new Error(`could not parse JSON from LLM response: ${trimmed.slice(0, 200)}`)
 }
 
