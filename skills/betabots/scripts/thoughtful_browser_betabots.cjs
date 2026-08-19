@@ -655,21 +655,62 @@ function runProcess(command, args, input, timeoutMs) {
 function extractJson(text) {
   const trimmed = String(text || '').trim()
   if (!trimmed) throw new Error('empty LLM response')
-  // Strip reasoning tags some providers prefix or suffix their replies with
-  // (e.g. minimax wraps thinking blocks in <thinking>...</thinking>).
+  // Strip reasoning wrappers some providers add (minimax emits
+  // <thinking>...</thinking> blocks both before and after the answer, and
+  // sometimes echoes the thinking narrative twice).
   const stripped = trimmed
-    .replace(/<\/?thinking>/giu, '')
-    .replace(/<\/?reasoning>/giu, '')
+    .replace(/<\/?(?:thinking|reasoning|reflection|analysis)>[\s\S]*?(?:<\/(?:thinking|reasoning|reflection|analysis)>|$)/giu, '')
+    .replace(/<\/?(?:thinking|reasoning|reflection|analysis)>/giu, '')
     .trim()
+  if (!stripped) throw new Error('empty LLM response after stripping reasoning')
   try {
     return JSON.parse(stripped)
   } catch {}
   const fenced = stripped.match(/```(?:json)?\s*([\s\S]*?)```/i)
   if (fenced) return JSON.parse(fenced[1])
+  // Try every balanced top-level JSON object in order. Returns the first
+  // one that parses. Falls back to the slice between the first '{' and the
+  // last '}' for providers that emit narrative around a single object.
   const start = stripped.indexOf('{')
+  if (start < 0) {
+    const arrMatch = stripped.match(/\[[\s\S]*\]/u)
+    if (arrMatch) {
+      try {
+        return JSON.parse(arrMatch[0])
+      } catch {}
+    }
+    throw new Error(`could not find JSON in LLM response: ${stripped.slice(0, 200)}`)
+  }
+  let depth = 0
+  let inString = false
+  let escape = false
+  for (let index = start; index < stripped.length; index += 1) {
+    const char = stripped[index]
+    if (escape) { escape = false; continue }
+    if (char === '\\' && inString) { escape = true; continue }
+    if (char === '"') { inString = !inString; continue }
+    if (inString) continue
+    if (char === '{') depth += 1
+    else if (char === '}') {
+      depth -= 1
+      if (depth === 0) {
+        const candidate = stripped.slice(start, index + 1)
+        try {
+          return JSON.parse(candidate)
+        } catch {}
+        // Keep scanning for the next balanced object after this one.
+        break
+      }
+    }
+  }
   const end = stripped.lastIndexOf('}')
-  if (start >= 0 && end > start) return JSON.parse(stripped.slice(start, end + 1))
-  throw new Error(`could not parse JSON from LLM response: ${trimmed.slice(0, 200)}`)
+  if (end > start) {
+    const candidate = stripped.slice(start, end + 1)
+    try {
+      return JSON.parse(candidate)
+    } catch {}
+  }
+  throw new Error(`could not parse JSON from LLM response: ${stripped.slice(0, 200)}`)
 }
 
 async function callCodex(prompt, imagePaths = []) {
