@@ -1,11 +1,43 @@
 const BODY_ACTIONS = new Set(['click', 'fill', 'select', 'scroll', 'wait', 'back', 'leave'])
 const TARGET_ACTIONS = new Set(['click', 'fill', 'select'])
-const UNSAFE_CONTROL = /\b(delete|remove|revoke|erase|destroy|sign out|log ?out|pay|purchase|buy|checkout|subscribe|publish|send money|transfer)\b/i
+const UNSAFE_OPTION = /\b(delete|remove|revoke|erase|destroy|sign out|log ?out|pay|purchase|buy|checkout|subscribe|publish|send money|transfer)\b/i
+const UNSAFE_ACTION = /\b(delete|remove|revoke|erase|destroy|sign out|log ?out|pay|buy|checkout|subscribe|publish|send money|transfer)\b/i
+const PURCHASE = /\bpurchase\b/i
+const PURCHASE_ACTION = /\b(?:complete\w*|make\w*|process\w*|confirm\w*|start\w*|begin\w*|place\w*|continue\w*|proceed\w*|authori[sz]\w*|submit\w*|initiat\w*)\b.{0,50}\bpurchase\b|\bpurchase\b.{0,20}\b(?:now|today|here|to continue|to proceed|to finish|to complete)\b/i
+const READ_ONLY_INFO_LABEL = /^(?:privacy(?: policy| notice)?|data (?:privacy|policy)|terms(?: of (?:service|use)| and conditions| & conditions)?|help(?: center)?|support|about(?: (?:this app|this service|your data))?|how it works|faq|frequently asked questions)$/i
+const PURCHASE_INFO_CONTEXT = /\b(?:data|information|details)\b.{0,100}\b(?:handled|used|collected|stored|processed|protected|shared|retained|managed|explained|covered|described)\b/i
 const DESTINY_DISPOSITIONS = new Set(['follow', 'reinterpret', 'reject', 'none'])
 const DEFAULT_BODY_ACTION_TIMEOUT_MS = 5000
 
 function cleanText(value, limit = 1000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, limit)
+}
+
+function isUnsafeControl(control) {
+  const actionLabel = cleanText(control.actionLabel || control.name, 240)
+  const fullName = cleanText(control.name, 500)
+  const description = cleanText(control.description, 500)
+  const visibleText = cleanText(control.visibleText, 1000)
+  const kind = cleanText(control.kind, 100)
+  const href = cleanText(control.href, 2000)
+  const allText = [fullName, actionLabel, description, visibleText, kind, href].join(' ')
+
+  // Explicit destructive and transactional actions remain blocked wherever they appear,
+  // including in supporting text attached to an otherwise harmless-looking label.
+  if (UNSAFE_ACTION.test(allText) || PURCHASE.test(href)) return true
+
+  // "Purchase" can describe a subject in policy copy, but never an action label.
+  if (PURCHASE.test(actionLabel)) return true
+  const purchaseContext = [fullName, description, visibleText].filter((value) => PURCHASE.test(value))
+  if (!purchaseContext.length) return false
+  if (!READ_ONLY_INFO_LABEL.test(actionLabel)) return true
+
+  // Permit the noun only when the surrounding copy clearly explains data handling.
+  // Explicit purchase instructions such as "complete a purchase" or "purchase now"
+  // remain blocked even when a policy title is the primary label.
+  return purchaseContext.some((value) => (
+    PURCHASE_ACTION.test(value) || !PURCHASE_INFO_CONTEXT.test(value)
+  ))
 }
 
 function normalizeMindDecision(value = {}) {
@@ -52,14 +84,15 @@ function validateMindAction(action = {}, controls = []) {
 
   const requestedTarget = cleanText(action.targetId || action.target, 120)
   const semanticMatches = controls.filter(
-    (candidate) => cleanText(candidate.name, 120).toLowerCase() === requestedTarget.toLowerCase(),
+    (candidate) => [candidate.name, candidate.actionLabel]
+      .some((value) => cleanText(value, 120).toLowerCase() === requestedTarget.toLowerCase()),
   )
   const control = controls.find((candidate) => candidate.id === requestedTarget) ||
     (semanticMatches.length === 1 ? semanticMatches[0] : null)
   if (!control) return { ok: false, reason: `Target ${requestedTarget || '(empty)'} was not visible to the mind.` }
   const targetId = control.id
   if (control.disabled) return { ok: false, reason: `Target ${targetId} is disabled.` }
-  if (UNSAFE_CONTROL.test(`${control.name || ''} ${control.kind || ''}`)) {
+  if (isUnsafeControl(control)) {
     return { ok: false, reason: `Target ${targetId} is unsafe for synthetic beta traffic.` }
   }
 
@@ -168,12 +201,51 @@ async function collectInteractiveControls(page, limit = 80) {
         const labelledText = labelledBy
           ? labelledBy.split(/\s+/).map((labelId) => document.getElementById(labelId)?.textContent || '').join(' ')
           : ''
+        const visibleText = (node) => String(node?.innerText || node?.textContent || '').replace(/\s+/g, ' ').trim()
+        const explicitActionLabel = [
+          element.getAttribute('aria-label'),
+          labelledText,
+          element.getAttribute('placeholder'),
+          element.labels ? [...element.labels].map((label) => label.textContent).join(' ') : '',
+        ].find((value) => String(value || '').trim()) || ''
+        const semanticActionLabel = [...element.querySelectorAll('h1,h2,h3,h4,h5,h6,[role="heading"],strong,b')]
+          .map(visibleText)
+          .find((value) => value && value.length <= 180) || ''
+        const leafActionLabel = [...element.querySelectorAll('*')].find((child) => {
+          const value = visibleText(child)
+          if (child.closest('[aria-hidden="true"]')) return false
+          if (!value || value.length > 180 || !/[\p{L}\p{N}]/u.test(value)) return false
+          return ![...child.children].some((descendant) => visibleText(descendant))
+        })
+        const prominentActionLabel = [...element.querySelectorAll('*')].find((child) => {
+          if (!visibleText(child) || child.closest('button,a,input,select,textarea,[role="button"],[role="link"]') !== element) return false
+          const style = window.getComputedStyle(child)
+          if (style.display === 'none' || style.visibility === 'hidden') return false
+          const weight = Number.parseInt(style.fontWeight, 10)
+          return Number.isFinite(weight) && weight >= 600
+        })
+        const directText = [...element.childNodes]
+          .filter((node) => node.nodeType === Node.TEXT_NODE)
+          .map((node) => node.textContent || '')
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+        const actionLabel = explicitActionLabel
+          || semanticActionLabel
+          || (leafActionLabel ? visibleText(leafActionLabel) : '')
+          || (prominentActionLabel ? visibleText(prominentActionLabel) : '')
+          || directText
+        const descriptionIds = element.getAttribute('aria-describedby') || ''
+        const descriptionText = descriptionIds
+          ? descriptionIds.split(/\s+/).map((descriptionId) => document.getElementById(descriptionId)?.textContent || '').join(' ')
+          : ''
+        const renderedControlText = visibleText(element)
         const name = [
           element.getAttribute('aria-label'),
           labelledText,
           element.getAttribute('placeholder'),
           element.labels ? [...element.labels].map((label) => label.textContent).join(' ') : '',
-          element.textContent,
+          renderedControlText || element.textContent,
           element.getAttribute('title'),
           element.getAttribute('name'),
         ].find((value) => String(value || '').trim()) || `${kind} ${ref}`
@@ -181,6 +253,9 @@ async function collectInteractiveControls(page, limit = 80) {
           id: ref,
           kind,
           name: String(name).replace(/\s+/g, ' ').trim().slice(0, 180),
+          visibleText: String(renderedControlText || '').replace(/\s+/g, ' ').trim().slice(0, 500),
+          actionLabel: String(actionLabel || name).replace(/\s+/g, ' ').trim().slice(0, 180),
+          description: String(element.getAttribute('aria-description') || descriptionText).replace(/\s+/g, ' ').trim().slice(0, 240),
           disabled: Boolean(element.disabled) || element.getAttribute('aria-disabled') === 'true',
           href: tag === 'a' ? String(element.href || '') : '',
           value: inputType === 'password' ? '' : ('value' in element ? String(element.value || '').slice(0, 180) : ''),
@@ -382,7 +457,7 @@ async function executeMindAction(page, snapshot, requestedAction, options = {}) 
       optionValue &&
       /was not visible to the mind/i.test(validated.reason)
     ) {
-      if (UNSAFE_CONTROL.test(optionValue)) {
+      if (UNSAFE_OPTION.test(optionValue)) {
         return { ok: false, reason: `Selection option "${optionValue}" is unsafe for synthetic beta traffic.` }
       }
       let matches = await visibleAriaOptions(page, optionValue, true)
