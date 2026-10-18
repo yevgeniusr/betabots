@@ -101,6 +101,66 @@ test('rejects destructive and payment actions', () => {
   assert.match(result.reason, /unsafe/i)
 })
 
+test('uses the primary action label for safety while retaining explicit dangerous descriptions', () => {
+  const policy = {
+    id: 'control-policy', kind: 'link', name: 'Privacy Policy How account, purchase, and movement data are handled',
+    actionLabel: 'Privacy Policy', href: 'https://app.test/privacy', disabled: false,
+  }
+  assert.equal(validateMindAction({ type: 'click', targetId: 'control-policy' }, [policy]).ok, true)
+  assert.equal(validateMindAction({ type: 'click', targetId: 'Privacy Policy' }, [policy]).ok, true,
+    'the LLM can refer to the primary label while the full name remains available as context')
+
+  const checkout = { id: 'control-checkout', kind: 'button', name: 'Continue to secure checkout', actionLabel: 'Continue to secure checkout' }
+  assert.match(validateMindAction({ type: 'click', targetId: checkout.id }, [checkout]).reason, /unsafe/i)
+  const deletion = { id: 'control-delete', kind: 'button', name: 'Delete account', actionLabel: 'Delete account' }
+  assert.match(validateMindAction({ type: 'click', targetId: deletion.id }, [deletion]).reason, /unsafe/i)
+  const disclosedPurchase = {
+    id: 'control-payment', kind: 'button', name: 'Continue', actionLabel: 'Continue',
+    description: 'This action completes a purchase.',
+  }
+  assert.match(validateMindAction({ type: 'click', targetId: disclosedPurchase.id }, [disclosedPurchase]).reason, /unsafe/i)
+})
+
+test('only disambiguates purchase as policy data copy, never as an action or transaction instruction', () => {
+  const policyWithShortAriaName = {
+    id: 'control-policy-aria', kind: 'link', name: 'Privacy Policy',
+    actionLabel: 'Privacy Policy',
+    visibleText: 'Privacy Policy How account, purchase, and movement data are handled',
+  }
+  assert.equal(validateMindAction({ type: 'click', targetId: policyWithShortAriaName.id }, [policyWithShortAriaName]).ok, true)
+
+  const primaryPurchase = {
+    id: 'control-primary-purchase', kind: 'link', name: 'Purchase',
+    actionLabel: 'Purchase', href: 'https://app.test/purchase',
+  }
+  assert.match(validateMindAction({ type: 'click', targetId: primaryPurchase.id }, [primaryPurchase]).reason, /unsafe/i)
+
+  const policyWithPurchasePrompt = {
+    id: 'control-policy-prompt', kind: 'link', name: 'Privacy Policy Purchase now',
+    actionLabel: 'Privacy Policy', description: 'Purchase now to continue.',
+  }
+  assert.match(validateMindAction({ type: 'click', targetId: policyWithPurchasePrompt.id }, [policyWithPurchasePrompt]).reason, /unsafe/i)
+
+  const ariaPolicyWithPurchasePrompt = {
+    id: 'control-policy-aria-prompt', kind: 'link', name: 'Privacy Policy',
+    actionLabel: 'Privacy Policy',
+    visibleText: 'Privacy Policy Purchase now to continue.',
+  }
+  assert.match(validateMindAction({ type: 'click', targetId: ariaPolicyWithPurchasePrompt.id }, [ariaPolicyWithPurchasePrompt]).reason, /unsafe/i)
+
+  const harmlessLabelAndDeletionCopy = {
+    id: 'control-free-bonus', kind: 'button', name: 'Free bonus Delete account',
+    actionLabel: 'Free bonus',
+  }
+  assert.match(validateMindAction({ type: 'click', targetId: harmlessLabelAndDeletionCopy.id }, [harmlessLabelAndDeletionCopy]).reason, /unsafe/i)
+
+  const learnMoreCheckout = {
+    id: 'control-learn-more', kind: 'link', name: 'Learn more Checkout',
+    actionLabel: 'Learn more', href: 'https://app.test/checkout',
+  }
+  assert.match(validateMindAction({ type: 'click', targetId: learnMoreCheckout.id }, [learnMoreCheckout]).reason, /unsafe/i)
+})
+
 test('rejects a selection action without an option value', () => {
   const result = validateMindAction(
     { type: 'select', targetId: 'control-4', value: '' },

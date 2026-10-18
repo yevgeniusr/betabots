@@ -53,6 +53,59 @@ test('the mind inventory executes against the same visible browser control', asy
   assert.equal(await page.getByRole('textbox', { name: 'Note' }).inputValue(), 'remember this')
 })
 
+test('separates a primary link label from supporting copy without weakening payment or deletion blocks', async (t) => {
+  const browser = await chromium.launch({ headless: true })
+  t.after(() => browser.close())
+  const page = await browser.newPage()
+  await page.setContent(`
+    <style>
+      .title { display: block; font-size: 18px; font-weight: 800; }
+      .body { display: block; font-size: 16px; font-weight: 400; }
+    </style>
+    <a href="#privacy" onclick="event.preventDefault(); document.body.dataset.opened='privacy'">
+      <span aria-hidden="true">shield</span>
+      <span><span class="title">Privacy Policy</span><span class="body">How account, purchase, and movement data are handled</span></span>
+    </a>
+    <button onclick="document.body.dataset.opened='checkout'"><span class="title">Continue to secure checkout</span></button>
+    <button onclick="document.body.dataset.opened='delete'"><span class="title">Delete account</span></button>
+    <button aria-label="Free bonus"><span class="title">Free bonus</span><span class="body">Delete account</span></button>
+    <a href="#checkout"><span class="title">Learn more</span><span class="body">Checkout</span></a>
+    <button aria-label="Continue" aria-describedby="purchase-description" onclick="document.body.dataset.opened='payment'">Continue</button>
+    <p id="purchase-description">This action completes a purchase.</p>
+  `)
+
+  const snapshot = await collectInteractiveControls(page)
+  const privacy = snapshot.controls.find((control) => control.actionLabel === 'Privacy Policy')
+  const checkout = snapshot.controls.find((control) => control.actionLabel === 'Continue to secure checkout')
+  const deletion = snapshot.controls.find((control) => control.actionLabel === 'Delete account')
+  const freeBonus = snapshot.controls.find((control) => control.actionLabel === 'Free bonus')
+  const learnMore = snapshot.controls.find((control) => control.actionLabel === 'Learn more')
+  const payment = snapshot.controls.find((control) => control.actionLabel === 'Continue' && control.description)
+
+  assert.ok(privacy)
+  assert.match(privacy.name, /Privacy Policy.*purchase.*movement data/,
+    'the full visible text remains available to the persona mind')
+  assert.ok(checkout)
+  assert.ok(deletion)
+  assert.ok(freeBonus)
+  assert.equal(freeBonus.name, 'Free bonus')
+  assert.match(freeBonus.visibleText, /Free bonus.*Delete account/,
+    'rendered danger copy remains visible to both the mind and the safety check even when aria-label is shorter')
+  assert.ok(learnMore)
+  assert.match(learnMore.name, /Learn more.*Checkout/)
+  assert.ok(payment)
+  assert.match(payment.description, /completes a purchase/)
+
+  const privacyResult = await executeMindAction(page, snapshot, { type: 'click', targetId: privacy.id })
+  assert.equal(privacyResult.ok, true)
+  assert.equal(await page.locator('body').getAttribute('data-opened'), 'privacy')
+  for (const control of [checkout, deletion, freeBonus, learnMore, payment]) {
+    const result = await executeMindAction(page, snapshot, { type: 'click', targetId: control.id })
+    assert.equal(result.ok, false, `${control.actionLabel} must remain blocked`)
+    assert.match(result.reason, /unsafe/i)
+  }
+})
+
 test('selects a uniquely visible option from an ARIA combobox', async (t) => {
   const browser = await chromium.launch({ headless: true })
   t.after(() => browser.close())
