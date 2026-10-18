@@ -211,6 +211,12 @@ async function collectInteractiveControls(page, limit = 80) {
         const semanticActionLabel = [...element.querySelectorAll('h1,h2,h3,h4,h5,h6,[role="heading"],strong,b')]
           .map(visibleText)
           .find((value) => value && value.length <= 180) || ''
+        const leafActionLabel = [...element.querySelectorAll('*')].find((child) => {
+          const value = visibleText(child)
+          if (child.closest('[aria-hidden="true"]')) return false
+          if (!value || value.length > 180 || !/[\p{L}\p{N}]/u.test(value)) return false
+          return ![...child.children].some((descendant) => visibleText(descendant))
+        })
         const prominentActionLabel = [...element.querySelectorAll('*')].find((child) => {
           if (!visibleText(child) || child.closest('button,a,input,select,textarea,[role="button"],[role="link"]') !== element) return false
           const style = window.getComputedStyle(child)
@@ -226,6 +232,7 @@ async function collectInteractiveControls(page, limit = 80) {
           .trim()
         const actionLabel = explicitActionLabel
           || semanticActionLabel
+          || (leafActionLabel ? visibleText(leafActionLabel) : '')
           || (prominentActionLabel ? visibleText(prominentActionLabel) : '')
           || directText
         const descriptionIds = element.getAttribute('aria-describedby') || ''

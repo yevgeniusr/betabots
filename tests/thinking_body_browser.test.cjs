@@ -5,6 +5,7 @@ const { chromium } = require('playwright')
 const {
   collectInteractiveControls,
   executeMindAction,
+  validateMindAction,
 } = require('../skills/betabots/scripts/thinking_body.cjs')
 
 test('the mind inventory executes against the same visible browser control', async (t) => {
@@ -104,6 +105,42 @@ test('separates a primary link label from supporting copy without weakening paym
     assert.equal(result.ok, false, `${control.actionLabel} must remain blocked`)
     assert.match(result.reason, /unsafe/i)
   }
+})
+
+test('finds a React Native row label between icon glyphs when title and body compute to normal weight', async (t) => {
+  const browser = await chromium.launch({ headless: true })
+  t.after(() => browser.close())
+  const page = await browser.newPage()
+  await page.setContent(`
+    <style>
+      .row { display: flex; align-items: flex-start; gap: 16px; }
+      .icon, .chevron { display: block; }
+      .copy { display: flex; flex-direction: column; }
+      .title { display: block; font-size: 24px; font-weight: 400; }
+      .description { display: block; font-size: 18px; font-weight: 400; }
+    </style>
+    <button class="row" onclick="document.body.dataset.opened='privacy'">
+      <div class="icon"><div></div></div>
+      <div class="copy">
+        <div class="title">Privacy Policy</div>
+        <div class="description">How account, purchase, and movement data are handled</div>
+      </div>
+      <div class="chevron"></div>
+    </button>
+  `)
+
+  assert.equal(await page.locator('.title').evaluate((element) => getComputedStyle(element).fontWeight), '400')
+  const snapshot = await collectInteractiveControls(page)
+  const policy = snapshot.controls.find((control) => control.actionLabel === 'Privacy Policy')
+
+  assert.ok(policy, 'the first non-icon text leaf identifies the RN row title')
+  assert.match(policy.name, /Privacy Policy.*purchase.*movement data are handled/)
+  assert.match(policy.visibleText, /Privacy Policy.*purchase.*movement data are handled/)
+  assert.equal(validateMindAction({ type: 'click', targetId: policy.id }, snapshot.controls).ok, true)
+
+  const result = await executeMindAction(page, snapshot, { type: 'click', targetId: policy.id })
+  assert.equal(result.ok, true)
+  assert.equal(await page.locator('body').getAttribute('data-opened'), 'privacy')
 })
 
 test('selects a uniquely visible option from an ARIA combobox', async (t) => {
